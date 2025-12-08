@@ -1,0 +1,15 @@
+{
+  "message_id": "123",
+  "channel": "NEG",
+  "tip_doc": "TIPDOC_FS001",
+  "name": "RUBEN AGUIRRE",
+  "cid": "UC90A34020B0B4F5FB4F030AD1E0FBEAC",
+  "aid": "AE19DDA839073417D8533160E47EC70A1",
+  "document_number": "1069757906",
+  "mdm_code": "31075530",
+  "usr_type": "USUARIO",
+  "rol": "ROLIFN6KJIINVVJW8W5",
+  "owner_num": "1069757906",
+  "owner_doc": "TIPDOC_FS001",
+  "entitlement": "REL1GH4KHJOAWEFGQDF"
+}

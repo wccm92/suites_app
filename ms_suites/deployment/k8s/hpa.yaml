@@ -1,0 +1,31 @@
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: #{service}#-hpa
+  namespace: #{namespace}#
+  labels:
+    app.bancolombia.com.co/env: '#{env}#'
+    app.bancolombia.com.co/cost-center: '#{cost-center}#'
+    app.bancolombia.com.co/application-code: '#{application-code}#'
+    app.bancolombia.com.co/project-name: '#{project-name}#'
+    app.bancolombia.com.co/pmo: '#{pmo}#'
+spec:
+  minReplicas: #{ms-replicas}#
+  maxReplicas: #{ms-max-replicas}#
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: #{service}#-deployment
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: #{target-cpu}#
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: #{target-Memory}#
