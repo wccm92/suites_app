@@ -6,9 +6,7 @@ defmodule MsSandbox.Config.AppConfig do
   defstruct [
     :env,
     :enable_server,
-    :http_port,
-    :secret_name_private_key,
-    :region
+    :http_port
   ]
 
   def load_config do
@@ -16,8 +14,6 @@ defmodule MsSandbox.Config.AppConfig do
       env: load(:env),
       enable_server: load(:enable_server),
       http_port: load(:http_port),
-      secret_name_private_key: load(:secret_name_private_key),
-      region: load(:region)
     }
   end
 

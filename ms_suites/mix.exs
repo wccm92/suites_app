@@ -54,12 +54,6 @@ defmodule MsSandbox.MixProject do
       {:poison, "~> 6.0"},
       {:cors_plug, "~> 3.0"},
       {:timex, "~> 3.7"},
-      {:ex_aws, "~> 2.1"},
-      {:ex_aws_sts, "~> 2.0"},
-      {:ex_aws_sqs, "~> 3.4"},
-      {:configparser_ex, "~> 4.0"},
-      {:ex_aws_secretsmanager, "~> 2.0"},
-      {:sweet_xml, "~> 0.7.0"},
       {:hackney, "~> 1.0"},
       # Test
       {:mock, "~> 0.3", only: :test},

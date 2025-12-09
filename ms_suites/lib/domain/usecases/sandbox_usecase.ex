@@ -6,9 +6,7 @@ defmodule MsSandbox.Domain.SandboxUsecase do
   alias MsSandbox.Utils.Token
 
   @timezone Application.compile_env(:ms_sandbox, :timezone)
-  @jwt_use_mock Application.compile_env!(:ms_sandbox, :jwt_use_mock)
   @issuer Application.compile_env!(:ms_sandbox, :jwt_issuer_url)
-  @private_key_provider Application.compile_env!(:ms_sandbox, :private_key_provider)
   @natural_person "natural-person"
   @enterprises "enterprises"
 
@@ -37,7 +35,7 @@ defmodule MsSandbox.Domain.SandboxUsecase do
       {:ok,
         %{
           "data" => %{
-            "token" => response_jwt |> encode_result(@jwt_use_mock, channel)
+            "token" => response_jwt |> encode_result(channel)
           }
         }
       }
@@ -47,22 +45,7 @@ defmodule MsSandbox.Domain.SandboxUsecase do
     end
   end
 
-  defp encode_result(result, "false" = _use_mock, channel) do
-    case @private_key_provider.get_private_key_cache() do
-      {:ok, %{"private_key" => private_key, "key_id" => key_id}} ->
-        extra_claims = %{
-          "aud" => channel,
-          "iss" => @issuer,
-          "sub" => handle_sub_claim(result)
-        }
-        signer = Joken.Signer.create("RS256", %{"pem" => private_key}, %{"kid" => key_id})
-        Map.merge(result, extra_claims) |> Token.generate_and_sign!(signer)
-      {:error, reason} ->
-        Logger.error("Error obteniendo clave privada: #{inspect(reason)}")
-    end
-  end
-
-  defp encode_result(result, _use_mock, channel) do
+  defp encode_result(result, channel) do
     extra_claims = %{
       "aud" => channel,
       "iss" => @issuer,

@@ -7,7 +7,6 @@ defmodule MsSandbox.Application do
 
   alias MsSandbox.Infrastructure.EntryPoint.ApiRest
   alias MsSandbox.Config.{AppConfig, ConfigHolder}
-  alias MsSandbox.Infrastructure.Adapters.PrivateKeyAdapter
 
   use Application
   require Logger
@@ -38,7 +37,6 @@ defmodule MsSandbox.Application do
 
   def application_children(_other_env),
       do: [
-        {ConfigHolder, AppConfig.load_config()},
-        {PrivateKeyAdapter, []}
+        {ConfigHolder, AppConfig.load_config()}
       ]
 end

@@ -49,9 +49,3 @@ defmodule MsSandbox.Config.ConfigHolder do
     end)
   end
 end
-
-defmodule MsSandbox.Config.ConfigHolder.PropertiesLoaderBehaviour do
-  alias MsSandbox.Config.AppConfig
-
-  @callback load(%AppConfig{}) :: map()
-end
