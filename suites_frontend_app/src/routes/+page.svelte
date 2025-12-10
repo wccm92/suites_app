@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { goto } from "$app/navigation";
+
   export let data: {
     suites: { id_suite: string }[];
     error: string | null;
@@ -24,14 +26,14 @@
       const res = await fetch(`/api/suites/${id}`);
 
       if (!res.ok) {
-        throw new Error('No se pudo obtener el detalle de la suite');
+        throw new Error("No se pudo obtener el detalle de la suite");
       }
 
       const suite: SuiteDetail = await res.json();
       selectedSuite = suite;
     } catch (e) {
       const err = e as Error;
-      detailError = err.message ?? 'Error inesperado al cargar el detalle';
+      detailError = err.message ?? "Error inesperado al cargar el detalle";
     } finally {
       loadingDetail = false;
     }
@@ -87,18 +89,28 @@
             </div>
             <div class="detail-row">
               <span class="detail-label">Cupos disponibles</span>
-              <span class="detail-value">{selectedSuite.cupos_disponibles}</span>
+              <span class="detail-value">{selectedSuite.cupos_disponibles}</span
+              >
             </div>
             <div class="detail-row">
               <span class="detail-label">Invitados inscritos</span>
               <span class="detail-value">
                 {#if selectedSuite.invitados_inscritos.length > 0}
-                  {selectedSuite.invitados_inscritos.join(', ')}
+                  {selectedSuite.invitados_inscritos.join(", ")}
                 {:else}
                   Ninguno
                 {/if}
               </span>
             </div>
+          </div>
+          <div class="detail-actions">
+            <button
+              class="btn-primary"
+              type="button"
+              on:click={() => goto("/registrar-invitado")}
+            >
+              Registrar invitado
+            </button>
           </div>
         {:else}
           <p class="hint">Selecciona una suite para ver su detalle.</p>
@@ -111,7 +123,11 @@
 <style>
   :global(body) {
     margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
       sans-serif;
     background: #0f172a;
     color: #e5e7eb;
@@ -163,8 +179,11 @@
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
-    transition: transform 0.15s ease, box-shadow 0.15s ease,
-      border-color 0.15s ease, background 0.15s ease;
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      border-color 0.15s ease,
+      background 0.15s ease;
     cursor: pointer;
   }
 
@@ -284,5 +303,36 @@
     .card-id {
       font-size: 1.4rem;
     }
+  }
+
+    .detail-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-primary {
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: none;
+    background: #1d4ed8;
+    color: #f9fafb;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
+    transition: transform 0.12s ease, box-shadow 0.12s ease,
+      background 0.12s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.6);
+    background: #1e40af;
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 8px 18px rgba(30, 64, 175, 0.7);
   }
 </style>
