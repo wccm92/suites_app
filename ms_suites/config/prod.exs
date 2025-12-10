@@ -15,9 +15,9 @@ config :logger,
 
 config :ms_suites, MsSuitesApp.Adapters.Repo,
         database: "db_edcph",
-        username: "",
-        password: "",
-        hostname: "",
+        username: "usrapps",
+        password: "EstadioDeporCali@25*",
+        hostname: "86.48.21.61",
         port: 5432
 
 config :ms_suites,
