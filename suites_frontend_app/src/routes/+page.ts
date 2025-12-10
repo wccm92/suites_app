@@ -1,12 +1,18 @@
 // src/routes/+page.ts
 import type { PageLoad } from './$types';
 
-type Suite = {
+export type Suite = {
   id_suite: string;
+  capacidad: number;
+};
+
+type SuitesResponse = {
+  suites: Suite[];
 };
 
 export const load: PageLoad = async ({ fetch }) => {
-  const res = await fetch('http://localhost:8083/suites_app/suites');
+  const res = await fetch('/api/suites');
+
   if (!res.ok) {
     return {
       suites: [] as Suite[],
@@ -14,6 +20,10 @@ export const load: PageLoad = async ({ fetch }) => {
     };
   }
 
-  const suites: Suite[] = await res.json();
-  return { suites, error: null };
+  const payload: SuitesResponse = await res.json();
+
+  return {
+    suites: payload.suites,
+    error: null
+  };
 };

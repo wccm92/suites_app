@@ -2,7 +2,7 @@
   import { goto } from "$app/navigation";
 
   export let data: {
-    suites: { id_suite: string }[];
+    suites: { id_suite: string; capacidad: number }[];
     error: string | null;
   };
 
@@ -64,6 +64,11 @@
             <span class="badge">Suite #{index + 1}</span>
             <h2 class="card-title">ID Suite</h2>
             <p class="card-id">{suite.id_suite}</p>
+
+            <p class="card-capacity">
+              Capacidad: <strong>{suite.capacidad}</strong> personas
+            </p>
+
             <p class="card-sub">Toca para ver detalle</p>
           </article>
         {/each}
@@ -369,5 +374,11 @@
     font-weight: 500;
     color: #e5e7eb;
     letter-spacing: 0.02em;
+  }
+
+  .card-capacity {
+    font-size: 0.85rem;
+    color: #9ca3af;
+    margin: 0.1rem 0 0.2rem 0;
   }
 </style>

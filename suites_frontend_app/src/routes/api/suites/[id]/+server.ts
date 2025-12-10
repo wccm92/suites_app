@@ -8,20 +8,20 @@ type SuiteDetail = {
 };
 
 const suitesDetails: Record<string, SuiteDetail> = {
-  '1': {
-    id_suite: '1',
+  '1243': {
+    id_suite: '1243',
     capacidad: '15',
     cupos_disponibles: '2',
     invitados_inscritos: ['124', '456', '789']
   },
-  '2': {
-    id_suite: '2',
+  '124': {
+    id_suite: '124',
     capacidad: '10',
     cupos_disponibles: '5',
     invitados_inscritos: ['111', '222']
   },
-  '3': {
-    id_suite: '3',
+  '345': {
+    id_suite: '345',
     capacidad: '20',
     cupos_disponibles: '0',
     invitados_inscritos: ['999', '888', '777', '666']
