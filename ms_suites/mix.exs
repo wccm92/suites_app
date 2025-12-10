@@ -1,9 +1,9 @@
-defmodule MsSandbox.MixProject do
+defmodule MsSuitesApp.MixProject do
   use Mix.Project
 
   def project do
     [
-      app: :ms_sandbox,
+      app: :ms_suites,
       version: "0.1.0",
       elixir: "~> 1.13",
       start_permanent: Mix.env() == :prod,
@@ -22,7 +22,7 @@ defmodule MsSandbox.MixProject do
         sobelow: :test
       ],
       releases: [
-        ms_sandbox: [
+        ms_suites: [
           include_executables_for: [:unix],
           steps: [:assemble, :tar]
         ]
@@ -35,7 +35,7 @@ defmodule MsSandbox.MixProject do
   def application do
     [
       extra_applications: [:logger],
-      mod: {MsSandbox.Application, [Mix.env()]}
+      mod: {MsSuitesApp.Application, [Mix.env()]}
     ]
   end
 
@@ -49,9 +49,11 @@ defmodule MsSandbox.MixProject do
       {:castore, "~> 1.0"},
       {:plug_cowboy, "~> 2.7"},
       {:jason, "~> 1.4"},
-      {:joken, "~> 2.6.1"},
+      #{:joken, "~> 2.6.1"},
       {:plug_checkup, "~> 0.6"},
       {:poison, "~> 6.0"},
+      {:ecto_sql, "~> 3.11"},
+      {:postgrex, ">= 0.0.0"},
       {:cors_plug, "~> 3.0"},
       {:timex, "~> 3.7"},
       {:hackney, "~> 1.0"},

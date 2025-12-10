@@ -1,13 +1,13 @@
-defmodule MsSandbox.Infrastructure.EntryPoint.ApiRest do
+defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
 
   @compile if Mix.env() == :test, do: :export_all
 
-  alias MsSandbox.Utils.DataTypeUtils
-  alias MsSandbox.Domain.SandboxUsecase
-  alias MsSandbox.Infrastructure.EntryPoint.ErrorHandler
-  alias MsSandbox.Utils.DataTypeUtils
-  alias MsSandbox.Domain.Model.NaturalPersonRequest
-  alias MsSandbox.Domain.Model.EnterprisesRequest
+  alias MsSuitesApp.Utils.DataTypeUtils
+  alias MsSuitesApp.Domain.SuitesUsecase
+  alias MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler
+  alias MsSuitesApp.Utils.DataTypeUtils
+  alias MsSuitesApp.Domain.Model.NaturalPersonRequest
+  alias MsSuitesApp.Domain.Model.EnterprisesRequest
 
   @moduledoc """
   Access point to the rest exposed services
@@ -19,6 +19,7 @@ defmodule MsSandbox.Infrastructure.EntryPoint.ApiRest do
 
   @natural_person "natural-person"
   @enterprises "enterprises"
+  @suites "suites"
 
   plug(CORSPlug,
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -29,43 +30,30 @@ defmodule MsSandbox.Infrastructure.EntryPoint.ApiRest do
   plug(Plug.Logger, log: :debug)
   plug(:match)
   plug(Plug.Parsers, parsers: [:urlencoded, :json], json_decoder: Poison)
-  plug(Plug.Telemetry, event_prefix: [:ms_sandbox, :plug])
+  plug(Plug.Telemetry, event_prefix: [:ms_suites, :plug])
   plug(:dispatch)
 
   forward(
-    "/fua/sandbox/health",
+    "/fua/Suites/health",
     to: PlugCheckup,
     init_opts:
       PlugCheckup.Options.new(
         json_encoder: Jason,
-        checks: MsSandbox.Infrastructure.EntryPoint.HealthCheck.checks()
+        checks: MsSuitesApp.Infrastructure.EntryPoint.HealthCheck.checks()
       )
   )
-
-  post "/fua/sandbox/natural-person" do
-    with body <- conn.body_params |> DataTypeUtils.normalize(),
-         request_id <- body.message_id,
-         {:ok, true} <- log_request(@natural_person, body),
-         {:ok, body} <- NaturalPersonRequest.validate_request(body),
-         {:ok, response} <- SandboxUsecase.handle_natural_person_token(body) do
-      log_response(@natural_person, request_id, response)
+  get "/suites_app/suites" do
+    with {:ok, response} <- SuitesUsecase.handle_list_suites() do
+      log_response(@suites, "no-message-id", response)
       build_response(response, conn)
     else
       error -> error |> handle_error(conn)
     end
   end
 
-  post "/fua/sandbox/enterprises" do
-    with body <- conn.body_params |> DataTypeUtils.normalize(),
-         request_id <- body.message_id,
-         {:ok, true} <- log_request(@enterprises, body),
-         {:ok, body} <- EnterprisesRequest.validate_request(body),
-         {:ok, response} <- SandboxUsecase.handle_enterprises_token(body) do
-      log_response(@enterprises, request_id, response)
-      build_response(response, conn)
-    else
-      error -> error |> handle_error(conn)
-    end
+  match _ do
+    conn
+    |> handle_not_found(Logger.level())
   end
 
   def build_response(%{status: status, body: body}, conn) do

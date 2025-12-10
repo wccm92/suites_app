@@ -1,4 +1,4 @@
-defmodule MsSandbox.Utils.DocumentTypeConverter do
+defmodule MsSuitesApp.Utils.DocumentTypeConverter do
 
   @id_types_doc_original %{
     "TIPDOC_FS000" => "CD",

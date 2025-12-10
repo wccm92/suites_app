@@ -1,7 +1,7 @@
-defmodule MsSandbox.Config.ConfigHolder do
+defmodule MsSuitesApp.Config.ConfigHolder do
   use GenServer
-  alias MsSandbox.Config.AppConfig
-  @table_name :ms_sandbox_config
+  alias MsSuitesApp.Config.AppConfig
+  @table_name :ms_suites_config
 
   @moduledoc """
   Provides Behaviours for handle app-configs
@@ -43,7 +43,7 @@ defmodule MsSandbox.Config.ConfigHolder do
   end
 
   defp load_additional_properties(%AppConfig{} = config) do
-    Application.get_env(:ms_sandbox, :config_loaders, [])
+    Application.get_env(:ms_suites, :config_loaders, [])
     |> Enum.reduce(config, fn loader, fullfilled ->
       Map.merge(fullfilled, loader.load(fullfilled))
     end)

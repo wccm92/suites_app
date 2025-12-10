@@ -1,12 +1,13 @@
-defmodule MsSandbox.Application do
+defmodule MsSuitesApp.Application do
   @moduledoc """
-  MsSandbox application
+  MsSuitesApp application
   """
 
   @compile if Mix.env() == :test, do: :export_all
 
-  alias MsSandbox.Infrastructure.EntryPoint.ApiRest
-  alias MsSandbox.Config.{AppConfig, ConfigHolder}
+  alias MsSuitesApp.Infrastructure.EntryPoint.ApiRest
+  alias MsSuitesApp.Config.{AppConfig, ConfigHolder}
+  alias MsSuitesApp.Adapters.Repo
 
   use Application
   require Logger
@@ -14,12 +15,12 @@ defmodule MsSandbox.Application do
   def start(_type, [env]) do
     config = AppConfig.load_config()
 
-    env = Application.get_env(:sandbox, :env)
+    env = Application.get_env(:ms_suites, :env)
     in_test? = {:ok, env == :test}
 
     children = with_plug_server(config) ++ application_children(in_test?)
 
-    opts = [strategy: :one_for_one, name: MsSandbox.Supervisor]
+    opts = [strategy: :one_for_one, name: MsSuitesApp.Supervisor]
     Supervisor.start_link(children, opts)
   end
 
@@ -33,10 +34,12 @@ defmodule MsSandbox.Application do
   def application_children({:ok, true} = _test_env),
       do: [
         {ConfigHolder, AppConfig.load_config()},
+        {Repo, []},
       ]
 
   def application_children(_other_env),
       do: [
-        {ConfigHolder, AppConfig.load_config()}
+        {ConfigHolder, AppConfig.load_config()},
+        {Repo, []},
       ]
 end
