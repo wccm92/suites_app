@@ -13,7 +13,7 @@ config :ms_suites,
 config :logger,
        level: #{log-level-ex}#
 
-config :ms_suites, MsSuitesApp.Adapters.Repo,
+config :ms_suites, MsSuitesApp.Infrastructure.Adapters.Repo,
         database: "db_edcph",
         username: "",
         password: "",
