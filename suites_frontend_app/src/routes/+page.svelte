@@ -92,15 +92,19 @@
               <span class="detail-value">{selectedSuite.cupos_disponibles}</span
               >
             </div>
-            <div class="detail-row">
+            <div class="detail-row detail-row-column">
               <span class="detail-label">Invitados inscritos</span>
-              <span class="detail-value">
-                {#if selectedSuite.invitados_inscritos.length > 0}
-                  {selectedSuite.invitados_inscritos.join(", ")}
-                {:else}
-                  Ninguno
-                {/if}
-              </span>
+              {#if selectedSuite.invitados_inscritos.length > 0}
+                <div class="guests-grid">
+                  {#each selectedSuite.invitados_inscritos as invitado}
+                    <div class="guest-pill">
+                      <span class="guest-id">{invitado}</span>
+                    </div>
+                  {/each}
+                </div>
+              {:else}
+                <span class="detail-value">Ninguno</span>
+              {/if}
             </div>
           </div>
           <div class="detail-actions">
@@ -305,7 +309,7 @@
     }
   }
 
-    .detail-actions {
+  .detail-actions {
     margin-top: 1rem;
     display: flex;
     justify-content: flex-end;
@@ -321,7 +325,9 @@
     font-weight: 600;
     cursor: pointer;
     box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
-    transition: transform 0.12s ease, box-shadow 0.12s ease,
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
       background 0.12s ease;
   }
 
@@ -334,5 +340,34 @@
   .btn-primary:active {
     transform: translateY(0);
     box-shadow: 0 8px 18px rgba(30, 64, 175, 0.7);
+  }
+  /* Que esta fila se apile en columna para el grid de invitados */
+  .detail-row-column {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .guests-grid {
+    margin-top: 0.35rem;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.4rem;
+  }
+
+  .guest-pill {
+    background: #111827;
+    border-radius: 999px;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #1f2937;
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.6);
+    text-align: center;
+  }
+
+  .guest-id {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #e5e7eb;
+    letter-spacing: 0.02em;
   }
 </style>
