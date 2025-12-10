@@ -16,7 +16,7 @@ config :logger,
 config :joken,
        default_signer: "secret"
 
-config :ms_suites, MsSuitesApp.Adapters.Repo,
+config :ms_suites, MsSuitesApp.Infrastructure.Adapters.Repo,
        database: "db_edcph",
        username: "",
        password: "",
