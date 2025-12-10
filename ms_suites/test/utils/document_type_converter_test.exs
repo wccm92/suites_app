@@ -1,6 +1,6 @@
-defmodule MsSandbox.Utils.DocumentTypeConverterTest do
+defmodule MsSuitesApp.Utils.DocumentTypeConverterTest do
   use ExUnit.Case, async: true
-  alias MsSandbox.Utils.DocumentTypeConverter
+  alias MsSuitesApp.Utils.DocumentTypeConverter
 
   describe "get_id_types_doc_original/1" do
     test "maps TIPDOC_FS*** to short code" do

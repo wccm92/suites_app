@@ -1,6 +1,6 @@
-defmodule MsSandbox.Infrastructure.EntryPoint.HealthCheck do
+defmodule MsSuitesApp.Infrastructure.EntryPoint.HealthCheck do
   @moduledoc """
-  MsSandbox health check
+  MsSuitesApp health check
   """
 
   def checks do

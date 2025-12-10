@@ -1,4 +1,4 @@
-defmodule MsSandbox.Infrastructure.EntryPoint.ErrorHandler do
+defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
 
   @compile if Mix.env() == :test, do: :export_all
 

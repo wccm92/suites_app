@@ -1,5 +1,5 @@
-defmodule MsSandbox.Utils.DataTypeUtilsTest do
-  alias MsSandbox.Utils.DataTypeUtils
+defmodule MsSuitesApp.Utils.DataTypeUtilsTest do
+  alias MsSuitesApp.Utils.DataTypeUtils
   use ExUnit.Case
 
   @valid_hex32_up "A69C1A7835ABE4710968CE7BE511F3F7E"

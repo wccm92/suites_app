@@ -1,4 +1,4 @@
-defmodule MsSandbox.Utils.DataTypeUtils do
+defmodule MsSuitesApp.Utils.DataTypeUtils do
   require Logger
 
   @moduledoc """

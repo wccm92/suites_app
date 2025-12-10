@@ -1,4 +1,4 @@
-defmodule MsSandbox.Config.AppConfig do
+defmodule MsSuitesApp.Config.AppConfig do
   @moduledoc """
    Provides strcut for app-config
   """
@@ -17,5 +17,5 @@ defmodule MsSandbox.Config.AppConfig do
     }
   end
 
-  defp load(property_name), do: Application.fetch_env!(:ms_sandbox, property_name)
+  defp load(property_name), do: Application.fetch_env!(:ms_suites, property_name)
 end
