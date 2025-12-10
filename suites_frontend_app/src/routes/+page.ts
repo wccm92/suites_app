@@ -6,7 +6,7 @@ type Suite = {
 };
 
 export const load: PageLoad = async ({ fetch }) => {
-  const res = await fetch('http://localhost:8083/suites_app/suites'); // si tienes un backend externo, cambias aquí
+  const res = await fetch('http://localhost:8083/suites_app/suites');
   if (!res.ok) {
     return {
       suites: [] as Suite[],
