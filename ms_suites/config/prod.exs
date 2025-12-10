@@ -21,6 +21,6 @@ config :ms_suites, MsSuitesApp.Infrastructure.Adapters.Repo,
         port: 5432
 
 config :ms_suites,
-       ecto_repos: [MsSuitesApp.Adapters.Repo]
+       ecto_repos: [MsSuitesApp.Infrastructure.Adapters.Repo]
 
 
