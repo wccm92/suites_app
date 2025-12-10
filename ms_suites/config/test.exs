@@ -24,7 +24,7 @@ config :junit_formatter,
 config :elixir_structure_manager,
   sonar_base_folder: ""
 
-config :ms_suites, MsSuitesApp.Adapters.Repo,
+config :ms_suites, MsSuitesApp.Infrastructure.Adapters.Repo,
        database: "db_edcph",
        username: "",
        password: "",
@@ -32,4 +32,4 @@ config :ms_suites, MsSuitesApp.Adapters.Repo,
        port: 5432
 
 config :ms_suites,
-       ecto_repos: [MsSuitesApp.Adapters.Repo]
+       ecto_repos: [MsSuitesApp.Infrastructure.Adapters.Repo]
