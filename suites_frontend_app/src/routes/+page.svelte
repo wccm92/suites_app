@@ -94,7 +94,8 @@
             </div>
             <div class="detail-row">
               <span class="detail-label">Cupos disponibles</span>
-              <span class="detail-value">{selectedSuite.cupos_disponibles}</span
+              <span class="detail-value"
+                >{selectedSuite.cupos_disponibles}</span
               >
             </div>
             <div class="detail-row detail-row-column">
@@ -132,14 +133,11 @@
 <style>
   :global(body) {
     margin: 0;
-    font-family:
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
       sans-serif;
-    background: #0f172a;
-    color: #e5e7eb;
+    /* Fondo en tonos verde oscuro */
+    background: radial-gradient(circle at top, #027c68 0, #003333 55%, #001a1a 100%);
+    color: #e6fff5;
   }
 
   .page {
@@ -154,6 +152,7 @@
     font-weight: 700;
     margin-bottom: 1.5rem;
     text-align: center;
+    color: #b0e892;
   }
 
   .error {
@@ -162,7 +161,7 @@
   }
 
   .empty {
-    color: #9ca3af;
+    color: #b0e892;
     text-align: center;
   }
 
@@ -180,11 +179,11 @@
   }
 
   .card {
-    background: #111827;
+    background: #003333;
     border-radius: 1rem;
     padding: 1rem 1.2rem;
-    box-shadow: 0 12px 25px rgba(15, 23, 42, 0.7);
-    border: 1px solid #1f2937;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5);
+    border: 1px solid #027c68;
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
@@ -198,9 +197,9 @@
 
   .card:hover {
     transform: translateY(-3px);
-    box-shadow: 0 18px 35px rgba(15, 23, 42, 0.9);
-    border-color: #4b5563;
-    background: #020617;
+    box-shadow: 0 18px 35px rgba(0, 0, 0, 0.65);
+    border-color: #009933;
+    background: #014040;
   }
 
   .badge {
@@ -208,8 +207,8 @@
     font-size: 0.75rem;
     padding: 0.15rem 0.6rem;
     border-radius: 999px;
-    background: #1d4ed8;
-    color: white;
+    background: #009933;
+    color: #f5fff8;
     text-transform: uppercase;
     letter-spacing: 0.05em;
   }
@@ -217,29 +216,39 @@
   .card-title {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #9ca3af;
+    color: #b0e892;
     margin: 0;
   }
 
   .card-id {
     font-size: 1.6rem;
     font-weight: 700;
-    color: #f9fafb;
+    color: #ffffff;
     margin: 0;
+  }
+
+  .card-capacity {
+    font-size: 0.85rem;
+    color: #e0f5dd;
+    margin: 0.1rem 0 0.2rem 0;
+  }
+
+  .card-capacity strong {
+    color: #b0e892;
   }
 
   .card-sub {
     font-size: 0.8rem;
-    color: #9ca3af;
+    color: #c8e6d8;
     margin: 0.3rem 0 0 0;
   }
 
   .detail-panel {
-    background: #020617;
+    background: #001f1f;
     border-radius: 1rem;
     padding: 1rem 1.2rem;
-    border: 1px solid #1f2937;
-    box-shadow: 0 12px 25px rgba(15, 23, 42, 0.7);
+    border: 1px solid #027c68;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
   }
 
   .detail-title {
@@ -247,10 +256,11 @@
     margin-top: 0;
     margin-bottom: 1rem;
     font-weight: 600;
+    color: #b0e892;
   }
 
   .detail-loading {
-    color: #93c5fd;
+    color: #b0e892;
   }
 
   .detail-card {
@@ -264,7 +274,7 @@
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0.4rem 0;
-    border-bottom: 1px solid #1f2937;
+    border-bottom: 1px solid #027c68;
   }
 
   .detail-row:last-child {
@@ -273,21 +283,84 @@
 
   .detail-label {
     font-size: 0.85rem;
-    color: #9ca3af;
+    color: #b0e892;
   }
 
   .detail-value {
     font-size: 0.95rem;
     font-weight: 500;
-    color: #e5e7eb;
+    color: #f5fff9;
   }
 
   .hint {
     font-size: 0.9rem;
-    color: #9ca3af;
+    color: #c8e6d8;
   }
 
-  /* Mobile-first: que respire bien en smartphones */
+  .detail-actions {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  .btn-primary {
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: none;
+    background: #027c68;
+    color: #f5fff9;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.6);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 14px 30px rgba(0, 51, 51, 0.85);
+    background: #009933;
+  }
+
+  .btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
+  }
+
+  /* Que esta fila se apile en columna para el grid de invitados */
+  .detail-row-column {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .guests-grid {
+    margin-top: 0.35rem;
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 0.4rem;
+  }
+
+  .guest-pill {
+    background: #014040;
+    border-radius: 999px;
+    padding: 0.3rem 0.5rem;
+    border: 1px solid #027c68;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+    text-align: center;
+  }
+
+  .guest-id {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #b0e892;
+    letter-spacing: 0.02em;
+  }
+
+  /* Mobile-first */
   @media (max-width: 768px) {
     .page {
       padding: 1rem;
@@ -312,73 +385,5 @@
     .card-id {
       font-size: 1.4rem;
     }
-  }
-
-  .detail-actions {
-    margin-top: 1rem;
-    display: flex;
-    justify-content: flex-end;
-  }
-
-  .btn-primary {
-    padding: 0.5rem 1rem;
-    border-radius: 999px;
-    border: none;
-    background: #1d4ed8;
-    color: #f9fafb;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.4);
-    transition:
-      transform 0.12s ease,
-      box-shadow 0.12s ease,
-      background 0.12s ease;
-  }
-
-  .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(37, 99, 235, 0.6);
-    background: #1e40af;
-  }
-
-  .btn-primary:active {
-    transform: translateY(0);
-    box-shadow: 0 8px 18px rgba(30, 64, 175, 0.7);
-  }
-  /* Que esta fila se apile en columna para el grid de invitados */
-  .detail-row-column {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .guests-grid {
-    margin-top: 0.35rem;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 0.4rem;
-  }
-
-  .guest-pill {
-    background: #111827;
-    border-radius: 999px;
-    padding: 0.3rem 0.5rem;
-    border: 1px solid #1f2937;
-    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.6);
-    text-align: center;
-  }
-
-  .guest-id {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #e5e7eb;
-    letter-spacing: 0.02em;
-  }
-
-  .card-capacity {
-    font-size: 0.85rem;
-    color: #9ca3af;
-    margin: 0.1rem 0 0.2rem 0;
   }
 </style>

@@ -51,7 +51,8 @@
     // En este punto las validaciones pasan
     error = '';
     // De momento no llamamos a ningún API, solo mostramos un mensaje
-    successMessage = 'Invitado agregado (simulado). Aquí luego conectaremos la API.';
+    successMessage =
+      'Invitado agregado (simulado). Aquí luego conectaremos la API.';
   }
 
   function handleBack() {
@@ -116,8 +117,8 @@
     margin: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
       sans-serif;
-    background: #0f172a;
-    color: #e5e7eb;
+    background: radial-gradient(circle at top, #027c68 0, #003333 55%, #001a1a 100%);
+    color: #e6fff5;
   }
 
   .page {
@@ -130,17 +131,17 @@
   .form-container {
     width: 100%;
     max-width: 480px;
-    background: #020617;
+    background: #001f1f;
     border-radius: 1rem;
     padding: 1.5rem 1.7rem;
-    border: 1px solid #1f2937;
-    box-shadow: 0 12px 25px rgba(15, 23, 42, 0.7);
+    border: 1px solid #027c68;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
   }
 
   .link-back {
     border: none;
     background: transparent;
-    color: #93c5fd;
+    color: #b0e892;
     cursor: pointer;
     font-size: 0.85rem;
     margin-bottom: 0.75rem;
@@ -155,11 +156,12 @@
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0;
+    color: #b0e892;
   }
 
   .subtitle {
     font-size: 0.9rem;
-    color: #9ca3af;
+    color: #c8e6d8;
     margin-top: 0.3rem;
     margin-bottom: 1.2rem;
   }
@@ -179,28 +181,33 @@
   .label {
     font-size: 0.9rem;
     font-weight: 500;
+    color: #e6fff5;
   }
 
   .input {
     padding: 0.55rem 0.7rem;
     border-radius: 0.6rem;
-    border: 1px solid #374151;
-    background: #020617;
-    color: #e5e7eb;
+    border: 1px solid #027c68;
+    background: #002626;
+    color: #e6fff5;
     font-size: 0.95rem;
     outline: none;
   }
 
+  .input::placeholder {
+    color: #8fbcae;
+  }
+
   .input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 1px #3b82f6;
+    border-color: #009933;
+    box-shadow: 0 0 0 1px #009933;
   }
 
   .requirements {
     margin: 0.3rem 0 0;
     padding-left: 1rem;
     font-size: 0.75rem;
-    color: #9ca3af;
+    color: #b0e892;
     list-style-type: disc;
   }
 
@@ -215,7 +222,7 @@
   }
 
   .success {
-    color: #4ade80;
+    color: #b0e892;
     font-size: 0.85rem;
     margin-top: 0.5rem;
   }
@@ -224,26 +231,28 @@
     padding: 0.6rem 1rem;
     border-radius: 999px;
     border: none;
-    background: #22c55e;
-    color: #022c22;
+    background: #027c68;
+    color: #f5fff9;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(34, 197, 94, 0.4);
-    transition: transform 0.12s ease, box-shadow 0.12s ease,
+    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.6);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
       background 0.12s ease;
     margin-top: 0.4rem;
   }
 
   .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(34, 197, 94, 0.6);
-    background: #16a34a;
+    box-shadow: 0 14px 30px rgba(0, 51, 51, 0.85);
+    background: #009933;
   }
 
   .btn-primary:active {
     transform: translateY(0);
-    box-shadow: 0 8px 18px rgba(22, 163, 74, 0.7);
+    box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
   }
 
   @media (max-width: 640px) {
