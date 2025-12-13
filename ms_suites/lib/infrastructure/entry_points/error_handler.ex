@@ -10,6 +10,30 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
+  def build_error_response({:error, :invalid_credentials}) do
+    make_error(
+      "01",
+      "Error",
+      "Usuario o contraseña incorrecta"
+    )
+  end
+
+  def build_error_response({:error, :not_event}) do
+    make_error(
+      "02",
+      "Error",
+      "Sin eventos"
+    )
+  end
+
+  def build_error_response({:error, :inactive_user}) do
+    make_error(
+      "02",
+      "Error",
+      "Usuario bloqueado"
+    )
+  end
+
   def build_error_response({:error, :invalid_cid_aid_format}) do
     make_error(
       "9995",

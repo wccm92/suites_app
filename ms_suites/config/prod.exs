@@ -23,4 +23,7 @@ config :ms_suites, MsSuitesApp.Infrastructure.Adapters.Repo,
 config :ms_suites,
        ecto_repos: [MsSuitesApp.Infrastructure.Adapters.Repo]
 
+config :ms_suites,
+       mockuser: true
+
 

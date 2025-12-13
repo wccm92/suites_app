@@ -21,7 +21,16 @@ config :ms_suites, MsSuitesApp.Infrastructure.Adapters.Repo,
        username: "",
        password: "",
        hostname: "",
-       port: 5432
+       port: 5432,
+       pool_size: 10,
+       queue_target: 5000,
+       queue_interval: 20000,
+       timeout: 15000,
+       ownership_timeout: 15000
 
 config :ms_suites,
        ecto_repos: [MsSuitesApp.Infrastructure.Adapters.Repo]
+
+config :ms_suites,
+       mockuser: false
+

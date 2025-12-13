@@ -8,6 +8,8 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Utils.DataTypeUtils
   alias MsSuitesApp.Domain.Model.NaturalPersonRequest
   alias MsSuitesApp.Domain.Model.EnterprisesRequest
+  alias MsSuitesApp.Domain.LoginUsecase
+  alias MsSuitesApp.Domain.EventUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -20,6 +22,8 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   @natural_person "natural-person"
   @enterprises "enterprises"
   @suites "suites"
+  @login "login"
+  @evento "evento"
 
   plug(CORSPlug,
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -51,6 +55,27 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     end
   end
 
+  post "/suites_app/login" do
+    case conn.body_params do
+      %{"username" => username, "password" => password} ->
+        case LoginUsecase.login(username, password) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error -> error |> handle_error(conn)
+        end
+    end
+  end
+
+  get "/suites_app/event" do
+    with {:ok, response} <- EventUsecase.get_evento_activo() do
+      log_response(@evento, "no-message-id", response)
+      build_response(response, conn)
+    else
+      error -> error |> handle_error(conn)
+    end
+  end
+
+
   match _ do
     conn
     |> handle_not_found(Logger.level())
@@ -63,6 +88,14 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   end
 
   def build_response(response, conn), do: build_response(%{status: 200, body: response}, conn)
+
+  def build_error_response(%{status: status, body: body}, conn) do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(status, Poison.encode!(body))
+  end
+
+  def build_error_response(response, conn), do: build_response(%{status: 404, body: response}, conn)
 
   match _ do
     conn
@@ -82,7 +115,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   defp handle_error(error, conn) do
     error
     |> ErrorHandler.build_error_response()
-    |> build_response(conn)
+    |> build_error_response(conn)
   end
 
   defp log_request(resource, request) do
