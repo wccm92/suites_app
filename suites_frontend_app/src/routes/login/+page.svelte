@@ -71,7 +71,7 @@
   <section class="form-container">
     <h1 class="title">Iniciar sesión</h1>
     <p class="subtitle">
-      Autentícate para gestionar las suites del evento.
+      Ingresa y gestiona tus invitados.
     </p>
 
     <form class="form" on:submit|preventDefault={handleSubmit}>
