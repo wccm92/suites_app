@@ -57,6 +57,8 @@ defmodule MsSuitesApp.MixProject do
       {:cors_plug, "~> 3.0"},
       {:timex, "~> 3.7"},
       {:hackney, "~> 1.0"},
+      {:joken, "~> 2.6.1"},
+      {:jose, "~> 1.11.10"},
       # Test
       {:mock, "~> 0.3", only: :test},
       {:excoveralls, "~> 0.18", only: :test},

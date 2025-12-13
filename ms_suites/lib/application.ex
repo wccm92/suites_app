@@ -7,7 +7,7 @@ defmodule MsSuitesApp.Application do
 
   alias MsSuitesApp.Infrastructure.EntryPoint.ApiRest
   alias MsSuitesApp.Config.{AppConfig, ConfigHolder}
-  alias MsSuitesApp.Adapters.Repo
+  alias MsSuitesApp.Infrastructure.Adapters.Repo
 
   use Application
   require Logger
