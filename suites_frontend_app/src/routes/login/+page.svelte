@@ -1,6 +1,8 @@
 <!-- src/routes/login/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { onMount } from 'svelte';
+  import { get } from 'svelte/store';
   import { session } from '$lib/stores/session';
   import { apiFetch } from '$lib/api/client';
 
@@ -8,6 +10,37 @@
   let password = '';
   let loading = false;
   let error = '';
+
+  // ✅ Al entrar al login, dejamos que el backend decida si la sesión sigue viva
+  onMount(async () => {
+    const { jwt } = get(session);
+
+    // 1) Si no hay JWT en localStorage -> nos quedamos en login
+    if (!jwt) return;
+
+    try {
+      // 2) Si hay JWT -> validamos sesión con el backend
+      const res = await apiFetch('/suites_app/validate-session', {
+        // auth: true por defecto, así que enviará Authorization: Bearer <jwt>
+      });
+
+      if (res.status === 200) {
+        // 2.2 -> Sesión válida: redirigir a la pantalla de suites
+        goto('/');
+      } else if (res.status === 403) {
+        // 2.1 -> Sesión inválida: limpiar token y quedarse en login
+        session.clear();
+        // Opcional: mostrar un mensaje suave
+        error = 'Tu sesión ha expirado, por favor vuelve a iniciar sesión.';
+      } else {
+        // Otros códigos (500, 404, etc.): dejamos al usuario en login
+        console.warn('Respuesta inesperada en validate-session:', res.status);
+      }
+    } catch (e) {
+      console.error('Error validando sesión:', e);
+      // si falla la validación (network, etc.), preferimos dejar al usuario en login
+    }
+  });
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
@@ -20,12 +53,8 @@
         return;
       }
 
-      // 🔐 Contraseña:
-      // - type="password" en el input
-      // - no se guarda en ningún store
-      // - solo viaja en el body de un POST (y con HTTPS en producción)
       const res = await apiFetch('/auth/login', {
-        auth: false, // este endpoint no requiere JWT todavía
+        auth: false, // este endpoint no usa JWT todavía
         method: 'POST',
         body: JSON.stringify({
           username,
@@ -45,13 +74,13 @@
         return;
       }
 
-      // Guardamos el JWT en la sesión global
+      // Guardamos el JWT en la sesión global (y por ende en localStorage)
       session.setJwt(body.jwt);
 
       // Limpiamos la contraseña de memoria
       password = '';
 
-      // Redirigimos a la pantalla principal (ajusta si tu ruta es otra)
+      // Redirigimos a suites
       await goto('/');
     } catch (e) {
       const err = e as Error;
@@ -71,7 +100,7 @@
   <section class="form-container">
     <h1 class="title">Iniciar sesión</h1>
     <p class="subtitle">
-      Ingresa y gestiona tus invitados.
+      Autentícate para gestionar las suites del evento.
     </p>
 
     <form class="form" on:submit|preventDefault={handleSubmit}>
