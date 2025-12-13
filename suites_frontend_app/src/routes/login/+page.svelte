@@ -1,4 +1,3 @@
-<!-- src/routes/login/+page.svelte -->
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { onMount } from 'svelte';
@@ -11,34 +10,36 @@
   let loading = false;
   let error = '';
 
-  // ✅ Al entrar al login, dejamos que el backend decida si la sesión sigue viva
   onMount(async () => {
-    const { jwt } = get(session);
+    // 1) Verificar si hay evento
+    try {
+      const eventRes = await apiFetch('/suites_app/get-event', { auth: false });
 
-    // 1) Si no hay JWT en localStorage -> nos quedamos en login
+      if (!eventRes.ok) {
+        await goto('/no-event');
+        return;
+      }
+    } catch (e) {
+      console.error('Error consultando /get-event:', e);
+      // Si falla, preferimos mostrar login que romper
+    }
+
+    // 2) Si ya hay JWT, validar sesión con backend
+    const { jwt } = get(session);
     if (!jwt) return;
 
     try {
-      // 2) Si hay JWT -> validamos sesión con el backend
-      const res = await apiFetch('/suites_app/validate-session', {
-        // auth: true por defecto, así que enviará Authorization: Bearer <jwt>
-      });
-
+      const res = await apiFetch('/suites_app/validate-session');
       if (res.status === 200) {
-        // 2.2 -> Sesión válida: redirigir a la pantalla de suites
-        goto('/');
+        await goto('/');
       } else if (res.status === 403) {
-        // 2.1 -> Sesión inválida: limpiar token y quedarse en login
         session.clear();
-        // Opcional: mostrar un mensaje suave
-        error = 'Tu sesión ha expirado, por favor vuelve a iniciar sesión.';
+        error = 'Tu sesión ha expirado, por favor inicia sesión de nuevo.';
       } else {
-        // Otros códigos (500, 404, etc.): dejamos al usuario en login
-        console.warn('Respuesta inesperada en validate-session:', res.status);
+        console.warn('Respuesta inesperada validate-session:', res.status);
       }
     } catch (e) {
       console.error('Error validando sesión:', e);
-      // si falla la validación (network, etc.), preferimos dejar al usuario en login
     }
   });
 
@@ -53,13 +54,10 @@
         return;
       }
 
-      const res = await apiFetch('/auth/login', {
-        auth: false, // este endpoint no usa JWT todavía
+      const res = await apiFetch('/suites_app/auth/login', {
+        auth: false,
         method: 'POST',
-        body: JSON.stringify({
-          username,
-          password
-        })
+        body: JSON.stringify({ username, password })
       });
 
       if (!res.ok) {
@@ -74,13 +72,8 @@
         return;
       }
 
-      // Guardamos el JWT en la sesión global (y por ende en localStorage)
       session.setJwt(body.jwt);
-
-      // Limpiamos la contraseña de memoria
       password = '';
-
-      // Redirigimos a suites
       await goto('/');
     } catch (e) {
       const err = e as Error;
