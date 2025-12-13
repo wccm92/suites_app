@@ -66,7 +66,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     end
   end
 
-  get "/suites_app/event" do
+  get "/suites_app/get-event" do
     with {:ok, response} <- EventUsecase.get_evento_activo() do
       log_response(@evento, "no-message-id", response)
       build_response(response, conn)
