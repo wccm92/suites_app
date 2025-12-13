@@ -117,7 +117,7 @@
     margin: 0;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
       sans-serif;
-    background: radial-gradient(circle at top, #027c68 0, #003333 55%, #001a1a 100%);
+    background: radial-gradient(circle at top, #027c68 0, #069747 55%, #001a1a 100%);
     color: #e6fff5;
   }
 

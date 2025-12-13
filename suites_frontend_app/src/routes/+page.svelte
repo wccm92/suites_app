@@ -136,7 +136,7 @@
     font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
       sans-serif;
     /* Fondo en tonos verde oscuro */
-    background: radial-gradient(circle at top, #027c68 0, #003333 55%, #001a1a 100%);
+    background: radial-gradient(circle at top, #027c68 0, #069747 55%, #001a1a 100%);
     color: #e6fff5;
   }
 
@@ -179,7 +179,7 @@
   }
 
   .card {
-    background: #003333;
+    background: #069747;
     border-radius: 1rem;
     padding: 1rem 1.2rem;
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5);
