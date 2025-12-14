@@ -1,27 +1,27 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
-  import { base } from '$app/paths';
-  import { onMount } from 'svelte';
-  import { get } from 'svelte/store';
-  import { session } from '$lib/stores/session';
-  import { apiFetch } from '$lib/api/client';
+  import { goto } from "$app/navigation";
+  import { base } from "$app/paths";
+  import { onMount } from "svelte";
+  import { get } from "svelte/store";
+  import { session } from "$lib/stores/session";
+  import { apiFetch } from "$lib/api/client";
 
-  let username = '';
-  let password = '';
+  let username = "";
+  let password = "";
   let loading = false;
-  let error = '';
+  let error = "";
 
   onMount(async () => {
     // 1) Verificar si hay evento
     try {
-      const eventRes = await apiFetch('/suites_app/get-event', { auth: false });
+      const eventRes = await apiFetch("/suites_app/get-event", { auth: false });
 
       if (!eventRes.ok) {
         await goto(`${base}/no-event`);
         return;
       }
     } catch (e) {
-      console.error('Error consultando /get-event:', e);
+      console.error("Error consultando /get-event:", e);
       // Si falla, preferimos mostrar login que romper
     }
 
@@ -30,58 +30,62 @@
     if (!jwt) return;
 
     try {
-      const res = await apiFetch('/suites_app/validate-session');
+      const res = await apiFetch("/suites_app/validate-session");
       if (res.status === 200) {
-        await goto('/');
+        await goto("/");
       } else if (res.status === 403) {
         session.clear();
-        error = 'Tu sesión ha expirado, por favor inicia sesión de nuevo.';
+        error = "Tu sesión ha expirado, por favor inicia sesión de nuevo.";
       } else {
-        console.warn('Respuesta inesperada validate-session:', res.status);
+        console.warn("Respuesta inesperada validate-session:", res.status);
       }
     } catch (e) {
-      console.error('Error validando sesión:', e);
+      console.error("Error validando sesión:", e);
     }
   });
 
   async function handleSubmit(event: Event) {
     event.preventDefault();
-    error = '';
+    error = "";
     loading = true;
 
     try {
       if (!username || !password) {
-        error = 'Usuario y contraseña son obligatorios.';
+        error = "Usuario y contraseña son obligatorios.";
         return;
       }
 
-      const res = await apiFetch('/suites_app/login', {
+      const res = await apiFetch("/suites_app/login", {
         auth: false,
-        method: 'POST',
-        body: JSON.stringify({ username, password })
+        method: "POST",
+        body: JSON.stringify({ username, password }),
       });
 
       if (!res.ok) {
-        error = 'Credenciales inválidas o error en el servidor.';
+        error = "Credenciales inválidas o error en el servidor.";
         return;
       }
 
       const body = (await res.json()) as { token: string };
 
       if (!body.token) {
-        error = 'El servidor no devolvió un token de autenticación.';
+        error = "El servidor no devolvió un token de autenticación.";
         return;
       }
 
       session.setJwt(body.token);
-      password = '';
-      await goto('/');
+      password = "";
+      await goto("/");
     } catch (e) {
       const err = e as Error;
-      error = err.message ?? 'Error inesperado al intentar autenticar.';
+      error = err.message ?? "Error inesperado al intentar autenticar.";
     } finally {
       loading = false;
     }
+  }
+
+  function goToForgotPassword() {
+    goto(`${base}/forgot-password`);
   }
 </script>
 
@@ -93,9 +97,7 @@
 <main class="page">
   <section class="form-container">
     <h1 class="title">Iniciar sesión</h1>
-    <p class="subtitle">
-      Autentícate para gestionar las suites del evento.
-    </p>
+    <p class="subtitle">Autentícate para gestionar las suites del evento.</p>
 
     <form class="form" on:submit|preventDefault={handleSubmit}>
       <div class="field">
@@ -134,6 +136,13 @@
           Entrar
         {/if}
       </button>
+      <button
+        type="button"
+        class="btn-link-forgot"
+        on:click={goToForgotPassword}
+      >
+        Olvidé mi contraseña
+      </button>
     </form>
   </section>
 </main>
@@ -141,9 +150,18 @@
 <style>
   :global(body) {
     margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
       sans-serif;
-    background: radial-gradient(circle at top, #027c68 0, #069747 55%, #001a1a 100%);
+    background: radial-gradient(
+      circle at top,
+      #027c68 0,
+      #069747 55%,
+      #001a1a 100%
+    );
     color: #e6fff5;
   }
 
@@ -267,4 +285,21 @@
       font-size: 1.3rem;
     }
   }
+
+  .btn-link-forgot {
+  margin-top: 0.6rem;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  color: #b0e892;
+  cursor: pointer;
+  text-decoration: underline;
+  align-self: flex-start;
+  padding: 0;
+}
+
+.btn-link-forgot:hover {
+  color: #e0ffd0;
+}
+
 </style>
