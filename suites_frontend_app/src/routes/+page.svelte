@@ -426,28 +426,60 @@
 
   /* Mobile-first */
   @media (max-width: 768px) {
-    .page {
-      padding: 1rem;
-    }
-
-    .title {
-      font-size: 1.4rem;
-    }
-
-    .layout {
-      grid-template-columns: minmax(0, 1fr);
-    }
-
-    .detail-panel {
-      margin-top: 0.5rem;
-    }
-
-    .card {
-      padding: 0.8rem 1rem;
-    }
-
-    .card-id {
-      font-size: 1.4rem;
-    }
+  .page {
+    padding: 1rem;
   }
+
+  .title {
+    font-size: 1.4rem;
+  }
+
+  /* Layout en una sola columna */
+  .layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+  }
+
+  /* ✅ La grilla de suites se convierte en cajoncitos más compactos
+     y con scroll propio para NO empujar el detalle hacia abajo */
+  .grid {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    max-height: 50vh;           /* ocupan como máximo media pantalla */
+    overflow-y: auto;           /* la lista scrollea dentro de sí misma */
+    padding-right: 0.25rem;     /* pequeño espacio para que no corte el scroll */
+  }
+
+  .card {
+    padding: 0.7rem 0.8rem;
+    border-radius: 0.75rem;
+    gap: 0.25rem;
+  }
+
+  .badge {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.5rem;
+  }
+
+  .card-title {
+    font-size: 0.8rem;
+  }
+
+  .card-id {
+    font-size: 1.2rem;
+  }
+
+  .card-capacity {
+    font-size: 0.8rem;
+  }
+
+  .card-sub {
+    font-size: 0.75rem;
+  }
+
+  /* Panel de detalle inmediatamente debajo y siempre visible
+     porque la grilla ya no crece infinito */
+  .detail-panel {
+    margin-top: 0.5rem;
+  }
+}
 </style>
