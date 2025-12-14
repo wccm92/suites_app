@@ -1,10 +1,20 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
-  import { apiFetch } from '$lib/api/client';
+  import { base } from "$app/paths";
+  import { onMount } from "svelte";
+  import { get } from "svelte/store";
+  import { session } from "$lib/stores/session";
+  import { apiFetch } from "$lib/api/client";
 
-  export let data: {
-    suites: { id_suite: string; capacidad: number }[];
-    error: string | null;
+  // Ya no recibimos "data" del load
+  // export let data: {
+  //   suites: { id_suite: string; capacidad: number }[];
+  //   error: string | null;
+  // };
+
+  type SuiteSummary = {
+    id_suite: string;
+    capacidad: number;
   };
 
   type SuiteDetail = {
@@ -14,33 +24,99 @@
     invitados_inscritos: string[];
   };
 
+  // Estado para el listado de suites
+  let suites: SuiteSummary[] = [];
+  let suitesLoading = true;
+  let suitesError: string | null = null;
+
+  // Estado para el detalle (como ya lo tenías)
   let selectedSuite: SuiteDetail | null = null;
   let loadingDetail = false;
   let detailError: string | null = null;
 
-  async function handleSelectSuite(id: string) {
-  loadingDetail = true;
-  detailError = null;
-  selectedSuite = null;
+  // Al montar la página en el navegador:
+  // 1) Revisamos JWT en localStorage (via store session)
+  // 2) Si no hay JWT → login
+  // 3) Si hay JWT → llamar /suites_app/suites
+  onMount(async () => {
+    suitesLoading = true;
+    suitesError = null;
 
-  try {
-    // Llamamos al backend real pasando por apiFetch.
-    // Ajusta el path si tu backend usa otro (ej: /suites_app/suites/:id)
-    const res = await apiFetch(`/suites_app/suites/${id}`);
+    const { jwt } = get(session);
 
-    if (!res.ok) {
-      throw new Error('No se pudo obtener el detalle de la suite');
+    // 1.1 -> Si no está el jwt o está en null → login
+    if (!jwt) {
+      await goto(`${base}/login`);
+      return;
     }
 
-    const suite: SuiteDetail = await res.json();
-    selectedSuite = suite;
-  } catch (e) {
-    const err = e as Error;
-    detailError = err.message ?? 'Error inesperado al cargar el detalle';
-  } finally {
-    loadingDetail = false;
+    try {
+      // 2 -> Invocar al API /suites_app/suites con Authorization
+      const res = await apiFetch("/suites_app/suites"); // auth=true por defecto
+
+      if (res.status === 401) {
+        // 2.1 -> Si 401, limpiar sesión y mandar a login
+        session.clear();
+        await goto(`${base}/login`);
+        return;
+      }
+
+      if (!res.ok) {
+        suitesError = "No se pudo obtener el listado de suites.";
+        return;
+      }
+
+      // Ajusta esto al formato real que devuelva tu backend:
+      // - si devuelve un array directamente: [ { id_suite, capacidad }, ... ]
+      // - si devuelve { suites: [...] }:
+      const body = (await res.json()) as
+        | SuiteSummary[]
+        | { suites: SuiteSummary[] };
+
+      suites = Array.isArray(body) ? body : body.suites;
+    } catch (e) {
+      const err = e as Error;
+      suitesError =
+        err.message ?? "Error inesperado al cargar el listado de suites.";
+    } finally {
+      suitesLoading = false;
+    }
+  });
+
+  async function handleSelectSuite(id: string) {
+    loadingDetail = true;
+    detailError = null;
+    selectedSuite = null;
+
+    try {
+      // Ya tenías esto apuntando al backend real.
+      // Lo dejamos igual, usando apiFetch con JWT.
+      const res = await apiFetch(`/suites_app/suites/${id}`);
+
+      if (res.status === 401) {
+        // Extra: si 401 aquí, también limpiamos sesión y mandamos a login
+        session.clear();
+        await goto(`${base}/login`);
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error("No se pudo obtener el detalle de la suite");
+      }
+
+      const suite: SuiteDetail = await res.json();
+      selectedSuite = suite;
+    } catch (e) {
+      const err = e as Error;
+      detailError = err.message ?? "Error inesperado al cargar el detalle";
+    } finally {
+      loadingDetail = false;
+    }
   }
-}
+
+  function goToRegisterGuest() {
+    goto(`${base}/registrar-invitado`);
+  }
 </script>
 
 <svelte:head>
@@ -51,15 +127,17 @@
 <main class="page">
   <h1 class="title">Listado de Suites</h1>
 
-  {#if data.error}
-    <p class="error">{data.error}</p>
-  {:else if data.suites.length === 0}
+  {#if suitesError}
+    <p class="error">{suitesError}</p>
+  {:else if suitesLoading}
+    <p class="detail-loading">Cargando suites...</p>
+  {:else if suites.length === 0}
     <p class="empty">No hay suites disponibles.</p>
   {:else}
     <section class="layout">
       <!-- GRID DE SUITES -->
       <section class="grid">
-        {#each data.suites as suite, index}
+        {#each suites as suite, index}
           <article
             class="card"
             on:click={() => handleSelectSuite(suite.id_suite)}
@@ -86,41 +164,15 @@
         {:else if detailError}
           <p class="error">{detailError}</p>
         {:else if selectedSuite}
+          <!-- ... tu HTML actual de detalle ... -->
           <div class="detail-card">
-            <div class="detail-row">
-              <span class="detail-label">ID Suite</span>
-              <span class="detail-value">{selectedSuite.id_suite}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Capacidad</span>
-              <span class="detail-value">{selectedSuite.capacidad}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Cupos disponibles</span>
-              <span class="detail-value"
-                >{selectedSuite.cupos_disponibles}</span
-              >
-            </div>
-            <div class="detail-row detail-row-column">
-              <span class="detail-label">Invitados inscritos</span>
-              {#if selectedSuite.invitados_inscritos.length > 0}
-                <div class="guests-grid">
-                  {#each selectedSuite.invitados_inscritos as invitado}
-                    <div class="guest-pill">
-                      <span class="guest-id">{invitado}</span>
-                    </div>
-                  {/each}
-                </div>
-              {:else}
-                <span class="detail-value">Ninguno</span>
-              {/if}
-            </div>
+            <!-- filas de detalle -->
           </div>
           <div class="detail-actions">
             <button
               class="btn-primary"
               type="button"
-              on:click={() => goto("/registrar-invitado")}
+              on:click={goToRegisterGuest}
             >
               Registrar invitado
             </button>
@@ -136,10 +188,19 @@
 <style>
   :global(body) {
     margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
       sans-serif;
     /* Fondo en tonos verde oscuro */
-    background: radial-gradient(circle at top, #027c68 0, #069747 55%, #001a1a 100%);
+    background: radial-gradient(
+      circle at top,
+      #027c68 0,
+      #069747 55%,
+      #001a1a 100%
+    );
     color: #e6fff5;
   }
 
