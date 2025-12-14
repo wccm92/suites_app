@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { base } from '$app/paths';
   import { onMount } from 'svelte';
   import { get } from 'svelte/store';
   import { session } from '$lib/stores/session';
@@ -16,7 +17,7 @@
       const eventRes = await apiFetch('/suites_app/get-event', { auth: false });
 
       if (!eventRes.ok) {
-        await goto('/no-event');
+        await goto(`${base}/no-event`);
         return;
       }
     } catch (e) {
