@@ -33,7 +33,7 @@
       const res = await apiFetch("/suites_app/validate-session");
       if (res.status === 200) {
         await goto("/");
-      } else if (res.status === 403) {
+      } else if (res.status === 401) {
         session.clear();
         error = "Tu sesión ha expirado, por favor inicia sesión de nuevo.";
       } else {
