@@ -66,14 +66,14 @@
         return;
       }
 
-      const body = (await res.json()) as { jwt: string };
+      const body = (await res.json()) as { token: string };
 
-      if (!body.jwt) {
+      if (!body.token) {
         error = 'El servidor no devolvió un token de autenticación.';
         return;
       }
 
-      session.setJwt(body.jwt);
+      session.setJwt(body.token);
       password = '';
       await goto('/');
     } catch (e) {
