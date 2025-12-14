@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from "$app/navigation";
+  import { apiFetch } from '$lib/api/client';
 
   export let data: {
     suites: { id_suite: string; capacidad: number }[];
@@ -18,26 +19,28 @@
   let detailError: string | null = null;
 
   async function handleSelectSuite(id: string) {
-    loadingDetail = true;
-    detailError = null;
-    selectedSuite = null;
+  loadingDetail = true;
+  detailError = null;
+  selectedSuite = null;
 
-    try {
-      const res = await fetch(`/api/suites/${id}`);
+  try {
+    // Llamamos al backend real pasando por apiFetch.
+    // Ajusta el path si tu backend usa otro (ej: /suites_app/suites/:id)
+    const res = await apiFetch(`/suites_app/suites/${id}`);
 
-      if (!res.ok) {
-        throw new Error("No se pudo obtener el detalle de la suite");
-      }
-
-      const suite: SuiteDetail = await res.json();
-      selectedSuite = suite;
-    } catch (e) {
-      const err = e as Error;
-      detailError = err.message ?? "Error inesperado al cargar el detalle";
-    } finally {
-      loadingDetail = false;
+    if (!res.ok) {
+      throw new Error('No se pudo obtener el detalle de la suite');
     }
+
+    const suite: SuiteDetail = await res.json();
+    selectedSuite = suite;
+  } catch (e) {
+    const err = e as Error;
+    detailError = err.message ?? 'Error inesperado al cargar el detalle';
+  } finally {
+    loadingDetail = false;
   }
+}
 </script>
 
 <svelte:head>
