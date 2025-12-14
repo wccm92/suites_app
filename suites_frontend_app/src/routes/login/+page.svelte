@@ -55,7 +55,7 @@
         return;
       }
 
-      const res = await apiFetch('/suites_app/auth/login', {
+      const res = await apiFetch('/suites_app/login', {
         auth: false,
         method: 'POST',
         body: JSON.stringify({ username, password })
