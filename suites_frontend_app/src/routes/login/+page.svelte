@@ -75,7 +75,7 @@
 
       session.setJwt(body.token);
       password = "";
-      await goto("/");
+      await goto(`${base}/`);
     } catch (e) {
       const err = e as Error;
       error = err.message ?? "Error inesperado al intentar autenticar.";
