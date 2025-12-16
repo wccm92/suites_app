@@ -52,7 +52,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
       "0382",
       "Lo sentimos, tenemos problemas con nuestro sistemas",
       "Lo sentimos, tenemos inconvenientes con nuestros sistemas, nuestro equipo se encuentra trabajando para brindarte una  solución. Intenta más tarde.",
-      200
+      500
     )
   end
 

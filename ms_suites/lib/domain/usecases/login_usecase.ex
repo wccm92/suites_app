@@ -1,6 +1,7 @@
 defmodule MsSuitesApp.Domain.LoginUsecase do
   alias MsSuitesApp.Domain.EventUsecase
   alias MsSuitesApp.Infrastructure.Adapters.Users
+  alias MsSuitesApp.Utils.JwtHelper
   alias MsSuitesApp.Utils.Token
 
   require Logger
@@ -32,9 +33,15 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
   end
 
   def validate_event_and_session(token) do
-    with {:ok, response} <- EventUsecase.get_evento_activo(),
-         {:ok, true} <- validate_session(token) do
-      {:ok, true}
+    with {:ok, event} <- EventUsecase.get_evento_activo(),
+         {:ok, plain_token} <- validate_session(token) do
+      {
+        :ok,
+        %{
+          id_evento: event.evento.id_evento,
+          user: plain_token
+        }
+      }
     else
       error -> error
     end
@@ -42,8 +49,14 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
 
   def validate_session(token) do
     case Token.verify_and_validate(token) do
-      {:error, [message: "Invalid token", claim: "exp", claim_val: data]} -> {:error, :expired_suite_session}
-      _ -> {:ok, true}
+      {:error, [message: "Invalid token", claim: "exp", claim_val: data]} ->
+        {:error, :expired_suite_session}
+      _ ->
+        try do
+          JwtHelper.extract_fields(token)
+        rescue
+          error -> error
+        end
     end
   end
 end
