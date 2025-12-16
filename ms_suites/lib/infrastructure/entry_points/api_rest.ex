@@ -66,7 +66,8 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   end
 
   get "/suites_app/suites" do
-    with {:ok, response} <- SuitesUsecase.handle_list_suites() do
+    token = extract_auth(conn)
+    with {:ok, response} <- SuitesUsecase.handle_list_suites(token) do
       log_response(@suites, "no-message-id", response)
       build_response(response, conn)
     else

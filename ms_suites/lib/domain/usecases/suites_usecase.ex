@@ -1,6 +1,7 @@
 defmodule MsSuitesApp.Domain.SuitesUsecase do
   import Ecto.Query, warn: false
 
+  alias MsSuitesApp.Domain.LoginUsecase
   alias MsSuitesApp.Infrastructure.Adapters.Repo
   alias MsSuitesApp.Domain.Model.Suites
 
@@ -10,13 +11,13 @@ defmodule MsSuitesApp.Domain.SuitesUsecase do
   Devuelve TODAS las suites (equivalente a: SELECT * FROM suites).
   """
 
-  @spec handle_list_suites() ::
-          {:ok, %{status: pos_integer(), body: map()}}
-          | {:error, term()}
-  def handle_list_suites do
-    with {:ok, suites} <- fetch_suites(),
+#  @spec handle_list_suites() ::
+#          {:ok, %{status: pos_integer(), body: map()}}
+#          | {:error, term()}
+  def handle_list_suites(token) do
+    with {:ok, suites} <- fetch_suites(token),
          {:ok, body} <- build_body(suites) do
-      {:ok, %{status: 200, body: body}}
+      {:ok, body}
     else
       {:error, reason} = error ->
         Logger.error("Error en handle_list_suites: #{inspect(reason)}")
@@ -25,17 +26,17 @@ defmodule MsSuitesApp.Domain.SuitesUsecase do
   end
 
   # Paso 1: obtener suites desde BD
-  defp fetch_suites do
-    Logger.debug("Consultando suites en BD")
-
-    suites = Repo.all(Suites)
-
-    Logger.debug("BD devolvió #{length(suites)} suites")
-    {:ok, suites}
-  rescue
-    e ->
-      Logger.error("Error consultando BD: #{Exception.message(e)}")
-      {:error, {:db_error, e}}
+  defp fetch_suites(token) do
+    with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token) do
+      Logger.debug("Consultando suites por evento y usuario en BD")
+      suites = Repo.all(Suites)
+      Logger.debug("BD devolvió #{length(suites)} suites")
+      {:ok, suites}
+    else
+      error ->
+        Logger.error("Error consultando BD: #{Exception.message(error)}")
+        {:error, {:db_error, error}}
+    end
   end
 
   defp build_body(suites) when is_list(suites) do
@@ -52,26 +53,7 @@ defmodule MsSuitesApp.Domain.SuitesUsecase do
     defp to_response(%Suites{} = s) do
       %{
         id_suite: s.id_suite,
-        #tribuna: s.tribuna,
-        #id_propietario: s.id_propietario,
-        #saldo: s.saldo,          # si Decimal te da problemas, luego lo pasamos a string
-        #obs: s.obs,
         capacidad: s.capacidad,
-        #estado: s.estado
       }
     end
-  @doc """
-  Devuelve solo las suites activas (estado = true), por si luego lo necesitas.
-  """
- #def list_active_suites do
- #  from(s in Suite, where: s.estado == true)
- #  |> Repo.all()
- #end
-
- #@doc """
- #Obtiene una suite por id_suite. Lanza error si no existe.
- #"""
- #def get_suite!(id_suite) do
- #  Repo.get!(Suite, id_suite)
- #end
 end
