@@ -58,7 +58,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
 
   get "/suites_app/validate-session" do
     token = extract_auth(conn)
-    with {:ok, true} <- LoginUsecase.validate_session(token) do
+    with {:ok, plain_token} <- LoginUsecase.validate_session(token) do
       build_response("token_validado", conn)
     else
       error -> error |> handle_error_v2(conn)
