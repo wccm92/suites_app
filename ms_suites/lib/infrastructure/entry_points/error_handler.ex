@@ -3,50 +3,56 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
   @compile if Mix.env() == :test, do: :export_all
 
   def build_error_response({:error, :empty_fields}) do
-    make_error(
+    make_error_v2(
       "9994",
       "Error",
-      "Campos nulos o vacíos"
+      "Campos nulos o vacíos",
+      400
     )
   end
 
   def build_error_response({:error, :invalid_credentials}) do
-    make_error(
+    make_error_v2(
       "01",
       "Error",
-      "Usuario o contraseña incorrecta"
+      "Usuario o contraseña incorrecta",
+      401
     )
   end
 
   def build_error_response({:error, :not_event}) do
-    make_error(
+    make_error_v2(
       "02",
       "Error",
-      "Sin eventos"
+      "Sin eventos",
+      404
     )
   end
 
   def build_error_response({:error, :inactive_user}) do
-    make_error(
+    make_error_v2(
       "02",
       "Error",
-      "Usuario bloqueado"
+      "Usuario bloqueado",
+      401
     )
   end
 
-  def build_error_response({:error, :invalid_cid_aid_format}) do
-    make_error(
-      "9995",
+  def build_error_response({:error, :expired_suite_session}) do
+    make_error_v2(
+      "04",
       "Error",
-      "Campo 'cid' y/o 'aid' con formato inválido"
+      "Sesión no valida",
+      401
     )
   end
 
   def build_error_response(_) do
-    make_error(
+    make_error_v2(
       "0382",
       "Lo sentimos, tenemos problemas con nuestro sistemas",
-      "Lo sentimos, tenemos inconvenientes con nuestros sistemas, nuestro equipo se encuentra trabajando para brindarte una  solución. Intenta más tarde."
+      "Lo sentimos, tenemos inconvenientes con nuestros sistemas, nuestro equipo se encuentra trabajando para brindarte una  solución. Intenta más tarde.",
+      200
     )
   end
 
@@ -57,6 +63,19 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
           "code" => code,
           "title" => title,
           "detail" => detail
+        }
+      ]
+    }
+  end
+
+  defp make_error_v2(code, title, detail, http_status) do
+    %{
+      "errors" => [
+        %{
+          "code" => code,
+          "title" => title,
+          "detail" => detail,
+          "http_status" => http_status
         }
       ]
     }

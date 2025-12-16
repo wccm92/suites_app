@@ -46,12 +46,32 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
         checks: MsSuitesApp.Infrastructure.EntryPoint.HealthCheck.checks()
       )
   )
+
+  get "/suites_app/get-event" do
+    with {:ok, response} <- EventUsecase.get_evento_activo() do
+      log_response(@evento, "no-message-id", response)
+      build_response(response, conn)
+    else
+      error -> error |> handle_error_v2(conn)
+    end
+  end
+
+  get "/suites_app/validate-session" do
+    headers = DataTypeUtils.normalize(conn.req_headers)
+    token = DataTypeUtils.get_authorization_header_value(headers)
+    with {:ok, true} <- LoginUsecase.validate_session(token) do
+      build_response("token_validado", conn)
+    else
+      error -> error |> handle_error_v2(conn)
+    end
+  end
+
   get "/suites_app/suites" do
     with {:ok, response} <- SuitesUsecase.handle_list_suites() do
       log_response(@suites, "no-message-id", response)
       build_response(response, conn)
     else
-      error -> error |> handle_error(conn)
+      error -> error |> handle_error_v2(conn)
     end
   end
 
@@ -61,17 +81,8 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
         case LoginUsecase.login(username, password) do
           {:ok, response} ->
             build_response(response, conn)
-          error -> error |> handle_error(conn)
+          error -> error |> handle_error_v2(conn)
         end
-    end
-  end
-
-  get "/suites_app/get-event" do
-    with {:ok, response} <- EventUsecase.get_evento_activo() do
-      log_response(@evento, "no-message-id", response)
-      build_response(response, conn)
-    else
-      error -> error |> handle_error(conn)
     end
   end
 
@@ -97,6 +108,12 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
 
   def build_error_response(response, conn), do: build_response(%{status: 404, body: response}, conn)
 
+  def build_error_response_v2(body, status, conn) do
+    conn
+    |> put_resp_content_type("application/json")
+    |> send_resp(status, Poison.encode!(body))
+  end
+
   match _ do
     conn
     |> handle_not_found(Logger.level())
@@ -116,6 +133,15 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     error
     |> ErrorHandler.build_error_response()
     |> build_error_response(conn)
+  end
+
+  defp handle_error_v2(error, conn) do
+    body_error = error |> ErrorHandler.build_error_response()
+    build_error_response_v2(
+      body_error,
+      status = extract_http_status(body_error),
+      conn
+    )
   end
 
   defp log_request(resource, request) do
@@ -138,4 +164,10 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     )
     {:ok, true}
   end
+
+  def extract_http_status(%{"errors" => [%{"http_status" => status} | _]})
+      when is_integer(status) do
+    status
+  end
+  def extract_http_status(_), do: nil
 end

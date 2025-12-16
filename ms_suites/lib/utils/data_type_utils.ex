@@ -97,4 +97,13 @@ defmodule MsSuitesApp.Utils.DataTypeUtils do
 
   def duration_time(start),
     do: (System.monotonic_time() - start) |> monotonic_time_to_milliseconds()
+
+  def get_authorization_header_value(headers) do
+    Enum.find_value(
+      headers,
+      fn {key, value} when is_binary(key) ->
+        if String.downcase(key) == "authorization", do: value, else: nil
+      _ -> nil
+      end)
+  end
 end
