@@ -11,11 +11,9 @@ defmodule MsSuitesApp.Domain.SuitesUsecase do
   Devuelve TODAS las suites (equivalente a: SELECT * FROM suites).
   """
 
-#  @spec handle_list_suites() ::
-#          {:ok, %{status: pos_integer(), body: map()}}
-#          | {:error, term()}
   def handle_list_suites(token) do
-    with {:ok, suites} <- fetch_suites(token),
+    with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token),
+         {:ok, suites} <- fetch_suites(event_user_info),
          {:ok, body} <- build_body(suites) do
       {:ok, body}
     else
@@ -25,18 +23,15 @@ defmodule MsSuitesApp.Domain.SuitesUsecase do
     end
   end
 
-  # Paso 1: obtener suites desde BD
-  defp fetch_suites(token) do
-    with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token) do
-      Logger.debug("Consultando suites por evento y usuario en BD")
-      suites = Repo.all(Suites)
-      Logger.debug("BD devolvió #{length(suites)} suites")
-      {:ok, suites}
-    else
-      error ->
-        Logger.error("Error consultando BD: #{Exception.message(error)}")
-        {:error, {:db_error, error}}
-    end
+  defp fetch_suites(event_user_info) do
+    Logger.debug("Consultando suites por evento y usuario en BD")
+    suites = Repo.all(Suites)
+    Logger.debug("BD devolvió #{length(suites)} suites")
+    {:ok, suites}
+  rescue
+    error ->
+      Logger.error("Error consultando BD: #{Exception.message(error)}")
+      {:error, {:db_error, error}}
   end
 
   defp build_body(suites) when is_list(suites) do
