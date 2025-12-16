@@ -1,4 +1,5 @@
 defmodule MsSuitesApp.Domain.LoginUsecase do
+  alias MsSuitesApp.Domain.EventUsecase
   alias MsSuitesApp.Infrastructure.Adapters.Users
   alias MsSuitesApp.Utils.Token
 
@@ -30,14 +31,19 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
     end
   end
 
+  def validate_event_and_session(token) do
+    with {:ok, response} <- EventUsecase.get_evento_activo(),
+         {:ok, true} <- validate_session(token) do
+      {:ok, true}
+    else
+      error -> error
+    end
+  end
+
   def validate_session(token) do
     case Token.verify_and_validate(token) do
       {:error, [message: "Invalid token", claim: "exp", claim_val: data]} -> {:error, :expired_suite_session}
       _ -> {:ok, true}
     end
-  end
-
-  def validate_event_and_session() do
-    {:ok, true}
   end
 end
