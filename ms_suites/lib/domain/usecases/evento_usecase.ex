@@ -14,20 +14,13 @@ defmodule MsSuitesApp.Domain.EventUsecase do
         {:error, :not_event}
 
       %Evento{} = evento ->
-        {:ok, %{status: 200, body: %{evento: to_response(evento)}}}
+        {:ok, %{evento: to_response(evento)}}
     end
   end
 
   defp to_response(%Evento{} = e) do
     %{
       id_evento: e.id_evento
-      #cod_evento: e.cod_evento,
-      #desc_evento: e.desc_evento,
-      #fech_creacion: e.fech_creacion,
-      #fech_inicio: e.fech_inicio,
-      #fech_final: e.fech_final,
-      #id_user: e.id_user,
-      #estado: e.estado
     }
   end
 

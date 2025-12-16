@@ -22,7 +22,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
 
   def build_error_response({:error, :not_event}) do
     make_error_v2(
-      "02",
+      "03",
       "Error",
       "Sin eventos",
       404
