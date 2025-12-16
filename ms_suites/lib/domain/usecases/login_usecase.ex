@@ -31,7 +31,10 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
   end
 
   def validate_session(token) do
-    {:ok, true}
+    case Token.verify_and_validate(token) do
+      {:error, [message: "Invalid token", claim: "exp", claim_val: data]} -> {:error, :expired_suite_session}
+      _ -> {:ok, true}
+    end
   end
 
   def validate_event_and_session() do
