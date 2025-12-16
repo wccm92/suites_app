@@ -29,4 +29,12 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
         {:error, :internal_error, "Error generando token"}
     end
   end
+
+  def validate_session(token) do
+    {:ok, true}s
+  end
+
+  def validate_event_and_session() do
+    {:ok, true}
+  end
 end
