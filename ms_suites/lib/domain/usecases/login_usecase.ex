@@ -31,7 +31,7 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
   end
 
   def validate_session(token) do
-    {:ok, true}s
+    {:ok, true}
   end
 
   def validate_event_and_session() do
