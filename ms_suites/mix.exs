@@ -49,6 +49,7 @@ defmodule MsSuitesApp.MixProject do
       {:castore, "~> 1.0"},
       {:plug_cowboy, "~> 2.7"},
       {:jason, "~> 1.4"},
+      {:req, "~> 0.5"},
       #{:joken, "~> 2.6.1"},
       {:plug_checkup, "~> 0.6"},
       {:poison, "~> 6.0"},

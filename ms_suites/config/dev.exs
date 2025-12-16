@@ -34,3 +34,6 @@ config :ms_suites,
 config :ms_suites,
        mockuser: false
 
+config :ms_suites,
+       token_bridge: "bridge"
+

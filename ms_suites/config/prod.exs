@@ -11,7 +11,7 @@ config :ms_suites,
        custom_metrics_prefix_name: "ms_suites"
 
 config :logger,
-       level: #{log-level-ex}#
+       level: :debug
 
 config :ms_suites, MsSuitesApp.Infrastructure.Adapters.Repo,
         database: "db_edcph",
@@ -24,6 +24,9 @@ config :ms_suites,
        ecto_repos: [MsSuitesApp.Infrastructure.Adapters.Repo]
 
 config :ms_suites,
-       mockuser: true
+       mockuser: false
+
+config :ms_suites,
+       token_bridge: "bridge"
 
 

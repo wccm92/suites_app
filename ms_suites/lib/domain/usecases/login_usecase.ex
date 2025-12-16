@@ -9,8 +9,8 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
     with {:ok, user} <- Users.validate_credentials(username, password),
          {:ok, jwt, _claims} <-
            Token.generate_and_sign(%{
-             "id_user" => 2, #user.id,
-             "username" => "admin" #user.username
+             "id_user" => user.id,
+             "username" => user.username
            }) do
       {:ok,
         %{

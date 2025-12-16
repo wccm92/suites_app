@@ -3,6 +3,7 @@ defmodule MsSuitesApp.Infrastructure.Adapters.Users do
   alias MsSuitesApp.Infrastructure.Adapters.Repo
   alias MsSuitesApp.Domain.Model.Users
   alias MsSuitesApp.Infrastructure.Adapters.Password
+  alias MsSuites.Auth.BridgeAuthClient
 
 
   @mockuser Application.compile_env(:ms_suites, :mockuser)
@@ -32,8 +33,8 @@ defmodule MsSuitesApp.Infrastructure.Adapters.Users do
    end
   end
 
-  defp verify_password(password, "scrypt:" <> _ = hash) do
-    Password.verify(password, hash)
+  defp verify_password(password, hash) do
+    BridgeAuthClient.verify_password(hash, password)
   end
 
   defp verify_password(_password, _hash), do: false
