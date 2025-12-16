@@ -17,12 +17,12 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
         }}
     else
       {:error, :inactive_user} ->
-      Logger.debug("llego a inactive")
-        {:error, :unauthorized, "Usuario inactivo"}
+        Logger.debug("llego a inactive")
+        {:error, :inactive_user}
 
       {:error, :invalid_credentials} ->
         Logger.debug("llego a credenciales")
-         {:error, :invalid_credentials}
+        {:error, :invalid_credentials}
 
       _ ->
         Logger.debug("llego a error token")
