@@ -57,8 +57,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   end
 
   get "/suites_app/validate-session" do
-    headers = DataTypeUtils.normalize(conn.req_headers)
-    token = DataTypeUtils.get_authorization_header_value(headers)
+    token = extract_auth(conn)
     with {:ok, true} <- LoginUsecase.validate_session(token) do
       build_response("token_validado", conn)
     else
@@ -163,6 +162,11 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
       }
     )
     {:ok, true}
+  end
+
+  defp extract_auth(conn) do
+    DataTypeUtils.normalize(conn.req_headers)
+    |> DataTypeUtils.get_authorization_header_value()
   end
 
   def extract_http_status(%{"errors" => [%{"http_status" => status} | _]})
