@@ -5,23 +5,12 @@
   import { get } from "svelte/store";
   import { session } from "$lib/stores/session";
   import { apiFetch } from "$lib/api/client";
-
-  // Ya no recibimos "data" del load
-  // export let data: {
-  //   suites: { id_suite: string; capacidad: number }[];
-  //   error: string | null;
-  // };
+  import type { SuiteDetailOrError, SuiteDetail, SuiteDetailError, ErrorItem } from '$lib/api/types';
+  import { isSuiteDetailError, isSuiteDetail } from '$lib/api/guards';
 
   type SuiteSummary = {
     id_suite: string;
     capacidad: number;
-  };
-
-  type SuiteDetail = {
-    id_suite: string;
-    capacidad: string;
-    cupos_disponibles: string;
-    invitados_inscritos: string[];
   };
 
   // Estado para el listado de suites
@@ -29,12 +18,11 @@
   let suitesLoading = true;
   let suitesError: string | null = null;
 
-  // Estado para el detalle (como ya lo tenías)
+
   let selectedSuite: SuiteDetail | null = null;
   let loadingDetail = false;
   let detailError: string | null = null;
 
-  // Al montar la página en el navegador:
   // 1) Revisamos JWT en localStorage (via store session)
   // 2) Si no hay JWT → login
   // 3) Si hay JWT → llamar /suites_app/suites
@@ -51,8 +39,7 @@
     }
 
     try {
-      // 2 -> Invocar al API /suites_app/suites con Authorization
-      const res = await apiFetch("/suites_app/suites"); // auth=true por defecto
+      const res = await apiFetch("/suites_app/suites");
 
       if (res.status === 401) {
         // 2.1 -> Si 401, limpiar sesión y mandar a login
@@ -66,9 +53,6 @@
         return;
       }
 
-      // Ajusta esto al formato real que devuelva tu backend:
-      // - si devuelve un array directamente: [ { id_suite, capacidad }, ... ]
-      // - si devuelve { suites: [...] }:
       const body = (await res.json()) as
         | SuiteSummary[]
         | { suites: SuiteSummary[] };
@@ -89,12 +73,17 @@
     selectedSuite = null;
 
     try {
-      // Ya tenías esto apuntando al backend real.
-      // Lo dejamos igual, usando apiFetch con JWT.
       const res = await apiFetch(`/suites_app/suites/${id}`);
 
+      if (res.status === 404) {
+        // Extra: si 404 aquí, limpiamos sesión y mandamos a la pantalla de no-event
+        session.clear();
+        await goto(`${base}/no-event`);
+        return;
+      }
+
       if (res.status === 401) {
-        // Extra: si 401 aquí, también limpiamos sesión y mandamos a login
+        // Extra: si 401 aquí, limpiamos sesión y mandamos a login
         session.clear();
         await goto(`${base}/login`);
         return;
@@ -104,8 +93,15 @@
         throw new Error("No se pudo obtener el detalle de la suite");
       }
 
-      const suite: SuiteDetail = await res.json();
-      selectedSuite = suite;
+      const body = (await res.json()) as unknown as SuiteDetailOrError;
+      if (isSuiteDetailError(body)) {
+        const firstError = body.errors[0];
+        throw new Error(firstError.detail || 'Error al consultar la suite.');
+      } else if (isSuiteDetail(body)) {
+        const suite = body;
+        selectedSuite = suite;
+      }
+
     } catch (e) {
       const err = e as Error;
       detailError = err.message ?? "Error inesperado al cargar el detalle";
@@ -426,60 +422,60 @@
 
   /* Mobile-first */
   @media (max-width: 768px) {
-  .page {
-    padding: 1rem;
-  }
+    .page {
+      padding: 1rem;
+    }
 
-  .title {
-    font-size: 1.4rem;
-  }
+    .title {
+      font-size: 1.4rem;
+    }
 
-  /* Layout en una sola columna */
-  .layout {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 1rem;
-  }
+    /* Layout en una sola columna */
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 1rem;
+    }
 
-  /* ✅ La grilla de suites se convierte en cajoncitos más compactos
+    /* ✅ La grilla de suites se convierte en cajoncitos más compactos
      y con scroll propio para NO empujar el detalle hacia abajo */
-  .grid {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    max-height: 50vh;           /* ocupan como máximo media pantalla */
-    overflow-y: auto;           /* la lista scrollea dentro de sí misma */
-    padding-right: 0.25rem;     /* pequeño espacio para que no corte el scroll */
-  }
+    .grid {
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      max-height: 50vh; /* ocupan como máximo media pantalla */
+      overflow-y: auto; /* la lista scrollea dentro de sí misma */
+      padding-right: 0.25rem; /* pequeño espacio para que no corte el scroll */
+    }
 
-  .card {
-    padding: 0.7rem 0.8rem;
-    border-radius: 0.75rem;
-    gap: 0.25rem;
-  }
+    .card {
+      padding: 0.7rem 0.8rem;
+      border-radius: 0.75rem;
+      gap: 0.25rem;
+    }
 
-  .badge {
-    font-size: 0.7rem;
-    padding: 0.1rem 0.5rem;
-  }
+    .badge {
+      font-size: 0.7rem;
+      padding: 0.1rem 0.5rem;
+    }
 
-  .card-title {
-    font-size: 0.8rem;
-  }
+    .card-title {
+      font-size: 0.8rem;
+    }
 
-  .card-id {
-    font-size: 1.2rem;
-  }
+    .card-id {
+      font-size: 1.2rem;
+    }
 
-  .card-capacity {
-    font-size: 0.8rem;
-  }
+    .card-capacity {
+      font-size: 0.8rem;
+    }
 
-  .card-sub {
-    font-size: 0.75rem;
-  }
+    .card-sub {
+      font-size: 0.75rem;
+    }
 
-  /* Panel de detalle inmediatamente debajo y siempre visible
+    /* Panel de detalle inmediatamente debajo y siempre visible
      porque la grilla ya no crece infinito */
-  .detail-panel {
-    margin-top: 0.5rem;
+    .detail-panel {
+      margin-top: 0.5rem;
+    }
   }
-}
 </style>
