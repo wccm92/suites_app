@@ -9,6 +9,7 @@ defmodule MsSuitesApp.Domain.Model.Suites do
     field :saldo, :decimal
     field :obs, :string
     field :capacidad, :integer
+    field :diasmora, :integer
     field :estado, :boolean
 
     many_to_many :eventos, MsSuitesApp.Domain.Model.Evento,

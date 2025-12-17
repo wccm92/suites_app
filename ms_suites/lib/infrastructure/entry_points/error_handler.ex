@@ -47,6 +47,24 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
+  def build_error_response({:error, :suite_bloqueada}) do
+    make_error_v2(
+      "06",
+      "Error",
+      "Suite bloqueada: 01",
+      200
+    )
+  end
+
+  def build_error_response({:error, :suite_en_mora}) do
+    make_error_v2(
+      "07",
+      "Error",
+      "Suite bloqueada: 02",
+      200
+    )
+  end
+
   def build_error_response(_) do
     make_error_v2(
       "0382",

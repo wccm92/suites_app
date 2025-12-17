@@ -10,6 +10,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Domain.Model.EnterprisesRequest
   alias MsSuitesApp.Domain.LoginUsecase
   alias MsSuitesApp.Domain.EventUsecase
+  alias MsSuitesApp.Domain.SuitesDetailUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -72,6 +73,19 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
       build_response(response, conn)
     else
       error -> error |> handle_error_v2(conn)
+    end
+  end
+
+  get "/suites_app/suites/:id_suite" do
+    token = extract_auth(conn)
+    case conn.params do
+      %{"id_suite" => id_suite} ->
+        case SuitesDetailUsecase.handle_list_suites_detail(id_suite, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
     end
   end
 
