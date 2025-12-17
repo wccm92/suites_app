@@ -14,7 +14,13 @@ defmodule MsSuitesApp.Infrastructure.Adapters.Users do
 
   def validate_credentials(username, password) do
     if @mockuser == true do
-      {:ok, username}
+      {
+        :ok,
+        %{
+          id: 2,
+          username: "prueba"
+        }
+      }
     else
     case get_by_username(username) do
       nil ->
