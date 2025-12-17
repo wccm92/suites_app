@@ -104,6 +104,10 @@
       } else if (isSuiteDetail(body)) {
         const suite = body;
         selectedSuite = suite;
+      } else {
+        throw new Error(
+          "Respuesta inesperada del servidor.",
+        );
       }
     } catch (e) {
       const err = e as Error;
@@ -168,21 +172,17 @@
               <span class="detail-label">ID Suite</span>
               <span class="detail-value">{selectedSuite.id_suite}</span>
             </div>
-
             <div class="detail-row">
               <span class="detail-label">Capacidad</span>
               <span class="detail-value">{selectedSuite.capacidad}</span>
             </div>
-
             <div class="detail-row">
               <span class="detail-label">Cupos disponibles</span>
               <span class="detail-value">{selectedSuite.cupos_disponibles}</span
               >
             </div>
-
             <div class="detail-row detail-row-column">
               <span class="detail-label">Invitados inscritos</span>
-
               {#if selectedSuite.invitados_inscritos?.length}
                 <div class="guests-grid">
                   {#each selectedSuite.invitados_inscritos as guest}

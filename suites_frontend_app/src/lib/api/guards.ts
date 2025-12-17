@@ -17,6 +17,6 @@ export function isSuiteDetail(body: any): body is SuiteDetail {
     body &&
     typeof body === 'object' &&
     typeof body.id_suite === 'string' &&
-    typeof body.capacidad === 'string'
+    typeof body.capacidad === 'number'
   );
 }
