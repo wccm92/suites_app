@@ -3,6 +3,7 @@ defmodule MsSuitesApp.Domain.SuitesUsecase do
 
   alias MsSuitesApp.Domain.LoginUsecase
   alias MsSuitesApp.Infrastructure.Adapters.Repo
+  alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
   alias MsSuitesApp.Domain.Model.Suites
 
   require Logger
@@ -25,7 +26,10 @@ defmodule MsSuitesApp.Domain.SuitesUsecase do
 
   defp fetch_suites(event_user_info) do
     Logger.debug("Consultando suites por evento y usuario en BD")
-    suites = Repo.all(Suites)
+    suites = SuitesQueryAdapter.list_suites_by_event_and_admin(
+      event_user_info.id_evento,
+      event_user_info.user.id_user
+    )
     Logger.debug("BD devolvió #{length(suites)} suites")
     {:ok, suites}
   rescue

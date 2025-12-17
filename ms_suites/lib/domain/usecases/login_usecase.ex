@@ -3,6 +3,7 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
   alias MsSuitesApp.Infrastructure.Adapters.Users
   alias MsSuitesApp.Utils.JwtHelper
   alias MsSuitesApp.Utils.Token
+  alias MsSuitesApp.Utils.DataTypeUtils
 
   require Logger
 
@@ -39,7 +40,7 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
         :ok,
         %{
           id_evento: event.evento.id_evento,
-          user: plain_token
+          user: DataTypeUtils.normalize(plain_token)
         }
       }
     else
