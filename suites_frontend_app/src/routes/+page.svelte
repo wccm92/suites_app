@@ -93,8 +93,15 @@
       // Lo dejamos igual, usando apiFetch con JWT.
       const res = await apiFetch(`/suites_app/suites/${id}`);
 
+      if (res.status === 404) {
+        // Extra: si 404 aquí, limpiamos sesión y mandamos a la pantalla de no-event
+        session.clear();
+        await goto(`${base}/no-event`);
+        return;
+      }
+
       if (res.status === 401) {
-        // Extra: si 401 aquí, también limpiamos sesión y mandamos a login
+        // Extra: si 401 aquí, limpiamos sesión y mandamos a login
         session.clear();
         await goto(`${base}/login`);
         return;
