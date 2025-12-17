@@ -5,8 +5,13 @@
   import { get } from "svelte/store";
   import { session } from "$lib/stores/session";
   import { apiFetch } from "$lib/api/client";
-  import type { SuiteDetailOrError, SuiteDetail, SuiteDetailError, ErrorItem } from '$lib/api/types';
-  import { isSuiteDetailError, isSuiteDetail } from '$lib/api/guards';
+  import type {
+    SuiteDetailOrError,
+    SuiteDetail,
+    SuiteDetailError,
+    ErrorItem,
+  } from "$lib/api/types";
+  import { isSuiteDetailError, isSuiteDetail } from "$lib/api/guards";
 
   type SuiteSummary = {
     id_suite: string;
@@ -17,7 +22,6 @@
   let suites: SuiteSummary[] = [];
   let suitesLoading = true;
   let suitesError: string | null = null;
-
 
   let selectedSuite: SuiteDetail | null = null;
   let loadingDetail = false;
@@ -96,12 +100,11 @@
       const body = (await res.json()) as unknown as SuiteDetailOrError;
       if (isSuiteDetailError(body)) {
         const firstError = body.errors[0];
-        throw new Error(firstError.detail || 'Error al consultar la suite.');
+        throw new Error(firstError.detail || "Error al consultar la suite.");
       } else if (isSuiteDetail(body)) {
         const suite = body;
         selectedSuite = suite;
       }
-
     } catch (e) {
       const err = e as Error;
       detailError = err.message ?? "Error inesperado al cargar el detalle";
@@ -160,9 +163,38 @@
         {:else if detailError}
           <p class="error">{detailError}</p>
         {:else if selectedSuite}
-          <!-- ... tu HTML actual de detalle ... -->
           <div class="detail-card">
-            <!-- filas de detalle -->
+            <div class="detail-row">
+              <span class="detail-label">ID Suite</span>
+              <span class="detail-value">{selectedSuite.id_suite}</span>
+            </div>
+
+            <div class="detail-row">
+              <span class="detail-label">Capacidad</span>
+              <span class="detail-value">{selectedSuite.capacidad}</span>
+            </div>
+
+            <div class="detail-row">
+              <span class="detail-label">Cupos disponibles</span>
+              <span class="detail-value">{selectedSuite.cupos_disponibles}</span
+              >
+            </div>
+
+            <div class="detail-row detail-row-column">
+              <span class="detail-label">Invitados inscritos</span>
+
+              {#if selectedSuite.invitados_inscritos?.length}
+                <div class="guests-grid">
+                  {#each selectedSuite.invitados_inscritos as guest}
+                    <div class="guest-pill">
+                      <span class="guest-id">{guest}</span>
+                    </div>
+                  {/each}
+                </div>
+              {:else}
+                <span class="detail-value">Sin invitados</span>
+              {/if}
+            </div>
           </div>
           <div class="detail-actions">
             <button
