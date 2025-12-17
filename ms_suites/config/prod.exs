@@ -20,6 +20,9 @@ config :ms_suites, MsSuitesApp.Infrastructure.Adapters.Repo,
         hostname: "",
         port: 5432
 
+config :joken,
+       default_signer: "secret"
+
 config :ms_suites,
        ecto_repos: [MsSuitesApp.Infrastructure.Adapters.Repo]
 
