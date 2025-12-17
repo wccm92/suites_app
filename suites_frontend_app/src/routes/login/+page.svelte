@@ -32,7 +32,7 @@
     try {
       const res = await apiFetch("/suites_app/validate-session");
       if (res.status === 200) {
-        await goto("/");
+        await goto(`${base}/`);
       } else if (res.status === 401) {
         session.clear();
         error = "Tu sesión ha expirado, por favor inicia sesión de nuevo.";
@@ -62,8 +62,25 @@
       });
 
       if (!res.ok) {
-        error = "Credenciales inválidas o error en el servidor.";
-        return;
+        const json = (await res.json()) as {
+          errors: {
+            title: string;
+            http_status: number;
+            detail: string;
+            code: string;
+          }[];
+        };
+
+        const code = json.errors[0]?.code;
+
+        if (code == "01") {
+          error = "Credenciales inválidas";
+          return;
+        }
+        if (code == "02") {
+          error = "Usuario bloqueado";
+          return;
+        }
       }
 
       const body = (await res.json()) as { token: string };
@@ -287,19 +304,18 @@
   }
 
   .btn-link-forgot {
-  margin-top: 0.6rem;
-  border: none;
-  background: transparent;
-  font-size: 0.85rem;
-  color: #b0e892;
-  cursor: pointer;
-  text-decoration: underline;
-  align-self: flex-start;
-  padding: 0;
-}
+    margin-top: 0.6rem;
+    border: none;
+    background: transparent;
+    font-size: 0.85rem;
+    color: #b0e892;
+    cursor: pointer;
+    text-decoration: underline;
+    align-self: flex-start;
+    padding: 0;
+  }
 
-.btn-link-forgot:hover {
-  color: #e0ffd0;
-}
-
+  .btn-link-forgot:hover {
+    color: #e0ffd0;
+  }
 </style>
