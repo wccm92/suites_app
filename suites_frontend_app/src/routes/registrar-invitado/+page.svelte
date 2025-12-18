@@ -1,5 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
+  import { base } from "$app/paths";
 
   let cedula = '';
   let error = '';
@@ -56,7 +57,7 @@
   }
 
   function handleBack() {
-    goto('/');
+    goto(`${base}/`);
   }
 </script>
 
