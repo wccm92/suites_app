@@ -5,6 +5,8 @@
   import { get } from "svelte/store";
   import { session } from "$lib/stores/session";
   import { apiFetch } from "$lib/api/client";
+  import { fade } from "svelte/transition";
+
   import type {
     SuiteDetailOrError,
     SuiteDetail,
@@ -26,6 +28,15 @@
   let selectedSuite: SuiteDetail | null = null;
   let loadingDetail = false;
   let detailError: string | null = null;
+
+  let detailOpen = false;
+
+  function openDetail() {
+    detailOpen = true;
+  }
+  function closeDetail() {
+    detailOpen = false;
+  }
 
   // 1) Revisamos JWT en localStorage (via store session)
   // 2) Si no hay JWT → login
@@ -104,10 +115,9 @@
       } else if (isSuiteDetail(body)) {
         const suite = body;
         selectedSuite = suite;
+        openDetail();
       } else {
-        throw new Error(
-          "Respuesta inesperada del servidor.",
-        );
+        throw new Error("Respuesta inesperada del servidor.");
       }
     } catch (e) {
       const err = e as Error;
@@ -158,8 +168,8 @@
         {/each}
       </section>
 
-      <!-- PANEL DE DETALLE -->
-      <section class="detail-panel">
+      <!-- Desktop mantiene panel al lado -->
+      <section class="detail-panel desktop-detail">
         <h2 class="detail-title">Detalle de la suite</h2>
 
         {#if loadingDetail}
@@ -167,6 +177,7 @@
         {:else if detailError}
           <p class="error">{detailError}</p>
         {:else if selectedSuite}
+          <!-- tu detalle -->
           <div class="detail-card">
             <div class="detail-row">
               <span class="detail-label">ID Suite</span>
@@ -181,6 +192,7 @@
               <span class="detail-value">{selectedSuite.cupos_disponibles}</span
               >
             </div>
+
             <div class="detail-row detail-row-column">
               <span class="detail-label">Invitados inscritos</span>
               {#if selectedSuite.invitados_inscritos?.length}
@@ -196,19 +208,82 @@
               {/if}
             </div>
           </div>
-          <div class="detail-actions">
-            <button
-              class="btn-primary"
-              type="button"
-              on:click={goToRegisterGuest}
-            >
-              Registrar invitado
-            </button>
-          </div>
         {:else}
           <p class="hint">Selecciona una suite para ver su detalle.</p>
         {/if}
       </section>
+
+      <!-- Mobile usa Bottom Sheet -->
+      {#if detailOpen}
+        <div class="sheet-overlay" transition:fade on:click={closeDetail}></div>
+
+        <section class="sheet" role="dialog" aria-modal="true">
+          <button
+            class="sheet-close"
+            type="button"
+            on:click={closeDetail}
+            aria-label="Cerrar"
+          >
+            ✕
+          </button>
+
+          <div class="sheet-handle" on:click={closeDetail}></div>
+
+          <h2 class="sheet-title">Detalle de la suite</h2>
+
+          <div class="sheet-body">
+            {#if loadingDetail}
+              <p class="detail-loading">Cargando detalle...</p>
+            {:else if detailError}
+              <p class="error">{detailError}</p>
+            {:else if selectedSuite}
+              <div class="detail-card">
+                <div class="detail-row">
+                  <span class="detail-label">ID Suite</span>
+                  <span class="detail-value">{selectedSuite.id_suite}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Capacidad</span>
+                  <span class="detail-value">{selectedSuite.capacidad}</span>
+                </div>
+                <div class="detail-row">
+                  <span class="detail-label">Cupos disponibles</span>
+                  <span class="detail-value"
+                    >{selectedSuite.cupos_disponibles}</span
+                  >
+                </div>
+
+                <div class="detail-row detail-row-column">
+                  <span class="detail-label">Invitados inscritos</span>
+                  {#if selectedSuite.invitados_inscritos?.length}
+                    <div class="guests-grid">
+                      {#each selectedSuite.invitados_inscritos as guest}
+                        <div class="guest-pill">
+                          <span class="guest-id">{guest}</span>
+                        </div>
+                      {/each}
+                    </div>
+                  {:else}
+                    <span class="detail-value">Sin invitados</span>
+                  {/if}
+                </div>
+              </div>
+
+              <div class="detail-actions">
+                <button
+                  class="btn-primary"
+                  type="button"
+                  on:click={goToRegisterGuest}
+                >
+                  Registrar invitado
+                </button>
+              </div>
+            {:else}
+              <p class="hint">Selecciona una suite para ver su detalle.</p>
+            {/if}
+          </div>
+        </section>
+      {/if}
     </section>
   {/if}
 </main>
@@ -509,5 +584,76 @@
     .detail-panel {
       margin-top: 0.5rem;
     }
+  }
+
+  /* A) Desktop: panel normal */
+  .desktop-detail {
+    display: block;
+  }
+
+  /* A) Mobile: escondemos el panel lateral y usamos sheet */
+  @media (max-width: 768px) {
+    .desktop-detail {
+      display: none;
+    }
+  }
+
+  /* Bottom Sheet */
+  .sheet-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 9998;
+  }
+
+  .sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 9999;
+
+    background: #001f1f;
+    border: 1px solid #027c68;
+    border-bottom: none;
+    border-radius: 18px 18px 0 0;
+    box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.55);
+
+    max-height: 85vh;
+    overflow: hidden;
+    padding: 10px 12px 12px;
+  }
+
+  .sheet-handle {
+    width: 56px;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(176, 232, 146, 0.55);
+    margin: 6px auto 10px;
+  }
+
+  .sheet-close {
+    position: absolute;
+    top: 10px;
+    right: 12px;
+    background: transparent;
+    border: none;
+    color: #b0e892;
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+
+  .sheet-title {
+    margin: 0 0 10px 0;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #b0e892;
+    text-align: center;
+  }
+
+  .sheet-body {
+    overflow-y: auto;
+    max-height: calc(85vh - 60px);
+    padding-right: 4px;
   }
 </style>
