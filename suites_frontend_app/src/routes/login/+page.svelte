@@ -162,7 +162,7 @@
       </button>
       <!-- 👇 AQUÍ VA EL ESCUDO (debajo de "Olvidé mi contraseña") -->
       <div class="login-shield">
-        <img src={`${base}/images/escudo-cali.jpeg`} alt="Escudo Deportivo Cali" />
+        <img src={`${base}/images/main_logo_v2.png`} alt="Escudo Deportivo Cali" />
       </div>
     </form>
   </section>
