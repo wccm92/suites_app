@@ -160,6 +160,10 @@
       >
         Olvidé mi contraseña
       </button>
+      <!-- 👇 AQUÍ VA EL ESCUDO (debajo de "Olvidé mi contraseña") -->
+      <div class="login-shield">
+        <img src="/images/main_logo_v2.png" alt="Escudo Deportivo Cali" />
+      </div>
     </form>
   </section>
 </main>
@@ -317,5 +321,32 @@
 
   .btn-link-forgot:hover {
     color: #e0ffd0;
+  }
+
+  .form-container {
+    display: flex;
+    flex-direction: column;
+    min-height: calc(
+      100vh - 3rem
+    ); /* 3rem ≈ padding vertical de .page (1.5rem arriba + abajo) */
+  }
+
+  .form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .login-shield {
+    margin-top: 0.75rem; /* “justo debajo” del link */
+    padding-bottom: 0.5rem; /* separa un poco del borde inferior */
+    display: flex;
+    justify-content: center;
+  }
+
+  .login-shield img {
+    width: min(220px, 70%);
+    height: auto;
+    opacity: 0.95;
   }
 </style>
