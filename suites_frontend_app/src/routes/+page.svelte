@@ -105,9 +105,7 @@
         const suite = body;
         selectedSuite = suite;
       } else {
-        throw new Error(
-          "Respuesta inesperada del servidor.",
-        );
+        throw new Error("Respuesta inesperada del servidor.");
       }
     } catch (e) {
       const err = e as Error;
@@ -118,7 +116,10 @@
   }
 
   function goToRegisterGuest() {
-    goto(`${base}/registrar-invitado`);
+    if (!selectedSuite) return;
+    goto(
+      `${base}/registrar-invitado?id_suite=${encodeURIComponent(selectedSuite.id_suite)}`,
+    );
   }
 </script>
 

@@ -1,14 +1,17 @@
 <script lang="ts">
-  import { goto } from '$app/navigation';
+  import { goto } from "$app/navigation";
   import { base } from "$app/paths";
+  import { page } from "$app/stores";
 
-  let cedula = '';
-  let error = '';
-  let successMessage = '';
+  let cedula = "";
+  let error = "";
+  let successMessage = "";
+
+  $: suiteId = $page.url.searchParams.get("id_suite");
 
   function sanitizeCedula(value: string): string {
     // Solo dígitos, máximo 10 caracteres
-    const digitsOnly = value.replace(/\D/g, '');
+    const digitsOnly = value.replace(/\D/g, "");
     return digitsOnly.slice(0, 10);
   }
 
@@ -20,40 +23,40 @@
     const sanitized = sanitizeCedula(original);
 
     cedula = sanitized;
-    successMessage = '';
+    successMessage = "";
 
     if (original !== sanitized) {
       error =
-        'Solo se permiten números (0-9), sin espacios, letras ni caracteres especiales. Máximo 10 dígitos.';
+        "Solo se permiten números (0-9), sin espacios, letras ni caracteres especiales. Máximo 10 dígitos.";
     } else {
-      error = '';
+      error = "";
     }
   }
 
   function handleSubmit(event: Event) {
     event.preventDefault();
-    successMessage = '';
+    successMessage = "";
 
     if (!cedula) {
-      error = 'La cédula es obligatoria.';
+      error = "La cédula es obligatoria.";
       return;
     }
 
     if (cedula.length > 10) {
-      error = 'La cédula no puede superar los 10 dígitos.';
+      error = "La cédula no puede superar los 10 dígitos.";
       return;
     }
 
     if (!/^\d+$/.test(cedula)) {
-      error = 'La cédula debe contener únicamente números.';
+      error = "La cédula debe contener únicamente números.";
       return;
     }
 
     // En este punto las validaciones pasan
-    error = '';
+    error = "";
     // De momento no llamamos a ningún API, solo mostramos un mensaje
     successMessage =
-      'Invitado agregado (simulado). Aquí luego conectaremos la API.';
+      "Invitado agregado (simulado). Aquí luego conectaremos la API.";
   }
 
   function handleBack() {
@@ -68,10 +71,17 @@
 
 <main class="page">
   <section class="form-container">
-    <button type="button" class="link-back" on:click={handleBack}>
-      ← Volver al listado de suites
-    </button>
+    <div class="header-row">
+      <button type="button" class="link-back" on:click={handleBack}>
+        ← Volver al listado de suites
+      </button>
 
+      {#if suiteId}
+        <p class="suite-subtitle">
+          Suite: <strong>{suiteId}</strong>
+        </p>
+      {/if}
+    </div>
     <h1 class="title">Registrar invitado</h1>
     <p class="subtitle">
       Ingresa la cédula del invitado siguiendo los requisitos indicados.
@@ -102,9 +112,7 @@
         {/if}
       </div>
 
-      <button type="submit" class="btn-primary">
-        Agregar invitado
-      </button>
+      <button type="submit" class="btn-primary"> Agregar invitado </button>
 
       {#if successMessage}
         <p class="success">{successMessage}</p>
@@ -116,9 +124,18 @@
 <style>
   :global(body) {
     margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
       sans-serif;
-    background: radial-gradient(circle at top, #027c68 0, #069747 55%, #001a1a 100%);
+    background: radial-gradient(
+      circle at top,
+      #027c68 0,
+      #069747 55%,
+      #001a1a 100%
+    );
     color: #e6fff5;
   }
 
@@ -267,6 +284,37 @@
 
     .title {
       font-size: 1.3rem;
+    }
+  }
+  .header-row {
+    display: flex;
+    align-items: center; /* 👈 misma altura, misma línea */
+    justify-content: space-between;
+    margin-bottom: 0.75rem;
+    gap: 1rem;
+  }
+
+  .suite-subtitle {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #c8e6d8;
+    white-space: nowrap;
+  }
+
+  .suite-subtitle strong {
+    color: #b0e892;
+  }
+
+  @media (max-width: 420px) {
+    .header-row {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .suite-subtitle {
+      align-self: flex-end;
+      font-size: 1.1rem;
     }
   }
 </style>
