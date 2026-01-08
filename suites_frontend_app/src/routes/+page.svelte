@@ -117,9 +117,14 @@
 
   function goToRegisterGuest() {
     if (!selectedSuite) return;
-    goto(
-      `${base}/registrar-invitado?id_suite=${encodeURIComponent(selectedSuite.id_suite)}`,
-    );
+
+    const qs = new URLSearchParams({
+      id_suite: selectedSuite.id_suite,
+      capacidad: String(selectedSuite.capacidad),
+      cupos_disponibles: String(selectedSuite.cupos_disponibles),
+    });
+
+    goto(`${base}/registrar-invitado?${qs.toString()}`);
   }
 </script>
 
