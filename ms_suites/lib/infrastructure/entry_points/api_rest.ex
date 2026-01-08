@@ -11,6 +11,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Domain.LoginUsecase
   alias MsSuitesApp.Domain.EventUsecase
   alias MsSuitesApp.Domain.SuitesDetailUsecase
+  alias MsSuitesApp.Domain.ValidateGuessUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -81,6 +82,19 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     case conn.params do
       %{"id_suite" => id_suite} ->
         case SuitesDetailUsecase.handle_list_suites_detail(id_suite, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
+    end
+  end
+
+  post "/suites_app/validate_guess" do
+    token = extract_auth(conn)
+    case conn.body_params do
+      %{"id_suite" => id_suite, "invitado" => guess} ->
+        case ValidateGuessUsecase.handle_validate_guess(id_suite, guess, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->

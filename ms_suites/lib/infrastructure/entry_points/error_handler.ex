@@ -29,6 +29,15 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
+  def build_error_response({:error, {:visitor_already_registered_in_event, %{id_suite: registered_suite_id}}}) do
+    make_error_v2(
+      "09",
+      "Error",
+      "cédula ya se encuentra registrada en la suite: " <> registered_suite_id,
+      404
+    )
+  end
+
   def build_error_response({:error, :inactive_user}) do
     make_error_v2(
       "02",

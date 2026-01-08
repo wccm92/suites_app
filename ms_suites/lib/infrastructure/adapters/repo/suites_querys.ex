@@ -44,4 +44,17 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
     )
     |> Repo.one()
   end
+
+  def validate_guess_in_event(id_evento, id_visitante) do
+    from(vx in VisitanteXEvento,
+      where: vx.id_evento == ^id_evento and vx.id_visitante == ^id_visitante,
+      select: vx.id_suite,
+      limit: 1
+    )
+    |> Repo.one()
+    |> case do
+         nil -> :not_found
+         id_suite -> {:ok, id_suite}
+       end
+  end
 end
