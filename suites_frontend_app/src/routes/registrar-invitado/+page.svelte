@@ -2,12 +2,16 @@
   import { goto } from "$app/navigation";
   import { base } from "$app/paths";
   import { page } from "$app/stores";
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
+  import { browser } from "$app/environment";
 
-  // Params desde la pantalla anterior
-  $: suiteId = $page.url.searchParams.get("id_suite") ?? "";
-  $: capacidad = Number($page.url.searchParams.get("capacidad") ?? "0");
-  $: cuposDisponibles = Number($page.url.searchParams.get("cupos_disponibles") ?? "0");
+  // ✅ Declaraciones base
+  let suiteId = "";
+  let capacidad = 0;
+
+  let cuposDisponiblesRaw: string | null = null;
+  let cuposDisponiblesNum = 0;
+  let cuposDisponiblesSafe = 0;
 
   // Form / estado
   let cedula = "";
@@ -21,8 +25,28 @@
   let modalMessage = "";
 
   // Derivados
+  let totalAgregados = 0;
+  let restantes = 0;
+  let cuposInvalidos = false;
+
+  // Params desde la pantalla anterior (reactivos)
+  $: suiteId = $page.url.searchParams.get("id_suite") ?? "";
+  $: capacidad = Number($page.url.searchParams.get("capacidad") ?? "0");
+
+  // cupos_disponibles raw + safe (si viene vacío/NaN/<=0 => 0)
+  $: cuposDisponiblesRaw = $page.url.searchParams.get("cupos_disponibles");
+  $: cuposDisponiblesNum = Number(cuposDisponiblesRaw ?? "0");
+  $: cuposDisponiblesSafe =
+    Number.isFinite(cuposDisponiblesNum) && cuposDisponiblesNum > 0
+      ? cuposDisponiblesNum
+      : 0;
+
+  // Derivados
   $: totalAgregados = invitados.length;
-  $: restantes = Math.max(0, cuposDisponibles - totalAgregados);
+  $: restantes = Math.max(0, cuposDisponiblesSafe - totalAgregados);
+
+  // ✅ bandera: cupos inválidos o 0 => bloquear "+"
+  $: cuposInvalidos = cuposDisponiblesSafe === 0;
 
   function openModal(message: string) {
     modalMessage = message;
@@ -38,8 +62,15 @@
     if (e.key === "Escape" && showModal) closeModal();
   }
 
-  window.addEventListener("keydown", onKeyDown);
-  onDestroy(() => window.removeEventListener("keydown", onKeyDown));
+  onMount(() => {
+    if (!browser) return;
+    window.addEventListener("keydown", onKeyDown);
+  });
+
+  onDestroy(() => {
+    if (!browser) return;
+    window.removeEventListener("keydown", onKeyDown);
+  });
 
   function sanitizeCedula(value: string): string {
     const digitsOnly = value.replace(/\D/g, "");
@@ -63,17 +94,29 @@
 
   function isValidCedula(value: string) {
     if (!value) return "La cédula es obligatoria.";
-    if (value.length !== 10) return "La cédula debe tener exactamente 10 dígitos.";
-    if (!/^\d+$/.test(value)) return "La cédula debe contener únicamente números.";
+    if (value.length !== 10)
+      return "La cédula debe tener exactamente 10 dígitos.";
+    if (!/^\d+$/.test(value))
+      return "La cédula debe contener únicamente números.";
     return "";
   }
 
   function addInvitado() {
     error = "";
 
+    // ✅ Si cupos no llegó bien o es 0, bloquear agregar
+    if (cuposInvalidos) {
+      openModal(
+        "No se pudo validar los cupos disponibles de esta suite. Vuelve al listado y selecciona la suite nuevamente.",
+      );
+      return;
+    }
+
     // 1) Validación de cupos
-    if (cuposDisponibles > 0 && totalAgregados >= cuposDisponibles) {
-      openModal("Ya se ha alcanzado el máximo de invitados a registrar para esta suite");
+    if (totalAgregados >= cuposDisponiblesSafe) {
+      openModal(
+        "Ya se ha alcanzado el máximo de invitados a registrar para esta suite",
+      );
       return;
     }
 
@@ -103,10 +146,9 @@
   }
 
   function confirmRegistro() {
-    // 🚨 Aún sin API: dejamos el botón listo pero sin backend real.
-    // Más adelante aquí harías el POST usando:
-    // const payload = { id_suite: suiteId, invitados };
-    openModal("Registro listo (simulado). Aquí luego conectaremos la API de confirmación.");
+    openModal(
+      "Registro listo (simulado). Aquí luego conectaremos la API de confirmación.",
+    );
   }
 </script>
 
@@ -133,7 +175,11 @@
           </div>
           <div class="stat">
             <span class="stat-label">Cupos disponibles:</span>
-            <span class="stat-value"> {cuposDisponibles || 0} </span>
+            <span
+              class="stat-value {cuposDisponiblesSafe === 0 ? 'stat-zero' : ''}"
+            >
+              {cuposDisponiblesSafe}
+            </span>
           </div>
         </div>
       </div>
@@ -164,8 +210,10 @@
           type="button"
           class="btn-add"
           on:click={addInvitado}
+          disabled={cuposInvalidos}
+          aria-disabled={cuposInvalidos}
           aria-label="Agregar invitado"
-          title="Agregar"
+          title={cuposInvalidos ? "Cupos no disponibles" : "Agregar"}
         >
           +
         </button>
@@ -242,8 +290,18 @@
 <style>
   :global(body) {
     margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    background: radial-gradient(circle at top, #027c68 0, #069747 55%, #001a1a 100%);
+    font-family:
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      sans-serif;
+    background: radial-gradient(
+      circle at top,
+      #027c68 0,
+      #069747 55%,
+      #001a1a 100%
+    );
     color: #e6fff5;
   }
 
@@ -392,7 +450,10 @@
     font-weight: 900;
     cursor: pointer;
     box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
-    transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    transition:
+      transform 0.12s ease,
+      background 0.12s ease,
+      border-color 0.12s ease;
   }
 
   .btn-add:hover {
@@ -454,7 +515,10 @@
     line-height: 1;
     display: grid;
     place-items: center;
-    transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    transition:
+      transform 0.12s ease,
+      background 0.12s ease,
+      border-color 0.12s ease;
   }
 
   .chip-remove:hover {
@@ -503,7 +567,10 @@
     font-size: 1.05rem;
     cursor: pointer;
     min-width: min(420px, 100%);
-    transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+    transition:
+      transform 0.12s ease,
+      background 0.12s ease,
+      border-color 0.12s ease;
   }
 
   .btn-confirm:hover:enabled {
@@ -557,7 +624,10 @@
     font-weight: 800;
     cursor: pointer;
     box-shadow: 0 10px 25px rgba(0, 51, 51, 0.6);
-    transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease;
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease;
   }
 
   .btn-primary:hover {
@@ -613,5 +683,17 @@
     .cedula-row {
       grid-template-columns: 1fr 52px;
     }
+  }
+
+  .btn-add:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    filter: grayscale(0.4);
+    transform: none;
+  }
+
+  .stat-zero {
+    color: #ff6b6b; /* rojo suave que encaja con tu paleta */
+    font-weight: 900;
   }
 </style>
