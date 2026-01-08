@@ -5,7 +5,6 @@
   import { onDestroy, onMount } from "svelte";
   import { browser } from "$app/environment";
 
-  // ✅ Declaraciones base
   let suiteId = "";
   let capacidad = 0;
 
@@ -13,11 +12,9 @@
   let cuposDisponiblesNum = 0;
   let cuposDisponiblesSafe = 0;
 
-  // Form / estado
   let cedula = "";
   let error = "";
 
-  // Lista de invitados agregados
   let invitados: string[] = [];
 
   // Modal
@@ -104,7 +101,6 @@
   function addInvitado() {
     error = "";
 
-    // ✅ Si cupos no llegó bien o es 0, bloquear agregar
     if (cuposInvalidos) {
       openModal(
         "No se pudo validar los cupos disponibles de esta suite. Vuelve al listado y selecciona la suite nuevamente.",
@@ -112,7 +108,6 @@
       return;
     }
 
-    // 1) Validación de cupos
     if (totalAgregados >= cuposDisponiblesSafe) {
       openModal(
         "Ya se ha alcanzado el máximo de invitados a registrar para esta suite",
@@ -120,14 +115,12 @@
       return;
     }
 
-    // 2) Validación de cédula
     const validation = isValidCedula(cedula);
     if (validation) {
       error = validation;
       return;
     }
 
-    // 3) Duplicados
     if (invitados.includes(cedula)) {
       openModal("Esta cédula ya fue agregada.");
       return;
@@ -188,7 +181,6 @@
     <h1 class="title">Registrar invitado</h1>
     <p class="subtitle">Ingrese las cédulas de los invitados a esta suite</p>
 
-    <!-- Input + botón (+) -->
     <div class="field">
       <label for="cedula" class="label">Cédula</label>
 
@@ -273,7 +265,6 @@
     </div>
   </section>
 
-  <!-- Modal -->
   {#if showModal}
     <div class="modal-overlay" on:click={closeModal}></div>
 
@@ -693,7 +684,7 @@
   }
 
   .stat-zero {
-    color: #ff6b6b; /* rojo suave que encaja con tu paleta */
+    color: #ff6b6b;
     font-weight: 900;
   }
 </style>
