@@ -92,8 +92,8 @@
 
   function isValidCedula(value: string) {
     if (!value) return "La cédula es obligatoria.";
-    if (value.length !== 10)
-      return "La cédula debe tener exactamente 10 dígitos.";
+    if (value.length < 6)
+      return "La cédula debe tener entre 6 y 10 dígitos.";
     if (!/^\d+$/.test(value))
       return "La cédula debe contener únicamente números.";
     return "";
