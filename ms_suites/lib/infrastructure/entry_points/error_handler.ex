@@ -29,11 +29,20 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
-  def build_error_response({:error, {:visitor_already_registered_in_event, %{id_suite: registered_suite_id}}}) do
+  def build_error_response({:error, {:visitor_already_registered_in_event, %{id_suite: registered_suite_id, id_visitante: id_visitante}}}) do
     make_error_v2(
       "09",
       "Error",
-      "cédula ya se encuentra registrada en la suite: " <> registered_suite_id,
+      "Cédula " <> id_visitante <> " ya se encuentra registrada en la suite: " <> registered_suite_id,
+      404
+    )
+  end
+
+  def build_error_response({:error, :black_list}) do
+    make_error_v2(
+      "10",
+      "Error",
+      "Cedula reportada por logística",
       404
     )
   end

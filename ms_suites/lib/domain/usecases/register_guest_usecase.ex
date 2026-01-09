@@ -34,6 +34,9 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
   end
   #registra visitantes
   defp register_one(id_evento, id_suite, documento) do
+    if SuitesQueryAdapter.validate_blacklisted(documento) do
+      error_result(documento, "blocked")
+    else
     case SuitesQueryAdapter.ensure_visitante_exists(documento) do
       :ok ->
         do_register_one(id_evento, id_suite, documento)
@@ -43,6 +46,7 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
 
       other ->
         error_result(documento, "error", %{detail: inspect(other)})
+        end
     end
   end
   #registra visitantesxevento
@@ -84,7 +88,7 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
   defp build_response(results) do
     %{
       successful_registrations: successful(results),
-      not_registered_blocked: [],
+      not_registered_blocked: blocked_docs(results),
       not_registered_already_suites: already_registered_docs(results)
     }
   end
@@ -98,6 +102,12 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
   defp already_registered_docs(results) do
     results
     |> Enum.filter(&(&1.status == "error" and &1.code == "already_registered"))
+    |> Enum.map(& &1.documento)
+  end
+
+  defp blocked_docs(results) do
+    results
+    |> Enum.filter(&(&1.status == "error" and &1.code == "blocked"))
     |> Enum.map(& &1.documento)
   end
 
