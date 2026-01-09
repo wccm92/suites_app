@@ -1,4 +1,4 @@
-defmodule MsSuitesApp.Domain.ValidateGuessUsecase do
+defmodule MsSuitesApp.Domain.ValidateGuestUsecase do
   import Ecto.Query, warn: false
 
 

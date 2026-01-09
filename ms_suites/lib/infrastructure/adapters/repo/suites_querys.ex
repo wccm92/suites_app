@@ -57,4 +57,41 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
          id_suite -> {:ok, id_suite}
        end
   end
+
+  def ensure_visitante_exists(id_visitante) when is_binary(id_visitante) do
+    case Repo.get(Visitante, id_visitante) do
+      %Visitante{} ->
+        :ok
+
+      nil ->
+        %Visitante{}
+        |> Visitante.changeset(%{
+          id_visitante: id_visitante,
+          nom_visitante: nil,
+          observacion: nil
+        })
+        |> Repo.insert()
+        |> case do
+             {:ok, _} -> :ok
+             {:error, changeset} -> {:error, {:visitante_insert_failed, changeset}}
+           end
+    end
+  end
+
+  def register_guest_in_suite(id_evento, id_suite, id_visitante) do
+    try do
+      Repo.insert!(%VisitanteXEvento{
+        id_evento: id_evento,
+        id_suite: id_suite,
+        id_visitante: id_visitante
+      })
+
+      {:ok, :inserted}
+    rescue
+      e in Ecto.ConstraintError ->
+        {:error, {:constraint_error, e.constraint}}
+    end
+  end
+
+
 end
