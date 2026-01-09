@@ -327,22 +327,6 @@
 </main>
 
 <style>
-  :global(body) {
-    margin: 0;
-    font-family:
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      sans-serif;
-    background: radial-gradient(
-      circle at top,
-      #027c68 0,
-      #069747 55%,
-      #001a1a 100%
-    );
-    color: #e6fff5;
-  }
 
   .page {
     min-height: 100vh;
@@ -354,10 +338,10 @@
   .form-container {
     width: 100%;
     max-width: 820px;
-    background: #001f1f;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem 1.7rem;
-    border: 1px solid #027c68;
+    border: 1px solid var(--color-primary);
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
   }
 
@@ -372,7 +356,7 @@
   .link-back {
     border: none;
     background: transparent;
-    color: #b0e892;
+    color: var(--color-success);
     cursor: pointer;
     font-size: 0.95rem;
     padding: 0;
@@ -394,12 +378,12 @@
     margin: 0;
     font-size: 1.35rem;
     font-weight: 700;
-    color: #c8e6d8;
+    color: var(--color-text-muted);
     white-space: nowrap;
   }
 
   .suite-subtitle strong {
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .suite-stats {
@@ -415,13 +399,13 @@
   }
 
   .stat-label {
-    color: #b0e892;
+    color: var(--color-success);
     font-size: 0.9rem;
     font-weight: 600;
   }
 
   .stat-value {
-    color: #b0e892;
+    color: var(--color-success);
     font-size: 1rem;
     font-weight: 800;
   }
@@ -430,12 +414,12 @@
     font-size: 1.6rem;
     font-weight: 800;
     margin: 0.4rem 0 0.25rem 0;
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .subtitle {
     font-size: 0.95rem;
-    color: #c8e6d8;
+    color: var(--color-text-muted);
     margin: 0 0 1.2rem 0;
   }
 
@@ -462,8 +446,8 @@
   .input {
     padding: 0.65rem 0.8rem;
     border-radius: 0.8rem;
-    border: 1px solid #027c68;
-    background: #002626;
+    border: 1px solid var(--color-primary);
+    background: var(--color-surface-soft);
     color: #e6fff5;
     font-size: 1rem;
     outline: none;
@@ -482,9 +466,9 @@
     width: 52px;
     height: 44px;
     border-radius: 0.9rem;
-    border: 1px solid #027c68;
-    background: #001f1f;
-    color: #b0e892;
+    border: 1px solid var(--color-primary);
+    background: var(--color-surface);
+    color: var(--color-success);
     font-size: 1.6rem;
     font-weight: 900;
     cursor: pointer;
@@ -514,7 +498,7 @@
   .section-title {
     margin: 0 0 0.65rem 0;
     font-size: 1.05rem;
-    color: #b0e892;
+    color: var(--color-success);
     font-weight: 800;
   }
 
@@ -530,15 +514,15 @@
     align-items: center;
     gap: 0.55rem;
     border-radius: 999px;
-    border: 1px solid #027c68;
-    background: #002626;
+    border: 1px solid var(--color-primary);
+    background: var(--color-surface-soft);
     padding: 0.45rem 0.65rem 0.45rem 0.85rem;
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
   }
 
   .chip-text {
     font-weight: 800;
-    color: #b0e892;
+    color: var(--color-success);
     letter-spacing: 0.02em;
   }
 
@@ -546,8 +530,8 @@
     width: 28px;
     height: 28px;
     border-radius: 999px;
-    border: 1px solid #027c68;
-    background: #001f1f;
+    border: 1px solid var(--color-primary);
+    background: var(--color-surface);
     color: #e6fff5;
     cursor: pointer;
     font-size: 1.2rem;
@@ -568,12 +552,12 @@
 
   .hint {
     margin: 0;
-    color: #c8e6d8;
+    color: var(--color-text-muted);
     font-size: 0.95rem;
   }
 
   .summary-box {
-    border: 1px solid #027c68;
+    border: 1px solid var(--color-primary);
     background: rgba(0, 38, 38, 0.55);
     border-radius: 1rem;
     padding: 0.9rem 1rem;
@@ -581,7 +565,7 @@
 
   .summary-line {
     margin: 0;
-    color: #b0e892;
+    color: var(--color-success);
     font-size: 1.05rem;
     font-weight: 700;
   }
@@ -599,9 +583,9 @@
   .btn-confirm {
     padding: 0.85rem 1.2rem;
     border-radius: 1rem;
-    border: 1px solid #027c68;
+    border: 1px solid var(--color-primary);
     background: transparent;
-    color: #b0e892;
+    color: var(--color-success);
     font-weight: 900;
     font-size: 1.05rem;
     cursor: pointer;
@@ -637,8 +621,8 @@
     top: 50%;
     transform: translate(-50%, -50%);
     width: min(520px, calc(100% - 2rem));
-    background: #001f1f;
-    border: 1px solid #027c68;
+    background: var(--color-surface);
+    border: 1px solid var(--color-primary);
     border-radius: 1rem;
     padding: 1.1rem 1.1rem 1rem;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
@@ -657,8 +641,8 @@
     padding: 0.7rem 1rem;
     border-radius: 999px;
     border: none;
-    background: #027c68;
-    color: #f5fff9;
+    background: var(--color-primary);
+    color: var(--color-text-main);
     font-size: 1rem;
     font-weight: 800;
     cursor: pointer;

@@ -233,23 +233,6 @@
 </main>
 
 <style>
-  :global(body) {
-    margin: 0;
-    font-family:
-      system-ui,
-      -apple-system,
-      BlinkMacSystemFont,
-      "Segoe UI",
-      sans-serif;
-    /* Fondo en tonos verde oscuro */
-    background: radial-gradient(
-      circle at top,
-      #027c68 0,
-      #069747 55%,
-      #001a1a 100%
-    );
-    color: #e6fff5;
-  }
 
   .page {
     min-height: 100vh;
@@ -263,7 +246,7 @@
     font-weight: 700;
     margin-bottom: 1.5rem;
     text-align: center;
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .error {
@@ -272,7 +255,7 @@
   }
 
   .empty {
-    color: #b0e892;
+    color: var(--color-success);
     text-align: center;
   }
 
@@ -290,11 +273,11 @@
   }
 
   .card {
-    background: #069747;
+    background: var(--color-primary-light);
     border-radius: 1rem;
     padding: 1rem 1.2rem;
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5);
-    border: 1px solid #027c68;
+    border: 1px solid var(--color-primary);
     display: flex;
     flex-direction: column;
     gap: 0.4rem;
@@ -327,7 +310,7 @@
   .card-title {
     font-size: 0.9rem;
     font-weight: 500;
-    color: #b0e892;
+    color: var(--color-success);
     margin: 0;
   }
 
@@ -345,20 +328,20 @@
   }
 
   .card-capacity strong {
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .card-sub {
     font-size: 0.8rem;
-    color: #c8e6d8;
+    color: var(--color-text-muted);
     margin: 0.3rem 0 0 0;
   }
 
   .detail-panel {
-    background: #001f1f;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1rem 1.2rem;
-    border: 1px solid #027c68;
+    border: 1px solid var(--color-primary);
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
   }
 
@@ -367,11 +350,11 @@
     margin-top: 0;
     margin-bottom: 1rem;
     font-weight: 600;
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .detail-loading {
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .detail-card {
@@ -385,7 +368,7 @@
     justify-content: space-between;
     gap: 0.5rem;
     padding: 0.4rem 0;
-    border-bottom: 1px solid #027c68;
+    border-bottom: 1px solid var(--color-primary);
   }
 
   .detail-row:last-child {
@@ -394,13 +377,13 @@
 
   .detail-label {
     font-size: 0.85rem;
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .detail-value {
     font-size: 0.95rem;
     font-weight: 500;
-    color: #f5fff9;
+    color: var(--color-text-main);
   }
 
   /* ✅ valor de cupos en rojo cuando es 0 */
@@ -411,7 +394,7 @@
 
   .hint {
     font-size: 0.9rem;
-    color: #c8e6d8;
+    color: var(--color-text-muted);
   }
 
   .detail-actions {
@@ -424,8 +407,8 @@
     padding: 0.5rem 1rem;
     border-radius: 999px;
     border: none;
-    background: #027c68;
-    color: #f5fff9;
+    background: var(--color-primary);
+    color: var(--color-text-main);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
@@ -472,7 +455,7 @@
     background: #014040;
     border-radius: 999px;
     padding: 0.3rem 0.5rem;
-    border: 1px solid #027c68;
+    border: 1px solid var(--color-primary);
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
     text-align: center;
   }
@@ -480,7 +463,7 @@
   .guest-id {
     font-size: 0.8rem;
     font-weight: 500;
-    color: #b0e892;
+    color: var(--color-success);
     letter-spacing: 0.02em;
   }
 
