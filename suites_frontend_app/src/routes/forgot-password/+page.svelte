@@ -84,18 +84,6 @@
 </main>
 
 <style>
-  :global(body) {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-      sans-serif;
-    background: radial-gradient(
-      circle at top,
-      #027c68 0,
-      #003333 55%,
-      #001a1a 100%
-    );
-    color: #e6fff5;
-  }
 
   .page {
     min-height: 100vh;
@@ -107,17 +95,17 @@
   .form-container {
     width: 100%;
     max-width: 420px;
-    background: #001f1f;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem 1.7rem;
-    border: 1px solid #027c68;
+    border: 1px solid var(--color-primary);
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
   }
 
   .link-back {
     border: none;
     background: transparent;
-    color: #c8e6d8;
+    color: var(--color-text-muted);
     cursor: pointer;
     font-size: 0.85rem;
     margin-bottom: 0.75rem;
@@ -132,12 +120,12 @@
     font-size: 1.6rem;
     font-weight: 700;
     margin: 0;
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .subtitle {
     font-size: 0.9rem;
-    color: #c8e6d8;
+    color: var(--color-text-muted);
     margin-top: 0.3rem;
     margin-bottom: 1.2rem;
   }
@@ -163,8 +151,8 @@
   .input {
     padding: 0.55rem 0.7rem;
     border-radius: 0.6rem;
-    border: 1px solid #027c68;
-    background: #002626;
+    border: 1px solid var(--color-primary);
+    background: var(--color-surface-soft);
     color: #e6fff5;
     font-size: 0.95rem;
     outline: none;
@@ -186,7 +174,7 @@
   }
 
   .success {
-    color: #b0e892;
+    color: var(--color-success);
     font-size: 0.85rem;
     margin-top: 0.6rem;
   }
@@ -196,8 +184,8 @@
     padding: 0.6rem 1rem;
     border-radius: 999px;
     border: none;
-    background: #027c68;
-    color: #f5fff9;
+    background: var(--color-primary);
+    color: var(--color-text-main);
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;

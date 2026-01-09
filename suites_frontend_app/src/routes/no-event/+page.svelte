@@ -14,13 +14,6 @@
 </main>
 
 <style>
-  :global(body) {
-    margin: 0;
-    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
-      sans-serif;
-    background: radial-gradient(circle at top, #027c68 0, #069747 55%, #001a1a 100%);
-    color: #e6fff5;
-  }
 
   .page {
     min-height: 100vh;
@@ -32,10 +25,10 @@
   .box {
     width: 100%;
     max-width: 480px;
-    background: #001f1f;
+    background: var(--color-surface);
     border-radius: 1rem;
     padding: 1.5rem 1.7rem;
-    border: 1px solid #027c68;
+    border: 1px solid var(--color-primary);
     box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
     text-align: center;
   }
@@ -44,12 +37,12 @@
     font-size: 1.5rem;
     font-weight: 700;
     margin: 0 0 0.75rem;
-    color: #b0e892;
+    color: var(--color-success);
   }
 
   .text {
     font-size: 0.95rem;
-    color: #c8e6d8;
+    color: var(--color-text-muted);
     margin: 0;
   }
 </style>
