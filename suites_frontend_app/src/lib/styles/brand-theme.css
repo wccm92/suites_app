@@ -1,0 +1,299 @@
+/* src/lib/styles/brand-theme.css */
+/* Tema Deportivo Cali 2023 */
+
+:root {
+  /* PALETA BASE (extraída del brandbook) */
+  --color-primary: #005940;        /* verde escudo principal */
+  --color-primary-light: #069747;  /* verde luminoso para highlights */
+  --color-primary-dark: #01353b;   /* verde muy profundo */
+  --color-primary-soft: #045156;   /* verde medio para fondos */
+
+  --color-accent: #a36a2e;         /* dorado de apoyo */
+  --color-gray: #575756;           /* gris corporativo */
+  --color-gray-soft: #dadada;      /* gris claro */
+
+  --color-bg: #001b1b;             /* fondo general muy oscuro */
+  --color-surface: #022624;        /* tarjetas / contenedores */
+  --color-surface-soft: #03312f;   /* variantes de superficie */
+
+  --color-text-main: #f5fff9;
+  --color-text-muted: #c8e6d8;
+  --color-text-soft: #dadada;
+
+  --color-success: #8fbcae;
+  --color-error: #ff6b6b;
+  --color-error-soft: #fca5a5;
+
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --shadow-elevated: 0 18px 45px rgba(0, 0, 0, 0.65);
+
+  --font-brand: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+
+  /* Gradiente de fondo principal */
+  --bg-gradient-main: radial-gradient(
+    circle at top,
+    var(--color-primary) 0,
+    var(--color-primary-light) 55%,
+    var(--color-bg) 100%
+  );
+}
+
+/* ===== BASE GLOBAL ===== */
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-brand);
+  background: var(--bg-gradient-main);
+  color: var(--color-text-main);
+}
+
+/* contenedor principal de todas las páginas (+page y login usan .page) */
+.page {
+  width: min(1120px, 100%);
+  margin: 2.5rem auto 3rem auto;
+  padding: 0 1rem;
+}
+
+/* títulos reutilizados (Listado de suites, Iniciar sesión, etc.) */
+.title {
+  font-size: clamp(1.6rem, 1.2rem + 1vw, 2rem);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-gray-soft);
+}
+
+.subtitle {
+  margin-top: 0.4rem;
+  font-size: 0.95rem;
+  color: var(--color-text-muted);
+}
+
+/* ===== TARJETAS ===== */
+
+.card,
+.detail-panel,
+.added-block {
+  background: radial-gradient(
+      circle at top left,
+      rgba(0, 0, 0, 0.32),
+      transparent 60%
+    ),
+    var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(0, 0, 0, 0.45);
+  box-shadow: var(--shadow-elevated);
+  color: var(--color-text-main);
+}
+
+.detail-panel {
+  backdrop-filter: blur(6px);
+}
+
+.card-title {
+  color: var(--color-text-main);
+}
+
+.card-id {
+  color: var(--color-gray-soft);
+}
+
+.card-sub,
+.card-capacity,
+.suite-subtitle,
+.suite-meta {
+  color: var(--color-text-muted);
+}
+
+/* valor de cupos cuando llega a cero */
+.detail-value-zero,
+.stat-zero {
+  color: var(--color-error-soft);
+  font-weight: 700;
+}
+
+/* ===== FORMULARIOS (login + registrar invitado) ===== */
+
+.form-container {
+  background: radial-gradient(
+      circle at top left,
+      rgba(0, 0, 0, 0.55),
+      transparent 65%
+    ),
+    var(--color-surface);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(0, 0, 0, 0.65);
+  box-shadow: var(--shadow-elevated);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-gray-soft);
+}
+
+.input,
+textarea {
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.55);
+  padding: 0.55rem 0.9rem;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--color-text-main);
+  outline: none;
+}
+
+.input:focus,
+textarea:focus {
+  border-color: var(--color-primary-light);
+  box-shadow: 0 0 0 1px rgba(0, 89, 64, 0.4);
+}
+
+/* ===== BOTONES ===== */
+
+.btn-primary,
+.btn-add,
+.btn-confirm {
+  padding: 0.55rem 1.3rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-accent);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0,
+    var(--color-primary-light) 40%,
+    var(--color-accent) 100%
+  );
+  color: var(--color-text-main);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease,
+    background 0.12s ease,
+    filter 0.12s ease;
+}
+
+.btn-primary:hover:enabled,
+.btn-add:hover:enabled,
+.btn-confirm:hover:enabled {
+  transform: translateY(-1px);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary-dark) 0,
+    var(--color-primary) 40%,
+    var(--color-accent) 100%
+  );
+  filter: brightness(1.05);
+}
+
+.btn-primary:disabled,
+.btn-add:disabled,
+.btn-confirm:disabled {
+  opacity: 0.65;
+  cursor: default;
+  box-shadow: none;
+}
+
+.btn-link-forgot {
+  margin-top: 0.6rem;
+  border: none;
+  background: transparent;
+  font-size: 0.85rem;
+  color: var(--color-gray-soft);
+  cursor: pointer;
+  text-decoration: underline;
+  align-self: flex-start;
+}
+
+/* Botón flotante de logout (+layout.svelte) */
+.logout-btn {
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-primary-light);
+  background: rgba(0, 27, 27, 0.95);
+  color: var(--color-gray-soft);
+  font-weight: 600;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+}
+
+.logout-btn:hover {
+  border-color: var(--color-accent);
+  background: rgba(1, 38, 38, 0.98);
+}
+
+/* ===== CHIPS (cedulas agregadas) ===== */
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(1, 53, 59, 0.85);
+  border: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.chip-text {
+  font-size: 0.8rem;
+  color: var(--color-text-soft);
+}
+
+.chip-remove {
+  border: none;
+  background: transparent;
+  color: var(--color-error-soft);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* ===== TEXTOS DE ESTADO ===== */
+
+.error {
+  color: var(--color-error-soft);
+  font-size: 0.9rem;
+}
+
+.success {
+  color: var(--color-success);
+  font-size: 0.9rem;
+}
+
+.hint,
+.detail-loading,
+.empty {
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* ===== ESTADÍSTICAS DETALLE SUITE ===== */
+
+.suite-stats {
+  border-top: 1px solid rgba(0, 0, 0, 0.5);
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.stat-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-main);
+}
