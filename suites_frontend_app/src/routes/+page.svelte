@@ -188,7 +188,7 @@
               >
             </div>
             <div class="detail-row detail-row-column">
-              <span class="detail-label">Invitados inscritos</span>
+              <span class="detail-label">Visitantes inscritos</span>
               {#if selectedSuite.invitados_inscritos?.length}
                 <div class="guests-grid">
                   {#each selectedSuite.invitados_inscritos as guest}
@@ -198,7 +198,7 @@
                   {/each}
                 </div>
               {:else}
-                <span class="detail-value">Sin invitados</span>
+                <span class="detail-value">Sin visitantes</span>
               {/if}
             </div>
           </div>
@@ -208,7 +208,7 @@
               type="button"
               on:click={goToRegisterGuest}
             >
-              Registrar invitado
+              Registrar visitante
             </button>
           </div>
         {:else}

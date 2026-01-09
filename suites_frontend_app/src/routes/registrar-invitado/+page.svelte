@@ -120,7 +120,7 @@
 
     if (totalAgregados >= cuposDisponiblesSafe) {
       openModal(
-        "Ya se ha alcanzado el máximo de invitados a registrar para esta suite",
+        "Ya se ha alcanzado el máximo de visitantes a registrar para esta suite",
       );
       return;
     }
@@ -154,7 +154,7 @@
         return;
       }
 
-      let detalle = "No se pudo registrar el invitado. Inténtalo nuevamente.";
+      let detalle = "No se pudo registrar el visitante. Inténtalo nuevamente.";
 
       try {
         const body = (await res.json()) as {
@@ -194,7 +194,7 @@
 </script>
 
 <svelte:head>
-  <title>Registrar invitado</title>
+  <title>Registrar visitante</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 </svelte:head>
 
@@ -226,8 +226,8 @@
       </div>
     </div>
 
-    <h1 class="title">Registrar invitado</h1>
-    <p class="subtitle">Ingrese las cédulas de los invitados a esta suite</p>
+    <h1 class="title">Registrar visitante</h1>
+    <p class="subtitle">Ingrese las cédulas de los visitantes a esta suite</p>
 
     <div class="field">
       <label for="cedula" class="label">Cédula</label>
@@ -266,7 +266,7 @@
 
     <!-- Invitados agregados -->
     <div class="added-block">
-      <h2 class="section-title">Invitados agregados</h2>
+      <h2 class="section-title">visitantes agregados</h2>
 
       {#if invitados.length > 0}
         <div class="chips">
@@ -286,16 +286,16 @@
           {/each}
         </div>
       {:else}
-        <p class="hint">Aún no has agregado invitados.</p>
+        <p class="hint">Aún no has agregado visitantes.</p>
       {/if}
 
       <!-- Resumen dinámico -->
       <div class="summary-box" aria-live="polite">
         <p class="summary-line">
-          Ha agregado <strong>[ {totalAgregados} ]</strong> invitado(s) en esta suite,
+          Ha agregado <strong>[ {totalAgregados} ]</strong> visitante(s) en esta suite,
         </p>
         <p class="summary-line">
-          aún puede agregar hasta <strong>[ {restantes} ]</strong> invitado(s) más
+          aún puede agregar hasta <strong>[ {restantes} ]</strong> visitante(s) más
         </p>
       </div>
     </div>
@@ -308,7 +308,7 @@
         on:click={confirmRegistro}
         disabled={invitados.length === 0}
       >
-        Confirmar registro de invitados(s)
+        Confirmar registro de visitantes(s)
       </button>
     </div>
   </section>
