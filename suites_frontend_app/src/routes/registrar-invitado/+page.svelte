@@ -18,9 +18,17 @@
 
   let invitados: string[] = [];
 
-  // Modal
+  // Modal simple (errores, mensajes generales)
   let showModal = false;
   let modalMessage = "";
+
+  // 🔹 Nuevo: modal de confirmación final
+  let showConfirmFinal = false;
+
+  // 🔹 Nuevo: modal de resultado del registro masivo
+  let showResultModal = false;
+  let resultMessage = "";
+  let isSubmittingFinal = false;
 
   // Derivados
   let totalAgregados = 0;
@@ -46,6 +54,8 @@
   // ✅ bandera: cupos inválidos o 0 => bloquear "+"
   $: cuposInvalidos = cuposDisponiblesSafe === 0;
 
+  // ---------- Helpers de modal (simple / confirm / result) ----------
+
   function openModal(message: string) {
     modalMessage = message;
     showModal = true;
@@ -56,8 +66,43 @@
     modalMessage = "";
   }
 
+  function openConfirmFinal() {
+    showConfirmFinal = true;
+  }
+
+  function closeConfirmFinal() {
+    showConfirmFinal = false;
+  }
+
+  function openResultModal(message: string) {
+    resultMessage = message;
+    showResultModal = true;
+  }
+
+  function closeResultModal() {
+    showResultModal = false;
+    resultMessage = "";
+    setTimeout(() => goto(`${base}/`), 300);
+  }
+
   function onKeyDown(e: KeyboardEvent) {
-    if (e.key === "Escape" && showModal) closeModal();
+    if (e.key !== "Escape") return;
+
+    if (showConfirmFinal) {
+      // Escape en confirmación final → cerrar confirm
+      closeConfirmFinal();
+      return;
+    }
+
+    if (showResultModal) {
+      // Escape en resultado final → comportarse como cerrar
+      closeResultModal();
+      return;
+    }
+
+    if (showModal) {
+      closeModal();
+    }
   }
 
   onMount(() => {
@@ -69,6 +114,8 @@
     if (!browser) return;
     window.removeEventListener("keydown", onKeyDown);
   });
+
+  // ---------- Lógica de cédula / lista local ----------
 
   function sanitizeCedula(value: string): string {
     const digitsOnly = value.replace(/\D/g, "");
@@ -99,13 +146,14 @@
     return "";
   }
 
-    async function addInvitado() {
+  // 🔹 Validación por cédula contra backend (se mantiene como antes)
+  async function addInvitado() {
     error = "";
 
-    // 💡 Seguridad básica: si no hay suiteId, no seguimos
+    // Seguridad básica: si no hay suiteId, no seguimos
     if (!suiteId) {
       openModal(
-        "No se pudo identificar la suite seleccionada. Vuelve al listado y entra de nuevo.",
+        "No se pudo identificar la suite seleccionada. Vuelve al listado y entra de nuevo."
       );
       return;
     }
@@ -113,14 +161,14 @@
     // 1) Validar cupos/local antes de pegarle al backend
     if (cuposInvalidos) {
       openModal(
-        "No se pudo validar los cupos disponibles de esta suite. Vuelve al listado y selecciona la suite nuevamente.",
+        "No se pudo validar los cupos disponibles de esta suite. Vuelve al listado y selecciona la suite nuevamente."
       );
       return;
     }
 
     if (totalAgregados >= cuposDisponiblesSafe) {
       openModal(
-        "Ya se ha alcanzado el máximo de visitantes a registrar para esta suite",
+        "Ya se ha alcanzado el máximo de visitantes a registrar para esta suite"
       );
       return;
     }
@@ -144,21 +192,28 @@
         method: "POST",
         body: JSON.stringify({
           id_suite: suiteId,
-          invitado: cedula,
-        }),
+          invitado: cedula
+        })
       });
 
       if (res.status === 200) {
+        // ✅ Válida → se agrega a la lista
         invitados = [...invitados, cedula];
         cedula = "";
         return;
       }
 
-      let detalle = "No se pudo registrar el visitante. Inténtalo nuevamente.";
+      let detalle =
+        "No se pudo registrar el visitante. Inténtalo nuevamente.";
 
       try {
         const body = (await res.json()) as {
-          errors?: { title?: string; http_status?: number; detail?: string; code?: string }[];
+          errors?: {
+            title?: string;
+            http_status?: number;
+            detail?: string;
+            code?: string;
+          }[];
         };
 
         const firstDetail = body?.errors?.[0]?.detail;
@@ -172,11 +227,10 @@
       openModal(detalle);
     } catch (e) {
       openModal(
-        "No fue posible comunicarse con el servidor. Verifica tu conexión e inténtalo de nuevo.",
+        "No fue posible comunicarse con el servidor. Verifica tu conexión e inténtalo de nuevo."
       );
     }
   }
-
 
   function removeInvitado(value: string) {
     invitados = invitados.filter((x) => x !== value);
@@ -186,10 +240,123 @@
     goto(`${base}/`);
   }
 
+  // ---------- Confirmación y registro masivo de visitantes ----------
+
   function confirmRegistro() {
-    openModal(
-      "Registro listo (simulado). Aquí luego conectaremos la API de confirmación.",
-    );
+    if (invitados.length === 0) return;
+    // Mostrar modal de confirmación
+    openConfirmFinal();
+  }
+
+  async function handleConfirmYes() {
+    if (!suiteId) {
+      // Algo raro: suiteId vacío → mostramos error normal
+      closeConfirmFinal();
+      openModal(
+        "No se pudo identificar la suite seleccionada. Vuelve al listado y entra de nuevo."
+      );
+      return;
+    }
+
+    if (invitados.length === 0) {
+      closeConfirmFinal();
+      openModal("No hay visitantes para registrar.");
+      return;
+    }
+
+    isSubmittingFinal = true;
+
+    try {
+      const res = await apiFetch("/suites_app/register_guests", {
+        method: "POST",
+        body: JSON.stringify({
+          id_suite: suiteId,
+          invitados
+        })
+      });
+
+      if (!res.ok) {
+        // Intentamos parsear error estándar
+        let detalle =
+          "No se pudo completar el registro de visitantes. Inténtalo nuevamente.";
+
+        try {
+          const body = (await res.json()) as {
+            errors?: {
+              title?: string;
+              http_status?: number;
+              detail?: string;
+              code?: string;
+            }[];
+          };
+          const firstDetail = body?.errors?.[0]?.detail;
+          if (firstDetail) detalle = firstDetail;
+        } catch {
+          // si falla el JSON, usamos el genérico
+        }
+
+        closeConfirmFinal();
+        openModal(detalle);
+        return;
+      }
+
+      // OK → parseamos el resultado del registro
+      const body = (await res.json()) as {
+        successful_registrations?: string[];
+        not_registered_blocked?: string[];
+        not_registered_already_suites?: string[];
+      };
+
+      const okList = body.successful_registrations ?? [];
+      const blockedList = body.not_registered_blocked ?? [];
+      const alreadySuitesList = body.not_registered_already_suites ?? [];
+
+      let msg = "";
+
+      if (okList.length > 0) {
+        msg +=
+          "Los siguientes visitantes fueron registrados exitosamente:\n\n" +
+          okList.join("\n") +
+          "\n\n";
+      }
+
+      if (blockedList.length > 0) {
+        msg +=
+          "Los siguientes visitantes no fueron registrados debido a que están reportados por Logística:\n\n" +
+          blockedList.join("\n") +
+          "\n\n";
+      }
+
+      if (alreadySuitesList.length > 0) {
+        msg +=
+          "Los siguientes visitantes no fueron registrados porque ya se encuentran en otras suites para este evento:\n\n" +
+          alreadySuitesList.join("\n") +
+          "\n\n";
+      }
+
+      if (!msg) {
+        msg =
+          "La operación de registro se completó, pero no se devolvieron detalles específicos.";
+      }
+
+      // Cerramos confirm y abrimos modal de resultado
+      closeConfirmFinal();
+      openResultModal(msg.trim());
+
+      // (Opcional) limpiar la lista local para que no se vuelvan a mandar
+      invitados = [];
+    } catch (e) {
+      closeConfirmFinal();
+      openModal(
+        "No fue posible comunicarse con el servidor para confirmar el registro. Inténtalo nuevamente."
+      );
+    } finally {
+      isSubmittingFinal = false;
+    }
+  }
+
+  function handleConfirmNo() {
+    closeConfirmFinal();
   }
 </script>
 
@@ -207,7 +374,9 @@
       </button>
 
       <div class="suite-meta">
-        <p class="suite-subtitle">Suite: <strong>{suiteId || "—"}</strong></p>
+        <p class="suite-subtitle">
+          Suite: <strong>{suiteId || "—"}</strong>
+        </p>
 
         <div class="suite-stats">
           <div class="stat">
@@ -292,10 +461,12 @@
       <!-- Resumen dinámico -->
       <div class="summary-box" aria-live="polite">
         <p class="summary-line">
-          Ha agregado <strong>[ {totalAgregados} ]</strong> visitante(s) en esta suite,
+          Ha agregado <strong>[ {totalAgregados} ]</strong> visitante(s) en
+          esta suite,
         </p>
         <p class="summary-line">
-          aún puede agregar hasta <strong>[ {restantes} ]</strong> visitante(s) más
+          aún puede agregar hasta <strong>[ {restantes} ]</strong> visitante(s)
+          más
         </p>
       </div>
     </div>
@@ -313,9 +484,22 @@
     </div>
   </section>
 
-  {#if showModal}
-    <div class="modal-overlay" on:click={closeModal}></div>
+  <!-- Overlay compartido -->
+  {#if showModal || showConfirmFinal || showResultModal}
+    <div class="modal-overlay" on:click={() => {
+      // Solo cerramos los que son "cerrables" con click fuera
+      if (showConfirmFinal) {
+        closeConfirmFinal();
+      } else if (showResultModal) {
+        closeResultModal();
+      } else if (showModal) {
+        closeModal();
+      }
+    }}></div>
+  {/if}
 
+  <!-- Modal simple (errores / mensajes) -->
+  {#if showModal}
     <section class="modal" role="dialog" aria-modal="true" aria-label="Mensaje">
       <p class="modal-text">{modalMessage}</p>
 
@@ -324,10 +508,65 @@
       </button>
     </section>
   {/if}
+
+  <!-- Modal de confirmación final -->
+  {#if showConfirmFinal}
+    <section
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Confirmar registro"
+    >
+      <p class="modal-text">
+        ¿Está seguro que desea registrar estos visitantes? Esta acción no se
+        puede deshacer.
+      </p>
+
+      <div class="modal-actions">
+        <button
+          type="button"
+          class="btn-secondary"
+          on:click={handleConfirmNo}
+          disabled={isSubmittingFinal}
+        >
+          No
+        </button>
+        <button
+          type="button"
+          class="btn-primary"
+          on:click={handleConfirmYes}
+          disabled={isSubmittingFinal}
+        >
+          {#if isSubmittingFinal}
+            Registrando...
+          {:else}
+            Sí
+          {/if}
+        </button>
+      </div>
+    </section>
+  {/if}
+
+  <!-- Modal de resultado final -->
+  {#if showResultModal}
+    <section
+      class="modal"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Resultado registro visitantes"
+    >
+      <p class="modal-text" style="white-space: pre-line;">
+        {resultMessage}
+      </p>
+
+      <button type="button" class="btn-primary" on:click={closeResultModal}>
+        Volver al listado de suites
+      </button>
+    </section>
+  {/if}
 </main>
 
 <style>
-
   .page {
     min-height: 100vh;
     display: flex;
@@ -664,6 +903,28 @@
     box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
   }
 
+  .btn-secondary {
+    flex: 1;
+    padding: 0.7rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-success);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .btn-secondary:hover:enabled {
+    background: rgba(1, 64, 64, 0.6);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.8rem;
+  }
+
   /* Responsive */
   @media (max-width: 640px) {
     .page {
@@ -688,6 +949,15 @@
 
     .stat-value {
       font-size: 0.95rem;
+    }
+
+    .modal-actions {
+      flex-direction: column-reverse;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
     }
   }
 
