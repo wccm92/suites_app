@@ -56,6 +56,15 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
+  def build_error_response({:error, :jwt_deserialization_error}) do
+    make_error_v2(
+      "04",
+      "Error",
+      "Sesión no valida",
+      401
+    )
+  end
+
   def build_error_response({:error, :suite_bloqueada}) do
     make_error_v2(
       "06",
