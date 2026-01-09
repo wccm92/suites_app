@@ -27,6 +27,10 @@
   let loadingDetail = false;
   let detailError: string | null = null;
 
+  // Derivado: indica si la suite seleccionada no tiene cupos
+  $: suiteSinCupos =
+    !!selectedSuite && selectedSuite.cupos_disponibles === 0;
+
   // 1) Revisamos JWT en localStorage (via store session)
   // 2) Si no hay JWT → login
   // 3) Si hay JWT → llamar /suites_app/suites
@@ -184,8 +188,12 @@
             </div>
             <div class="detail-row">
               <span class="detail-label">Cupos disponibles</span>
-              <span class="detail-value">{selectedSuite.cupos_disponibles}</span
+              <!-- si no hay cupos, pintamos en rojo -->
+              <span
+                class="detail-value {suiteSinCupos ? 'detail-value-zero' : ''}"
               >
+                {selectedSuite.cupos_disponibles}
+              </span>
             </div>
             <div class="detail-row detail-row-column">
               <span class="detail-label">Visitantes inscritos</span>
@@ -207,6 +215,11 @@
               class="btn-primary"
               type="button"
               on:click={goToRegisterGuest}
+              disabled={suiteSinCupos}
+              aria-disabled={suiteSinCupos}
+              title={suiteSinCupos
+                ? "No puedes registrar invitados: no hay cupos disponibles en esta suite."
+                : "Registrar invitado en esta suite"}
             >
               Registrar visitante
             </button>
@@ -390,6 +403,12 @@
     color: #f5fff9;
   }
 
+  /* ✅ valor de cupos en rojo cuando es 0 */
+  .detail-value-zero {
+    color: #ff6b6b;
+    font-weight: 700;
+  }
+
   .hint {
     font-size: 0.9rem;
     color: #c8e6d8;
@@ -417,15 +436,22 @@
       background 0.12s ease;
   }
 
-  .btn-primary:hover {
+  /* ✅ solo hover cuando está habilitado */
+  .btn-primary:hover:enabled {
     transform: translateY(-1px);
     box-shadow: 0 14px 30px rgba(0, 51, 51, 0.85);
     background: #009933;
   }
 
-  .btn-primary:active {
+  .btn-primary:active:enabled {
     transform: translateY(0);
     box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
   }
 
   /* Que esta fila se apile en columna para el grid de invitados */
