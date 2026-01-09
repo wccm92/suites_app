@@ -4,6 +4,7 @@
   import { page } from "$app/stores";
   import { onDestroy, onMount } from "svelte";
   import { browser } from "$app/environment";
+  import { apiFetch } from "$lib/api/client";
 
   let suiteId = "";
   let capacidad = 0;
@@ -98,9 +99,18 @@
     return "";
   }
 
-  function addInvitado() {
+    async function addInvitado() {
     error = "";
 
+    // 💡 Seguridad básica: si no hay suiteId, no seguimos
+    if (!suiteId) {
+      openModal(
+        "No se pudo identificar la suite seleccionada. Vuelve al listado y entra de nuevo.",
+      );
+      return;
+    }
+
+    // 1) Validar cupos/local antes de pegarle al backend
     if (cuposInvalidos) {
       openModal(
         "No se pudo validar los cupos disponibles de esta suite. Vuelve al listado y selecciona la suite nuevamente.",
@@ -115,20 +125,58 @@
       return;
     }
 
+    // 2) Validar formato de cédula (frontend)
     const validation = isValidCedula(cedula);
     if (validation) {
       error = validation;
       return;
     }
 
+    // 3) Validar duplicados en la lista local
     if (invitados.includes(cedula)) {
       openModal("Esta cédula ya fue agregada.");
       return;
     }
 
-    invitados = [...invitados, cedula];
-    cedula = "";
+    // 4) Llamar al API para validar el invitado
+    try {
+      const res = await apiFetch("/suites_app/validate_guest", {
+        method: "POST",
+        body: JSON.stringify({
+          id_suite: suiteId,
+          invitado: cedula,
+        }),
+      });
+
+      if (res.status === 200) {
+        invitados = [...invitados, cedula];
+        cedula = "";
+        return;
+      }
+
+      let detalle = "No se pudo registrar el invitado. Inténtalo nuevamente.";
+
+      try {
+        const body = (await res.json()) as {
+          errors?: { title?: string; http_status?: number; detail?: string; code?: string }[];
+        };
+
+        const firstDetail = body?.errors?.[0]?.detail;
+        if (firstDetail) {
+          detalle = firstDetail;
+        }
+      } catch {
+        // Si falla el parseo del JSON, usamos el mensaje genérico
+      }
+
+      openModal(detalle);
+    } catch (e) {
+      openModal(
+        "No fue posible comunicarse con el servidor. Verifica tu conexión e inténtalo de nuevo.",
+      );
+    }
   }
+
 
   function removeInvitado(value: string) {
     invitados = invitados.filter((x) => x !== value);
