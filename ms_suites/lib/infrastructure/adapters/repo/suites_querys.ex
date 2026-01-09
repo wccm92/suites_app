@@ -5,6 +5,7 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
   alias MsSuitesApp.Domain.Model.Suites
   alias MsSuitesApp.Domain.Model.VisitanteXEvento
   alias MsSuitesApp.Domain.Model.Visitante
+  alias MsSuitesApp.Domain.Model.Blacklist
 
   def list_suites_by_event_and_admin(event_id, admin_id) do
     from(s in Suites,
@@ -93,5 +94,16 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
     end
   end
 
-
+  def validate_blacklisted(cedula) when is_binary(cedula) do
+    from(b in Blacklist,
+      where: b.cedula == ^cedula,
+      select: 1,
+      limit: 1
+    )
+    |> Repo.one()
+    |> case do
+         nil -> false
+         _ -> true
+       end
+  end
 end

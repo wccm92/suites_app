@@ -25,7 +25,13 @@ defmodule MsSuitesApp.Domain.ValidateGuestUsecase do
 
   defp validate_blacklist(id_visitante) do
     Logger.debug("Consultando invitado en la lista negra")
-    {:ok, true}
+    case SuitesQueryAdapter.validate_blacklisted(id_visitante) do
+      false ->
+        {:ok, true}
+
+      true ->
+        {:error, :black_list}
+    end
   end
 
 
@@ -37,7 +43,7 @@ defmodule MsSuitesApp.Domain.ValidateGuestUsecase do
         {:ok, true}
 
       {:ok, registered_suite_id} ->
-        {:error, {:visitor_already_registered_in_event, %{id_suite: registered_suite_id}}}
+        {:error, {:visitor_already_registered_in_event, %{id_suite: registered_suite_id, id_visitante: id_visitante}}}
     end
   end
 
