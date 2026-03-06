@@ -7,7 +7,7 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
 
   def handle_register_guests(id_suite, visitantes, token) when is_list(visitantes)do
     with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token),
-         {:ok, results} <- register_guests(event_user_info.id_evento, id_suite, visitantes) do
+         {:ok, results} <- register_guests(event_user_info.id, id_suite, visitantes) do
       {:ok, results}
     else
       {:error, _} = err -> err
@@ -15,12 +15,12 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
     end
   end
   #mapea los documentos
-  defp register_guests(id_evento, id_suite, visitantes) do
+  defp register_guests(id, id_suite, visitantes) do
     results =
       visitantes
       |> Enum.map(&normalize_doc/1)
       |> Enum.reject(&is_nil_or_empty?/1)
-      |> Enum.map(&register_one(id_evento, id_suite, &1))
+      |> Enum.map(&register_one(id, id_suite, &1))
 
     {:ok, build_response(results)}
   end
@@ -33,13 +33,13 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
     |> String.trim()
   end
   #registra visitantes
-  defp register_one(id_evento, id_suite, documento) do
+  defp register_one(id, id_suite, documento) do
     if SuitesQueryAdapter.validate_blacklisted(documento) do
       error_result(documento, "blocked")
     else
     case SuitesQueryAdapter.ensure_visitante_exists(documento) do
       :ok ->
-        do_register_one(id_evento, id_suite, documento)
+        do_register_one(id, id_suite, documento)
 
       {:error, {:visitante_insert_failed, changeset}} ->
         error_result(documento, "visitor_insert_failed", %{detail: inspect(changeset.errors)})
@@ -50,13 +50,13 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
     end
   end
   #registra visitantesxevento
-  defp do_register_one(id_evento, id_suite, documento) do
-    case SuitesQueryAdapter.register_guest_in_suite(id_evento, id_suite, documento) do
+  defp do_register_one(id, id_suite, documento) do
+    case SuitesQueryAdapter.register_guest_in_suite(id, id_suite, documento) do
       {:ok, _} ->
         %{documento: documento, status: "OK"}
 
       {:error, {:constraint_error, "visitantexevento_pkey"}} ->
-        already_registered_response(id_evento, documento)
+        already_registered_response(id, documento)
 
       {:error, {:constraint_error, constraint_name}} ->
         error_result(documento, "constraint_error", %{constraint: constraint_name})
@@ -69,8 +69,8 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
     end
   end
   #si no se pudo registrar en visitantexevento verifica en que suite esta registrado
-  defp already_registered_response(id_evento, documento) do
-    case SuitesQueryAdapter.validate_guess_in_event(id_evento, documento) do
+  defp already_registered_response(id, documento) do
+    case SuitesQueryAdapter.validate_guess_in_event(id, documento) do
       {:ok, existing_suite_id} ->
         error_result(documento, "already_registered", %{id_suite_actual: existing_suite_id})
 

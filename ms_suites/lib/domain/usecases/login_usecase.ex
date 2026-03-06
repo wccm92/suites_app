@@ -39,7 +39,7 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
       {
         :ok,
         %{
-          id_evento: event.evento.id_evento,
+          id: event.evento.id,
           user: DataTypeUtils.normalize(plain_token)
         }
       }

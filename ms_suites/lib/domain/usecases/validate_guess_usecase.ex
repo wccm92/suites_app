@@ -38,7 +38,7 @@ defmodule MsSuitesApp.Domain.ValidateGuestUsecase do
   defp validate_guess(id_visitante, event_user_info) do
     Logger.debug("Validando si visitante ya está registrado en el evento")
 
-    case SuitesQueryAdapter.validate_guess_in_event(event_user_info.id_evento, id_visitante) do
+    case SuitesQueryAdapter.validate_guess_in_event(event_user_info.id, id_visitante) do
       :not_found ->
         {:ok, true}
 

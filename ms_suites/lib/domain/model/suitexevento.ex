@@ -9,9 +9,9 @@ defmodule MsSuitesApp.Domain.Model.SuiteXEvento do
                references: :id_suite,
                type: :string
 
-    belongs_to :evento, MsSuitesApp.Domain.Model.Evento,
+    belongs_to :eventos, MsSuitesApp.Domain.Model.Evento,
                foreign_key: :id_evento,
-               references: :id_evento,
+               references: :id,
                type: :integer
 
     field :estado, :string

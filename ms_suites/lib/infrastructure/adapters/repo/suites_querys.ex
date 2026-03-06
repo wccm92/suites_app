@@ -11,7 +11,7 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
     from(s in Suites,
       join: e in assoc(s, :eventos),
       join: a in assoc(s, :administradores),
-      where: e.id_evento == ^event_id and a.id == ^admin_id,
+      where: e.id == ^event_id and a.id == ^admin_id,
       distinct: true
     )
     |> Repo.all()
@@ -33,6 +33,7 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
         capacidad: s.capacidad,
         estado: s.estado,
         diasmora: s.diasmora,
+        exonera: s.exonera,
         invitados_inscritos:
           fragment(
             "COALESCE(array_agg(DISTINCT ?) FILTER (WHERE ? IS NOT NULL), '{}')",

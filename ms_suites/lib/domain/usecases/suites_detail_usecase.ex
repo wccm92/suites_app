@@ -17,7 +17,7 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
     with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token),
          {:ok, suites} <- fetch_suites(id_suite, event_user_info),
          {:ok, true} <- validate_suite_estado(suites),
-         {:ok, true} <- validate_suite_mora(suites),
+         {:ok, true} <- validate_suite_mora(suites, suites.exonera),
          {:ok, body} <- build_body(suites) do
       {:ok, body}
     else
@@ -31,7 +31,7 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
     Logger.debug("Consultando el detalle de suites por id_suite")
     suites_detail = SuitesQueryAdapter.list_suites_detail_by_id_suite(
       id_suite,
-      event_user_info.id_evento
+      event_user_info.id
     )
     Logger.debug("BD devolvió  suites")
     {:ok, suites_detail}
@@ -47,7 +47,7 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
 
   defp validate_suite_estado(%{estado: true}), do: {:ok, true}
 
-  defp validate_suite_mora(%{diasmora: diasmora}) do
+  defp validate_suite_mora(%{diasmora: diasmora}, exonera) do
     max_dias =
       case ParametrosRepo.get_diasmora_max() do
         nil -> 0
@@ -55,7 +55,7 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
         v when is_binary(v) -> String.to_integer(v)
       end
 
-    if diasmora > max_dias do
+    if diasmora > max_dias and not exonera do
       {:error, :suite_en_mora}
     else
       {:ok, true}

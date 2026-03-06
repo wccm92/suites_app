@@ -6,8 +6,8 @@ defmodule MsSuitesApp.Infrastructure.Adapters.Eventos do
   def get_evento_activo do
     Repo.one(
       from e in Evento,
-      where: e.estado == true,
-      order_by: [desc: e.fech_inicio],
+      where: e.estado == "Activo",
+      order_by: [desc: e.fecha_inicio],
       limit: 1
     )
   end

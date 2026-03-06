@@ -10,11 +10,12 @@ defmodule MsSuitesApp.Domain.Model.Suites do
     field :obs, :string
     field :capacidad, :integer
     field :diasmora, :integer
+    field :exonera, :boolean
     field :estado, :boolean
 
     many_to_many :eventos, MsSuitesApp.Domain.Model.Evento,
                  join_through: MsSuitesApp.Domain.Model.SuiteXEvento,
-                 join_keys: [id_suite: :id_suite, id_evento: :id_evento]
+                 join_keys: [id_suite: :id_suite, id_evento: :id]
 
     many_to_many :administradores, MsSuitesApp.Domain.Model.Users,
                  join_through: MsSuitesApp.Domain.Model.AdminXSuite,

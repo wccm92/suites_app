@@ -27,7 +27,7 @@ defmodule MsSuitesApp.Domain.SuitesUsecase do
   defp fetch_suites(event_user_info) do
     Logger.debug("Consultando suites por evento y usuario en BD")
     suites = SuitesQueryAdapter.list_suites_by_event_and_admin(
-      event_user_info.id_evento,
+      event_user_info.id,
       event_user_info.user.id_user
     )
     Logger.debug("BD devolvió #{length(suites)} suites")
