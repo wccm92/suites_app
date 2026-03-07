@@ -18,3 +18,12 @@ export type SuiteDetailError = {
 };
 
 export type SuiteDetailOrError = SuiteDetail | SuiteDetailError;
+
+export type Parqueadero = {
+    id_parqueadero: string;
+    estado: 'habilitado' | 'deshabilitado';
+};
+
+export type ParqueaderosResponse = {
+    parqueadero: Parqueadero[];
+};

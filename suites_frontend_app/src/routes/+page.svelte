@@ -138,7 +138,25 @@
 </svelte:head>
 
 <main class="page">
-  <h1 class="title">Listado de Suites</h1>
+  <div class="top-bar">
+    <h1 class="title">Listado de Suites</h1>
+    <button
+      class="btn-nav"
+      type="button"
+      on:click={() => goto(`${base}/parqueaderos`)}
+    >
+      <span class="btn-nav__icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/>
+        </svg>
+      </span>
+      <span class="btn-nav__body">
+        <span class="btn-nav__label">Ver parqueaderos</span>
+        <span class="btn-nav__sub">Consultar disponibilidad</span>
+      </span>
+      <span class="btn-nav__arrow">›</span>
+    </button>
+  </div>
 
   {#if suitesError}
     <p class="error">{suitesError}</p>
@@ -241,12 +259,96 @@
     margin: 0 auto;
   }
 
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
   .title {
     font-size: 1.8rem;
     font-weight: 700;
-    margin-bottom: 1.5rem;
-    text-align: center;
+    margin: 0;
+    text-align: left;
     color: var(--color-success);
+  }
+
+  .btn-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.65rem 1.1rem 0.65rem 0.75rem;
+    border-radius: 1rem;
+    border: 1px solid var(--color-primary-light);
+    background: linear-gradient(135deg, #022e2c 0%, #014040 100%);
+    color: var(--color-text-main);
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.55), 0 0 0 0 rgba(0, 153, 51, 0);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease,
+      border-color 0.15s ease;
+    white-space: nowrap;
+    text-align: left;
+  }
+
+  .btn-nav:hover {
+    transform: translateY(-2px);
+    border-color: #009933;
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.7), 0 0 0 3px rgba(0, 153, 51, 0.25);
+  }
+
+  .btn-nav:active {
+    transform: translateY(0);
+  }
+
+  .btn-nav__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.4rem;
+    height: 2.4rem;
+    border-radius: 0.75rem;
+    background: #009933;
+    color: #f5fff8;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0, 153, 51, 0.45);
+  }
+
+  .btn-nav__icon svg {
+    width: 1.35rem;
+    height: 1.35rem;
+  }
+
+  .btn-nav__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+  }
+
+  .btn-nav__label {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+    line-height: 1.2;
+  }
+
+  .btn-nav__sub {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    font-weight: 400;
+    line-height: 1.2;
+  }
+
+  .btn-nav__arrow {
+    margin-left: auto;
+    font-size: 1.4rem;
+    color: #009933;
+    line-height: 1;
+    padding-left: 0.25rem;
   }
 
   .error {
