@@ -130,6 +130,70 @@
 
     goto(`${base}/registrar-invitado?${qs.toString()}`);
   }
+
+  // ── Alquilar suite – 3-step modal flow ──────────────────────────────────
+  let showRentModal = false;
+  let showRentConfirm = false;
+  let showRentSuccess = false;
+  let cedulaArrendatario = '';
+  let rentError = '';
+  let isSubmittingRent = false;
+
+  function openRentModal() {
+    cedulaArrendatario = '';
+    rentError = '';
+    showRentModal = true;
+  }
+
+  function closeRentModal() {
+    showRentModal = false;
+  }
+
+  function openRentConfirm() {
+    const clean = cedulaArrendatario.trim().replace(/\D/g, '');
+    if (clean.length < 6 || clean.length > 10) {
+      rentError = 'Ingrese una cédula válida (entre 6 y 10 dígitos).';
+      return;
+    }
+    cedulaArrendatario = clean;
+    rentError = '';
+    showRentConfirm = true;
+  }
+
+  function closeRentConfirm() {
+    showRentConfirm = false;
+  }
+
+  async function confirmRent() {
+    if (!selectedSuite) return;
+    isSubmittingRent = true;
+    rentError = '';
+    try {
+      const res = await apiFetch(`/suites_app/rent_suite/${selectedSuite.id_suite}`, {
+        method: 'POST',
+        body: JSON.stringify({ cedula: cedulaArrendatario }),
+      });
+      if (res.status === 401) {
+        session.clear();
+        await goto(`${base}/login`);
+        return;
+      }
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({}));
+        rentError = (json as any)?.errors?.[0]?.detail ?? 'Error al alquilar la suite.';
+        showRentConfirm = false;
+        return;
+      }
+      showRentConfirm = false;
+      showRentModal = false;
+      showRentSuccess = true;
+    } catch {
+      rentError = 'Error inesperado al alquilar la suite.';
+      showRentConfirm = false;
+    } finally {
+      isSubmittingRent = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -230,6 +294,14 @@
           </div>
           <div class="detail-actions">
             <button
+              class="btn-secondary"
+              type="button"
+              on:click={openRentModal}
+              title="Alquilar esta suite"
+            >
+              Alquilar suite
+            </button>
+            <button
               class="btn-primary"
               type="button"
               on:click={goToRegisterGuest}
@@ -249,6 +321,78 @@
     </section>
   {/if}
 </main>
+
+<!-- ── Modal 1: Alquilar suite ────────────────────────────────────────── -->
+{#if showRentModal && !showRentConfirm && !showRentSuccess}
+  <div class="modal-overlay" on:click={closeRentModal} role="presentation"></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rent-modal-title">
+    <h3 class="modal-title" id="rent-modal-title">Alquilar suite</h3>
+    <p class="modal-text">
+      Esta opción te permite alquilar la suite a una persona de confianza para que esta se encargue
+      de inscribir los visitantes para el evento actual. Recuerda que una vez alquilada, no puedes
+      modificar e inscribir visitantes.
+    </p>
+    <label class="modal-label" for="cedula-arrendatario">Cédula del arrendatario</label>
+    <input
+      id="cedula-arrendatario"
+      class="modal-input"
+      type="text"
+      inputmode="numeric"
+      placeholder="Ej: 1234567890"
+      bind:value={cedulaArrendatario}
+      maxlength={10}
+    />
+    {#if rentError}
+      <p class="modal-error">{rentError}</p>
+    {/if}
+    <div class="modal-actions">
+      <button class="modal-btn-secondary" type="button" on:click={closeRentModal}>Cancelar</button>
+      <button class="modal-btn-primary" type="button" on:click={openRentConfirm}>Alquilar</button>
+    </div>
+  </div>
+{/if}
+
+<!-- ── Modal 2: Confirmar ─────────────────────────────────────────────── -->
+{#if showRentConfirm}
+  <div class="modal-overlay" role="presentation"></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rent-confirm-title">
+    <h3 class="modal-title" id="rent-confirm-title">¿Está seguro?</h3>
+    <p class="modal-text">
+      ¿Está seguro que desea alquilar esta suite? Esta acción no se puede deshacer.
+    </p>
+    {#if rentError}
+      <p class="modal-error">{rentError}</p>
+    {/if}
+    <div class="modal-actions">
+      <button
+        class="modal-btn-secondary"
+        type="button"
+        on:click={closeRentConfirm}
+        disabled={isSubmittingRent}
+      >No</button>
+      <button
+        class="modal-btn-primary"
+        type="button"
+        on:click={confirmRent}
+        disabled={isSubmittingRent}
+      >{isSubmittingRent ? 'Procesando...' : 'Sí'}</button>
+    </div>
+  </div>
+{/if}
+
+<!-- ── Modal 3: Éxito ─────────────────────────────────────────────────── -->
+{#if showRentSuccess}
+  <div class="modal-overlay" role="presentation"></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rent-success-title">
+    <h3 class="modal-title modal-title-success" id="rent-success-title">¡Registro exitoso!</h3>
+    <p class="modal-text">La suite ha sido alquilada correctamente.</p>
+    <div class="modal-actions">
+      <button class="modal-btn-primary" type="button" on:click={() => showRentSuccess = false}>
+        Cerrar
+      </button>
+    </div>
+  </div>
+{/if}
 
 <style>
 
@@ -503,6 +647,34 @@
     margin-top: 1rem;
     display: flex;
     justify-content: flex-end;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+  }
+
+  .btn-secondary {
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: none;
+    background: #009933;
+    color: #f5fff8;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 153, 51, 0.45);
+    transition:
+      transform 0.12s ease,
+      background 0.12s ease,
+      box-shadow 0.12s ease;
+  }
+
+  .btn-secondary:hover {
+    transform: translateY(-1px);
+    background: #00b33c;
+    box-shadow: 0 10px 25px rgba(0, 153, 51, 0.65);
+  }
+
+  .btn-secondary:active {
+    transform: translateY(0);
   }
 
   .btn-primary {
@@ -567,6 +739,126 @@
     font-weight: 500;
     color: var(--color-success);
     letter-spacing: 0.02em;
+  }
+
+  /* ── Modal styles ──────────────────────────────────────────────────── */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.55);
+    z-index: 9998;
+  }
+
+  .modal {
+    position: fixed;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(520px, calc(100% - 2rem));
+    background: var(--color-surface);
+    border: 1px solid var(--color-primary);
+    border-radius: 1rem;
+    padding: 1.4rem 1.4rem 1.1rem;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
+    z-index: 9999;
+  }
+
+  .modal-title {
+    margin: 0 0 0.75rem 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--color-success);
+  }
+
+  .modal-title-success {
+    color: #4ade80;
+  }
+
+  .modal-text {
+    margin: 0 0 1rem 0;
+    color: #e6fff5;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .modal-label {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--color-success);
+    margin-bottom: 0.35rem;
+  }
+
+  .modal-input {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    border-radius: 0.6rem;
+    border: 1px solid var(--color-primary);
+    background: #012e2e;
+    color: var(--color-text-main);
+    font-size: 1rem;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color 0.15s ease;
+  }
+
+  .modal-input:focus {
+    border-color: #009933;
+  }
+
+  .modal-error {
+    margin: 0.45rem 0 0 0;
+    font-size: 0.85rem;
+    color: #ff6b6b;
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1rem;
+    justify-content: flex-end;
+  }
+
+  .modal-btn-primary {
+    padding: 0.55rem 1.3rem;
+    border-radius: 999px;
+    border: none;
+    background: var(--color-primary);
+    color: var(--color-text-main);
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.12s ease, transform 0.12s ease;
+  }
+
+  .modal-btn-primary:hover:enabled {
+    background: #009933;
+    transform: translateY(-1px);
+  }
+
+  .modal-btn-primary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+  }
+
+  .modal-btn-secondary {
+    padding: 0.55rem 1.3rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-primary);
+    background: transparent;
+    color: var(--color-success);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.12s ease;
+  }
+
+  .modal-btn-secondary:hover:enabled {
+    background: rgba(1, 64, 64, 0.6);
+  }
+
+  .modal-btn-secondary:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 
   /* Mobile-first */
