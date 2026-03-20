@@ -14,6 +14,8 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Domain.ValidateGuestUsecase
   alias MsSuitesApp.Domain.RegisterGuestsUsecase
   alias MsSuitesApp.Domain.ParkingUsecase
+  alias MsSuitesApp.Domain.LoginLeaseHolderUsecase
+  alias MsSuitesApp.Domain.LeaseHolderUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -29,6 +31,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   @login "login"
   @evento "evento"
   @evento "lots"
+  @leaseholder "arrendatarios"
 
   plug(CORSPlug,
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -74,6 +77,16 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     token = extract_auth(conn)
     with {:ok, response} <- SuitesUsecase.handle_list_suites(token) do
       log_response(@suites, "no-message-id", response)
+      build_response(response, conn)
+    else
+      error -> error |> handle_error_v2(conn)
+    end
+  end
+
+  get "/suites_app/suites_leaseholder" do
+    token = extract_auth(conn)
+    with {:ok, response} <- LeaseHolderUsecase.handle_list_suites(token) do
+      log_response(@leaseholder, "no-message-id", response)
       build_response(response, conn)
     else
       error -> error |> handle_error_v2(conn)
@@ -133,6 +146,17 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     case conn.body_params do
       %{"username" => username, "password" => password} ->
         case LoginUsecase.login(username, password) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error -> error |> handle_error_v2(conn)
+        end
+    end
+  end
+
+  post "/suites_app/login_leaseholder" do
+    case conn.body_params do
+      %{"username" => username, "password" => password} ->
+        case LoginLeaseHolderUsecase.login(username, password) do
           {:ok, response} ->
             build_response(response, conn)
           error -> error |> handle_error_v2(conn)

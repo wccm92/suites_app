@@ -17,11 +17,21 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
     |> Repo.all()
   end
 
+  def list_suites_by_event_and_lease_holder(event_id, admin_id) do
+    from(s in Suites,
+      join: e in assoc(s, :eventos),
+      join: a in assoc(s, :arrendatarios),
+      where: e.id == ^event_id and a.username == ^admin_id and s.tipo == "SUITE",
+      distinct: true
+    )
+    |> Repo.all()
+  end
+
   def list_parkings_by_event_and_admin(event_id, admin_id) do
     from(s in Suites,
       join: e in assoc(s, :eventos),
       join: a in assoc(s, :administradores),
-      where: e.id == ^event_id and a.id == ^admin_id and s.tipo == "PARQUEADERO",
+      where: e.id == ^event_id and a.id == ^admin_id and s.tipo != "PARQUEADERO",
       distinct: true
     )
     |> Repo.all()

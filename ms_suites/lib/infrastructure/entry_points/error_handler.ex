@@ -20,6 +20,15 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
+  def build_error_response({:error, :event_not_belongs_to_user}) do
+    make_error_v2(
+      "03",
+      "Error",
+      "Evento no activo para el usuario",
+      401
+    )
+  end
+
   def build_error_response({:error, :not_event}) do
     make_error_v2(
       "03",

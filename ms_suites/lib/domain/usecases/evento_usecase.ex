@@ -20,7 +20,10 @@ defmodule MsSuitesApp.Domain.EventUsecase do
 
   defp to_response(%Evento{} = e) do
     %{
-      id: e.id
+
+      id: e.id,
+      evento: e.evento,
+      descripcion: e.descripcion
     }
   end
 
