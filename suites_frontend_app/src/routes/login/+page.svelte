@@ -9,6 +9,7 @@
   let username = "";
   let password = "";
   let loading = false;
+  let loadingLeaseholder = false;
   let error = "";
 
   onMount(async () => {
@@ -103,6 +104,64 @@
     }
   }
 
+  async function handleLeaseholderLogin() {
+    error = "";
+    loadingLeaseholder = true;
+
+    try {
+      if (!username || !password) {
+        error = "Usuario y contraseña son obligatorios.";
+        return;
+      }
+
+      const res = await apiFetch("/suites_app/login_leaseholder", {
+        auth: false,
+        method: "POST",
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (!res.ok) {
+        const json = (await res.json()) as {
+          errors: {
+            title: string;
+            http_status: number;
+            detail: string;
+            code: string;
+          }[];
+        };
+
+        const code = json.errors[0]?.code;
+
+        if (code == "01") {
+          error = "Credenciales inválidas";
+          return;
+        }
+        if (code == "02") {
+          error = "Usuario bloqueado";
+          return;
+        }
+        error = json.errors[0]?.detail ?? "Error al iniciar sesión.";
+        return;
+      }
+
+      const body = (await res.json()) as { token: string };
+
+      if (!body.token) {
+        error = "El servidor no devolvió un token de autenticación.";
+        return;
+      }
+
+      session.setJwt(body.token);
+      password = "";
+      await goto(`${base}/arriendos`);
+    } catch (e) {
+      const err = e as Error;
+      error = err.message ?? "Error inesperado al intentar autenticar.";
+    } finally {
+      loadingLeaseholder = false;
+    }
+  }
+
   function goToForgotPassword() {
     goto(`${base}/forgot-password`);
   }
@@ -148,13 +207,29 @@
         <p class="error">{error}</p>
       {/if}
 
-      <button type="submit" class="btn-primary" disabled={loading}>
+      <button type="submit" class="btn-primary" disabled={loading || loadingLeaseholder}>
         {#if loading}
           Autenticando...
         {:else}
-          Entrar
+          Ingresar como propietario
         {/if}
       </button>
+
+      <div class="divider"><span>o</span></div>
+
+      <button
+        type="button"
+        class="btn-secondary"
+        disabled={loading || loadingLeaseholder}
+        on:click={handleLeaseholderLogin}
+      >
+        {#if loadingLeaseholder}
+          Autenticando...
+        {:else}
+          Ingresar como arrendatario
+        {/if}
+      </button>
+
       <button
         type="button"
         class="btn-link-forgot"
@@ -278,6 +353,56 @@
   }
 
   .btn-primary:disabled {
+    opacity: 0.7;
+    cursor: default;
+  }
+
+  .divider {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    margin: 0.1rem 0;
+  }
+
+  .divider::before,
+  .divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--color-primary);
+  }
+
+  .btn-secondary {
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-primary-light);
+    background: transparent;
+    color: var(--color-text-main);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease,
+      border-color 0.12s ease;
+  }
+
+  .btn-secondary:hover:enabled {
+    transform: translateY(-1px);
+    background: #014040;
+    border-color: #009933;
+    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.5);
+  }
+
+  .btn-secondary:active:enabled {
+    transform: translateY(0);
+  }
+
+  .btn-secondary:disabled {
     opacity: 0.7;
     cursor: default;
   }
