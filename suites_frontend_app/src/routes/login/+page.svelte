@@ -377,29 +377,28 @@
   .btn-secondary {
     padding: 0.6rem 1rem;
     border-radius: 999px;
-    border: 1px solid var(--color-primary-light);
-    background: transparent;
+    border: none;
+    background: var(--color-primary);
     color: var(--color-text-main);
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.6);
     transition:
       transform 0.12s ease,
       box-shadow 0.12s ease,
-      background 0.12s ease,
-      border-color 0.12s ease;
+      background 0.12s ease;
   }
 
   .btn-secondary:hover:enabled {
     transform: translateY(-1px);
-    background: #014040;
-    border-color: #009933;
-    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.5);
+    box-shadow: 0 14px 30px rgba(0, 51, 51, 0.85);
+    background: #009933;
   }
 
   .btn-secondary:active:enabled {
     transform: translateY(0);
+    box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
   }
 
   .btn-secondary:disabled {
