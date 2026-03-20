@@ -11,7 +11,17 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
     from(s in Suites,
       join: e in assoc(s, :eventos),
       join: a in assoc(s, :administradores),
-      where: e.id == ^event_id and a.id == ^admin_id,
+      where: e.id == ^event_id and a.id == ^admin_id and s.tipo == "SUITE",
+      distinct: true
+    )
+    |> Repo.all()
+  end
+
+  def list_parkings_by_event_and_admin(event_id, admin_id) do
+    from(s in Suites,
+      join: e in assoc(s, :eventos),
+      join: a in assoc(s, :administradores),
+      where: e.id == ^event_id and a.id == ^admin_id and s.tipo == "PARQUEADERO",
       distinct: true
     )
     |> Repo.all()
@@ -45,6 +55,37 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
       }
     )
     |> Repo.one()
+  end
+
+  def list_parkings_detail_by_id_parkings(id_suites, event_id) do
+    from(s in Suites,
+      left_join: vx in VisitanteXEvento,
+      on: vx.id_suite == s.id_suite and vx.id_evento == ^event_id,
+      where: s.id_suite in ^id_suites,
+      group_by: [
+        s.id_suite,
+        s.capacidad,
+        s.estado,
+        s.diasmora,
+        s.exonera
+      ],
+      select: %{
+        id_suite: s.id_suite,
+        capacidad: s.capacidad,
+        estado: s.estado,
+        diasmora: s.diasmora,
+        exonera: s.exonera,
+        invitados_inscritos:
+          fragment(
+            "COALESCE(array_agg(DISTINCT ?) FILTER (WHERE ? IS NOT NULL), '{}')",
+            vx.id_visitante,
+            vx.id_visitante
+          ),
+        cupos_disponibles:
+          fragment("? - COUNT(DISTINCT ?)", s.capacidad, vx.id_visitante)
+      }
+    )
+    |> Repo.all()
   end
 
   def validate_guess_in_event(id_evento, id_visitante) do

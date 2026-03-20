@@ -12,6 +12,7 @@ defmodule MsSuitesApp.Domain.Model.Suites do
     field :diasmora, :integer
     field :exonera, :boolean
     field :estado, :boolean
+    field :tipo, :string
 
     many_to_many :eventos, MsSuitesApp.Domain.Model.Evento,
                  join_through: MsSuitesApp.Domain.Model.SuiteXEvento,
@@ -24,7 +25,7 @@ defmodule MsSuitesApp.Domain.Model.Suites do
 
   def changeset(suite, attrs) do
     suite
-    |> cast(attrs, [:id_suite, :tribuna, :id_propietario, :saldo, :obs, :capacidad, :estado])
+    |> cast(attrs, [:id_suite, :tribuna, :id_propietario, :saldo, :obs, :capacidad, :estado, :tipo])
     |> validate_required([:id_suite, :tribuna])
   end
 end

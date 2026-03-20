@@ -13,6 +13,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Domain.SuitesDetailUsecase
   alias MsSuitesApp.Domain.ValidateGuestUsecase
   alias MsSuitesApp.Domain.RegisterGuestsUsecase
+  alias MsSuitesApp.Domain.ParkingUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -27,6 +28,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   @suites "suites"
   @login "login"
   @evento "evento"
+  @evento "lots"
 
   plug(CORSPlug,
     methods: ["GET", "POST", "PUT", "DELETE"],
@@ -72,6 +74,16 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     token = extract_auth(conn)
     with {:ok, response} <- SuitesUsecase.handle_list_suites(token) do
       log_response(@suites, "no-message-id", response)
+      build_response(response, conn)
+    else
+      error -> error |> handle_error_v2(conn)
+    end
+  end
+
+  get "/suites_app/lots" do
+    token = extract_auth(conn)
+    with {:ok, response} <- ParkingUsecase.handle_list_lots(token) do
+      log_response(@lots, "no-message-id", response)
       build_response(response, conn)
     else
       error -> error |> handle_error_v2(conn)
