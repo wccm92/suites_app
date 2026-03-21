@@ -1,7 +1,7 @@
 defmodule MsSuitesApp.Domain.LeaseHolderUsecase do
   import Ecto.Query, warn: false
 
-  alias MsSuitesApp.Domain.LoginUsecase
+  alias MsSuitesApp.Domain.LoginLeaseHolderUsecase
   alias MsSuitesApp.Infrastructure.Adapters.Repo
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
   alias MsSuitesApp.Domain.Model.Suites
@@ -13,7 +13,7 @@ defmodule MsSuitesApp.Domain.LeaseHolderUsecase do
   """
 
   def handle_list_suites(token) do
-    with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token),
+    with {:ok, event_user_info} <- LoginLeaseHolderUsecase.validate_event_and_session(token),
          {:ok, suites} <- fetch_suites(event_user_info),
          {:ok, body} <- build_body(suites) do
       {:ok, body}

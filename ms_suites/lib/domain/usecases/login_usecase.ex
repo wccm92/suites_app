@@ -12,7 +12,8 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
          {:ok, jwt, _claims} <-
            Token.generate_and_sign(%{
              "id_user" => user.id,
-             "username" => user.username
+             "username" => user.username,
+             "profile" => "owner"
            }) do
       {:ok,
         %{
@@ -35,18 +36,30 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
 
   def validate_event_and_session(token) do
     with {:ok, event} <- EventUsecase.get_evento_activo(),
-         {:ok, plain_token} <- validate_session(token) do
+         {:ok, plain_token} <- validate_session(token),
+         {:ok, normalized_plain_token} <- normalize_token_data(plain_token),
+         {:ok, true} <- validate_profile(normalized_plain_token) |> dbg() do
       {
         :ok,
         %{
           id: event.evento.id,
-          user: DataTypeUtils.normalize(plain_token)
+          user: normalized_plain_token
         }
       }
     else
       error -> error
     end
   end
+
+  defp normalize_token_data(data) do
+    {
+      :ok,
+      DataTypeUtils.normalize(data)
+    }
+  end
+
+  defp validate_profile(%{profile: "owner"}), do: {:ok, true}
+  defp validate_profile(_), do: {:error, :invalid_profile}
 
   def validate_session(token) do
     case Token.verify_and_validate(token) do
