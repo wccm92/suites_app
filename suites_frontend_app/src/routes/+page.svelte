@@ -203,7 +203,7 @@
 
 <main class="page">
   <div class="top-bar">
-    <h1 class="title">Listado de Suites</h1>
+    <h1 class="title">Mis suites</h1>
     <button
       class="btn-nav"
       type="button"
