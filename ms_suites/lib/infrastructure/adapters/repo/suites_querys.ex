@@ -6,6 +6,8 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
   alias MsSuitesApp.Domain.Model.VisitanteXEvento
   alias MsSuitesApp.Domain.Model.Visitante
   alias MsSuitesApp.Domain.Model.Blacklist
+  alias MsSuitesApp.Domain.Model.ArrendatarioXSuite
+  alias MsSuitesApp.Domain.Model.SuiteXEvento
 
   def list_suites_by_event_and_admin(event_id, admin_id) do
     from(s in Suites,
@@ -15,6 +17,49 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
       distinct: true
     )
     |> Repo.all()
+  end
+
+  def validate_suite_admin(id_suite, id_user) do
+    from(s in Suites,
+      join: axs in "adminxsuite",
+      on: axs.id_suite == s.id_suite,
+      where: axs.id_suite == ^id_suite and axs.id_administrador == ^id_user,
+      select: s,
+      limit: 1
+    )
+    |> Repo.one()
+  end
+
+  def upsert_leaseholder_suite(id_suite, username) do
+    exists? =
+      from(a in ArrendatarioXSuite,
+        where:
+          a.id_suite == ^id_suite and
+          a.username == ^username
+      )
+      |> Repo.exists?()
+
+    if exists? do
+      {:ok, true}
+    else
+      %ArrendatarioXSuite{}
+      |> ArrendatarioXSuite.changeset(%{
+        id_suite: id_suite,
+        username: username,
+      })
+      |> Repo.insert()
+    end
+  end
+
+  def suite_alquilada?(id_suite, id_evento) do
+    from(axs in ArrendatarioXSuite,
+      join: sxe in SuiteXEvento,
+      on: sxe.id_suite == axs.id_suite,
+      where:
+        axs.id_suite == ^id_suite and
+        sxe.id_evento == ^id_evento
+    )
+    |> Repo.exists?()
   end
 
   def list_suites_by_event_and_lease_holder(event_id, admin_id) do

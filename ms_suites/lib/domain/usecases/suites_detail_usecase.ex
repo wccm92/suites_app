@@ -18,7 +18,8 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
          {:ok, suites} <- fetch_suites(id_suite, event_user_info),
          {:ok, true} <- validate_suite_estado(suites),
          {:ok, true} <- validate_suite_mora(suites, suites.exonera),
-         {:ok, body} <- build_body(suites) do
+         suite_alquilada  <- SuitesQueryAdapter.suite_alquilada?(id_suite, event_user_info.id),
+         {:ok, body} <- build_body(suites, suite_alquilada) do
       {:ok, body}
     else
       {:error, reason} = error ->
@@ -71,13 +72,15 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
     capacidad: capacidad,
     invitados_inscritos: invitados_inscritos,
     cupos_disponibles: cupos_disponibles
-  }) do
+  },
+         suite_alquilada) do
     {:ok,
       %{
         id_suite: id_suite,
         capacidad: capacidad,
         invitados_inscritos: invitados_inscritos,
-        cupos_disponibles: cupos_disponibles
+        cupos_disponibles: cupos_disponibles,
+        suite_alquilada: suite_alquilada
       }}
   end
 end

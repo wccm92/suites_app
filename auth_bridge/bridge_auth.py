@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from werkzeug.security import check_password_hash
+from werkzeug.security import generate_password_hash
 import os
 
 app = Flask(__name__)
@@ -25,6 +26,29 @@ def verify():
 
     ok = check_password_hash(stored_hash, password)
     return jsonify({"ok": ok}), 200
+
+@app.post("/hash")
+def hash_password():
+    auth = request.headers.get("Authorization", "")
+    if not auth.startswith("Bearer "):
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+
+    token = auth.replace("Bearer ", "").strip()
+    if not BRIDGE_TOKEN or token != BRIDGE_TOKEN:
+        return jsonify({"ok": False, "error": "unauthorized"}), 401
+
+    data = request.get_json(silent=True) or {}
+    password = data.get("password")
+
+    if not password:
+        return jsonify({"ok": False, "error": "missing_password"}), 400
+
+    hashed = generate_password_hash(password)
+
+    return jsonify({
+        "ok": True,
+        "hash": hashed
+    }), 200
 
 
 if __name__ == "__main__":
