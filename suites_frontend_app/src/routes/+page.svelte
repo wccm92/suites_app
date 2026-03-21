@@ -31,6 +31,10 @@
   $: suiteSinCupos =
     !!selectedSuite && selectedSuite.cupos_disponibles === 0;
 
+  // Derivado: indica si la suite ya está alquilada
+  $: suiteAlquilada =
+    !!selectedSuite && selectedSuite.suite_alquilada === true;
+
   // 1) Revisamos JWT en localStorage (via store session)
   // 2) Si no hay JWT → login
   // 3) Si hay JWT → llamar /suites_app/suites
@@ -294,22 +298,28 @@
           </div>
           <div class="detail-actions">
             <button
-              class="btn-secondary"
+              class="btn-secondary {suiteAlquilada ? 'btn-rented' : ''}"
               type="button"
-              on:click={openRentModal}
-              title="Alquilar esta suite"
+              on:click={suiteAlquilada ? undefined : openRentModal}
+              disabled={suiteAlquilada}
+              aria-disabled={suiteAlquilada}
+              title={suiteAlquilada
+                ? "Esta suite ya está alquilada."
+                : "Alquilar esta suite"}
             >
-              Alquilar suite
+              {suiteAlquilada ? 'Suite Alquilada' : 'Alquilar suite'}
             </button>
             <button
               class="btn-primary"
               type="button"
               on:click={goToRegisterGuest}
-              disabled={suiteSinCupos}
-              aria-disabled={suiteSinCupos}
-              title={suiteSinCupos
-                ? "No puedes registrar invitados: no hay cupos disponibles en esta suite."
-                : "Registrar invitado en esta suite"}
+              disabled={suiteSinCupos || suiteAlquilada}
+              aria-disabled={suiteSinCupos || suiteAlquilada}
+              title={suiteAlquilada
+                ? "No puedes registrar invitados: la suite está alquilada."
+                : suiteSinCupos
+                  ? "No puedes registrar invitados: no hay cupos disponibles en esta suite."
+                  : "Registrar invitado en esta suite"}
             >
               Registrar visitante
             </button>
@@ -675,6 +685,20 @@
 
   .btn-secondary:active {
     transform: translateY(0);
+  }
+
+  .btn-secondary.btn-rented {
+    background: #7c3a00;
+    color: #ffd199;
+    box-shadow: 0 6px 18px rgba(180, 80, 0, 0.35);
+    cursor: not-allowed;
+    opacity: 0.85;
+  }
+
+  .btn-secondary.btn-rented:hover {
+    transform: none;
+    background: #7c3a00;
+    box-shadow: 0 6px 18px rgba(180, 80, 0, 0.35);
   }
 
   .btn-primary {

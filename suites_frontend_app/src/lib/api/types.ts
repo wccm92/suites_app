@@ -3,6 +3,7 @@ export type SuiteDetail = {
     capacidad: number;
     cupos_disponibles: number;
     invitados_inscritos: string[];
+    suite_alquilada: boolean;
 };
 
 
