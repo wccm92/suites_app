@@ -45,11 +45,27 @@ defmodule MsSuitesApp.Domain.LoginLeaseHolderUsecase do
   end
 
 
-  def validate_event_and_session(token) do
+  def validate_event_and_session(token, "profile_validation_enable") do
     with {:ok, event} <- EventUsecase.get_evento_activo(),
          {:ok, plain_token} <- validate_session(token),
          {:ok, normalized_plain_token} <- normalize_token_data(plain_token),
          {:ok, true} <- validate_profile(normalized_plain_token) do
+      {
+        :ok,
+        %{
+          id: event.evento.id,
+          user: normalized_plain_token
+        }
+      }
+    else
+      error -> error
+    end
+  end
+
+  def validate_event_and_session(token) do
+    with {:ok, event} <- EventUsecase.get_evento_activo(),
+         {:ok, plain_token} <- validate_session(token),
+         {:ok, normalized_plain_token} <- normalize_token_data(plain_token) do
       {
         :ok,
         %{

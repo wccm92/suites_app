@@ -13,7 +13,7 @@ defmodule MsSuitesApp.Domain.LeaseHolderUsecase do
   """
 
   def handle_list_suites(token) do
-    with {:ok, event_user_info} <- LoginLeaseHolderUsecase.validate_event_and_session(token),
+    with {:ok, event_user_info} <- LoginLeaseHolderUsecase.validate_event_and_session(token, "profile_validation_enable"),
          {:ok, suites} <- fetch_suites(event_user_info),
          {:ok, body} <- build_body(suites) do
       {:ok, body}
