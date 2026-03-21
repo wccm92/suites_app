@@ -518,12 +518,20 @@
     border-radius: 50%;
     background: #ff3b3b;
     flex-shrink: 0;
-    animation: blink 1.2s ease-in-out infinite;
+    animation: dotBlink 1s ease-in-out infinite;
   }
 
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: 0.25; }
+  @keyframes dotBlink {
+    0%, 100% {
+      opacity: 1;
+      background: #ff3b3b;
+      box-shadow: 0 0 6px 2px rgba(255, 59, 59, 0.8), 0 0 14px 4px rgba(255, 59, 59, 0.4);
+    }
+    50% {
+      opacity: 0.15;
+      background: #ff3b3b;
+      box-shadow: none;
+    }
   }
 
   .live-text {
@@ -532,6 +540,20 @@
     letter-spacing: 0.12em;
     color: #ff6b6b;
     text-transform: uppercase;
+    animation: textBlink 1s ease-in-out infinite;
+  }
+
+  @keyframes textBlink {
+    0%, 100% {
+      opacity: 1;
+      color: #ff4444;
+      text-shadow: 0 0 8px rgba(255, 68, 68, 0.9), 0 0 18px rgba(255, 68, 68, 0.5);
+    }
+    50% {
+      opacity: 0.2;
+      color: #ff6b6b;
+      text-shadow: none;
+    }
   }
 
   .event-label {
