@@ -6,11 +6,14 @@
   import { session } from "$lib/stores/session";
   import { apiFetch } from "$lib/api/client";
 
+  type EventInfo = { evento: string; descripcion: string; id: number };
+
   let username = "";
   let password = "";
   let loading = false;
   let loadingLeaseholder = false;
   let error = "";
+  let eventInfo: EventInfo | null = null;
 
   onMount(async () => {
     // 1) Verificar si hay evento
@@ -20,6 +23,11 @@
       if (!eventRes.ok) {
         await goto(`${base}/no-event`);
         return;
+      }
+
+      const eventBody = await eventRes.json().catch(() => null);
+      if (eventBody?.evento) {
+        eventInfo = eventBody.evento as EventInfo;
       }
     } catch (e) {
       console.error("Error consultando /get-event:", e);
@@ -237,7 +245,19 @@
       >
         Olvidé mi contraseña
       </button>
-      <!-- 👇 AQUÍ VA EL ESCUDO (debajo de "Olvidé mi contraseña") -->
+
+      {#if eventInfo}
+        <div class="event-card">
+          <div class="event-live-badge">
+            <span class="live-dot"></span>
+            <span class="live-text">EN VIVO</span>
+          </div>
+          <p class="event-label">Tu evento activo</p>
+          <h2 class="event-name">{eventInfo.evento}</h2>
+          <p class="event-description">{eventInfo.descripcion}</p>
+        </div>
+      {/if}
+
       <div class="login-shield">
         <img
           src={`${base}/images/main_logo_v2.png`}
@@ -461,5 +481,81 @@
     width: min(220px, 70%);
     height: auto;
     opacity: 0.95;
+  }
+
+  /* ── Evento activo ────────────────────────────────────────────────── */
+  .event-card {
+    margin-top: 0.25rem;
+    border-radius: 0.85rem;
+    border: 1px solid var(--color-primary-light);
+    background: linear-gradient(135deg, #012e2c 0%, #023a30 100%);
+    padding: 0.85rem 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    box-shadow:
+      0 0 0 1px rgba(0, 153, 51, 0.15),
+      0 8px 24px rgba(0, 0, 0, 0.5),
+      0 0 18px rgba(0, 153, 51, 0.12);
+    animation: cardPulse 4s ease-in-out infinite;
+  }
+
+  @keyframes cardPulse {
+    0%, 100% { box-shadow: 0 0 0 1px rgba(0,153,51,0.15), 0 8px 24px rgba(0,0,0,0.5), 0 0 18px rgba(0,153,51,0.12); }
+    50%       { box-shadow: 0 0 0 1px rgba(0,153,51,0.35), 0 8px 28px rgba(0,0,0,0.55), 0 0 28px rgba(0,153,51,0.25); }
+  }
+
+  .event-live-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.1rem;
+  }
+
+  .live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #ff3b3b;
+    flex-shrink: 0;
+    animation: blink 1.2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50%       { opacity: 0.25; }
+  }
+
+  .live-text {
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    color: #ff6b6b;
+    text-transform: uppercase;
+  }
+
+  .event-label {
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    font-weight: 400;
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .event-name {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #ffffff;
+    margin: 0;
+    line-height: 1.2;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+
+  .event-description {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin: 0.1rem 0 0 0;
+    line-height: 1.45;
   }
 </style>
