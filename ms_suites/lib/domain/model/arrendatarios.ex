@@ -14,7 +14,7 @@ defmodule MsSuitesApp.Domain.Model.Arrendatarios do
 
   def changeset(users, attrs) do
     users
-    |> cast(attrs, [:username, :password_hash, :is_active])
-    |> validate_required([:username, :password_hash, :is_active])
+    |> cast(attrs, [:username, :password_hash, :is_active, :id_evento])
+    |> validate_required([:username, :password_hash, :is_active, :id_evento])
   end
 end

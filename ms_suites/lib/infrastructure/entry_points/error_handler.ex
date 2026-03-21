@@ -65,6 +65,23 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
+  def build_error_response({:error, :error_rent_suite}) do
+    make_error_v2(
+      "08",
+      "Error",
+      "Error rentando suite",
+      500
+    )
+  end
+
+  def build_error_response({:error, :invalid_profile}) do
+    make_error_v2(
+      "09",
+      "Error",
+      "Perfil invalido",
+      401
+    )
+  end
   def build_error_response({:error, :expired_suite_session}) do
     make_error_v2(
       "04",

@@ -71,7 +71,30 @@ defmodule MsSuitesApp.Infrastructure.Adapters.Users do
     end
   end
 
+  def upsert_leaseholder(cedula, hash, id_evento) do
+    case Repo.get_by(Arrendatarios, username: cedula) do
+      nil ->
+        %Arrendatarios{}
+        |> Arrendatarios.changeset(%{
+          username: cedula,
+          password_hash: hash,
+          is_active: true,
+          id_evento: id_evento
+        })
+        |> Repo.insert()
 
+      user ->
+        cond do
+          user.id_evento == id_evento ->
+            {:ok, user}
+
+          true ->
+            user
+            |> Arrendatarios.changeset(%{id_evento: id_evento})
+            |> Repo.update()
+        end
+    end
+  end
 
   defp verify_password(password, hash) do
     BridgeAuthClient.verify_password(hash, password)

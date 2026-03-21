@@ -16,6 +16,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Domain.ParkingUsecase
   alias MsSuitesApp.Domain.LoginLeaseHolderUsecase
   alias MsSuitesApp.Domain.LeaseHolderUsecase
+  alias MsSuitesApp.Domain.RentSuiteUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -134,6 +135,20 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     case conn.body_params do
       %{"id_suite" => id_suite, "invitados" => invitados} ->
         case RegisterGuestsUsecase.handle_register_guests(id_suite, invitados, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
+    end
+  end
+
+  post "/suites_app/rent_suite/:id_suite" do
+    token = extract_auth(conn)
+    id_suite = conn.params["id_suite"]
+    case conn.body_params do
+      %{"cedula" => cedula} ->
+        case RentSuiteUsecase.handle_rent_suite(id_suite, cedula, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->
