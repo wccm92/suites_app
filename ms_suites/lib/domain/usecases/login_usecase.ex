@@ -38,7 +38,7 @@ defmodule MsSuitesApp.Domain.LoginUsecase do
     with {:ok, event} <- EventUsecase.get_evento_activo(),
          {:ok, plain_token} <- validate_session(token),
          {:ok, normalized_plain_token} <- normalize_token_data(plain_token),
-         {:ok, true} <- validate_profile(normalized_plain_token) |> dbg() do
+         {:ok, true} <- validate_profile(normalized_plain_token) do
       {
         :ok,
         %{
