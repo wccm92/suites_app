@@ -21,6 +21,10 @@ defmodule MsSuitesApp.Domain.Model.Suites do
     many_to_many :administradores, MsSuitesApp.Domain.Model.Users,
                  join_through: MsSuitesApp.Domain.Model.AdminXSuite,
                  join_keys: [id_suite: :id_suite, id_administrador: :id]
+
+    many_to_many :arrendatarios, MsSuitesApp.Domain.Model.Arrendatarios,
+                 join_through: MsSuitesApp.Domain.Model.ArrendatarioXSuite,
+                 join_keys: [id_suite: :id_suite, username: :username]
   end
 
   def changeset(suite, attrs) do
