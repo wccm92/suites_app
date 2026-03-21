@@ -36,7 +36,7 @@
     }
 
     try {
-      const res = await apiFetch("/suites_app/suites");
+      const res = await apiFetch("/suites_app/suites_leaseholder");
 
       if (res.status === 401) {
         session.clear();
