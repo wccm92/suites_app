@@ -3,8 +3,10 @@
   import { base } from "$app/paths";
   import { page } from "$app/stores";
   import { onDestroy, onMount } from "svelte";
+  import { get } from "svelte/store";
   import { browser } from "$app/environment";
   import { apiFetch } from "$lib/api/client";
+  import { session } from "$lib/stores/session";
 
   let suiteId = "";
   let capacidad = 0;
@@ -79,10 +81,22 @@
     showResultModal = true;
   }
 
+  function getHomeRoute(): string {
+    const { jwt } = get(session);
+    if (!jwt) return `${base}/`;
+    try {
+      const payload = JSON.parse(atob(jwt.split('.')[1]));
+      if (payload?.profile === 'leaseholder') return `${base}/arriendos`;
+    } catch {
+      // JWT malformado, redirigir al default
+    }
+    return `${base}/`;
+  }
+
   function closeResultModal() {
     showResultModal = false;
     resultMessage = "";
-    setTimeout(() => goto(`${base}/`), 300);
+    setTimeout(() => goto(getHomeRoute()), 300);
   }
 
   function onKeyDown(e: KeyboardEvent) {
@@ -237,7 +251,7 @@
   }
 
   function handleBack() {
-    goto(`${base}/`);
+    goto(getHomeRoute());
   }
 
   // ---------- Confirmación y registro masivo de visitantes ----------
