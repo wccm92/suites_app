@@ -76,7 +76,7 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
     from(s in Suites,
       join: e in assoc(s, :eventos),
       join: a in assoc(s, :administradores),
-      where: e.id == ^event_id and a.id == ^admin_id and s.tipo != "PARQUEADERO",
+      where: e.id == ^event_id and a.id == ^admin_id and s.tipo != "SUITE",
       distinct: true
     )
     |> Repo.all()
