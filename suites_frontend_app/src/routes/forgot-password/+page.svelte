@@ -95,11 +95,11 @@
   .form-container {
     width: 100%;
     max-width: 420px;
-    background: var(--color-surface);
+    background: #ffffff;
     border-radius: 1rem;
     padding: 1.5rem 1.7rem;
-    border: 1px solid var(--color-primary);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
+    border: 1px solid #d1e8e0;
+    box-shadow: 0 4px 20px rgba(0, 89, 64, 0.10);
   }
 
   .link-back {
@@ -151,20 +151,21 @@
   .input {
     padding: 0.55rem 0.7rem;
     border-radius: 0.6rem;
-    border: 1px solid var(--color-primary);
-    background: var(--color-surface-soft);
-    color: #e6fff5;
+    border: 1px solid #c0ddd4;
+    background: #f5faf7;
+    color: var(--color-text-main);
     font-size: 0.95rem;
     outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .input::placeholder {
-    color: #8fbcae;
+    color: #8a9e95;
   }
 
   .input:focus {
-    border-color: #009933;
-    box-shadow: 0 0 0 1px #009933;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 89, 64, 0.15);
   }
 
   .error {
@@ -185,11 +186,11 @@
     border-radius: 999px;
     border: none;
     background: var(--color-primary);
-    color: var(--color-text-main);
+    color: #ffffff;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.6);
+    box-shadow: 0 4px 12px rgba(0, 89, 64, 0.28);
     transition:
       transform 0.12s ease,
       box-shadow 0.12s ease,
@@ -198,13 +199,13 @@
 
   .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(0, 51, 51, 0.85);
+    box-shadow: 0 8px 20px rgba(0, 89, 64, 0.40);
     background: #009933;
   }
 
   .btn-primary:active {
     transform: translateY(0);
-    box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
   @media (max-width: 640px) {

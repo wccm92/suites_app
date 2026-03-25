@@ -25,11 +25,11 @@
   .box {
     width: 100%;
     max-width: 480px;
-    background: var(--color-surface);
+    background: #ffffff;
     border-radius: 1rem;
     padding: 1.5rem 1.7rem;
-    border: 1px solid var(--color-primary);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
+    border: 1px solid #d1e8e0;
+    box-shadow: 0 4px 20px rgba(0, 89, 64, 0.10);
     text-align: center;
   }
 

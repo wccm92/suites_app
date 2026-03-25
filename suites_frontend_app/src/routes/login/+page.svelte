@@ -280,11 +280,11 @@
   .form-container {
     width: 100%;
     max-width: 420px;
-    background: var(--color-surface);
+    background: #ffffff;
     border-radius: 1rem;
     padding: 1.5rem 1.7rem;
-    border: 1px solid var(--color-primary);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
+    border: 1px solid #d1e8e0;
+    box-shadow: 0 4px 20px rgba(0, 89, 64, 0.12);
   }
 
   .title {
@@ -322,20 +322,21 @@
   .input {
     padding: 0.55rem 0.7rem;
     border-radius: 0.6rem;
-    border: 1px solid var(--color-primary);
-    background: var(--color-surface-soft);
-    color: #e6fff5;
+    border: 1px solid #c0ddd4;
+    background: #f5faf7;
+    color: var(--color-text-main);
     font-size: 0.95rem;
     outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .input::placeholder {
-    color: #8fbcae;
+    color: #8a9e95;
   }
 
   .input:focus {
-    border-color: #009933;
-    box-shadow: 0 0 0 1px #009933;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 89, 64, 0.15);
   }
 
   .error {
@@ -349,11 +350,11 @@
     border-radius: 999px;
     border: none;
     background: var(--color-primary);
-    color: var(--color-text-main);
+    color: #ffffff;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.6);
+    box-shadow: 0 4px 12px rgba(0, 89, 64, 0.28);
     transition:
       transform 0.12s ease,
       box-shadow 0.12s ease,
@@ -363,13 +364,13 @@
 
   .btn-primary:hover:enabled {
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(0, 51, 51, 0.85);
+    box-shadow: 0 8px 20px rgba(0, 89, 64, 0.40);
     background: #009933;
   }
 
   .btn-primary:active:enabled {
     transform: translateY(0);
-    box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
   .btn-primary:disabled {
@@ -399,11 +400,11 @@
     border-radius: 999px;
     border: none;
     background: var(--color-primary);
-    color: var(--color-text-main);
+    color: #ffffff;
     font-size: 0.95rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.6);
+    box-shadow: 0 4px 12px rgba(0, 89, 64, 0.28);
     transition:
       transform 0.12s ease,
       box-shadow 0.12s ease,
@@ -412,13 +413,13 @@
 
   .btn-secondary:hover:enabled {
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(0, 51, 51, 0.85);
+    box-shadow: 0 8px 20px rgba(0, 89, 64, 0.40);
     background: #009933;
   }
 
   .btn-secondary:active:enabled {
     transform: translateY(0);
-    box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
   .btn-secondary:disabled {
@@ -487,22 +488,19 @@
   .event-card {
     margin-top: 0.25rem;
     border-radius: 0.85rem;
-    border: 1px solid var(--color-primary-light);
-    background: linear-gradient(135deg, #012e2c 0%, #023a30 100%);
+    border: 1px solid #c0ddd4;
+    background: linear-gradient(135deg, #edf7f2 0%, #e0f5ea 100%);
     padding: 0.85rem 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.3rem;
-    box-shadow:
-      0 0 0 1px rgba(0, 153, 51, 0.15),
-      0 8px 24px rgba(0, 0, 0, 0.5),
-      0 0 18px rgba(0, 153, 51, 0.12);
+    box-shadow: 0 4px 14px rgba(0, 89, 64, 0.12);
     animation: cardPulse 4s ease-in-out infinite;
   }
 
   @keyframes cardPulse {
-    0%, 100% { box-shadow: 0 0 0 1px rgba(0,153,51,0.15), 0 8px 24px rgba(0,0,0,0.5), 0 0 18px rgba(0,153,51,0.12); }
-    50%       { box-shadow: 0 0 0 1px rgba(0,153,51,0.35), 0 8px 28px rgba(0,0,0,0.55), 0 0 28px rgba(0,153,51,0.25); }
+    0%, 100% { box-shadow: 0 4px 14px rgba(0, 89, 64, 0.12); }
+    50%       { box-shadow: 0 6px 22px rgba(0, 89, 64, 0.22); }
   }
 
   .event-live-badge {
@@ -568,10 +566,9 @@
   .event-name {
     font-size: 1.15rem;
     font-weight: 800;
-    color: #ffffff;
+    color: var(--color-text-main);
     margin: 0;
     line-height: 1.2;
-    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   }
 
   .event-description {

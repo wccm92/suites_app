@@ -12,33 +12,28 @@
   --color-gray: #575756;           /* gris corporativo */
   --color-gray-soft: #dadada;      /* gris claro */
 
-  --color-bg: #001b1b;             /* fondo general muy oscuro */
-  --color-surface: #022624;        /* tarjetas / contenedores */
-  --color-surface-soft: #03312f;   /* variantes de superficie */
+  --color-bg: #f5faf7;             /* fondo general blanco-verdoso */
+  --color-surface: #ffffff;        /* tarjetas / contenedores */
+  --color-surface-soft: #edf7f2;   /* variantes de superficie */
 
-  --color-text-main: #f5fff9;
-  --color-text-muted: #c8e6d8;
-  --color-text-soft: #dadada;
+  --color-text-main: #1a2e27;
+  --color-text-muted: #5a7a6e;
+  --color-text-soft: #8a9e95;
 
-  --color-success: #8fbcae;
+  --color-success: #005940;
   --color-error: #ff6b6b;
   --color-error-soft: #fca5a5;
 
   --radius-lg: 22px;
   --radius-pill: 999px;
 
-  --shadow-elevated: 0 18px 45px rgba(0, 0, 0, 0.65);
+  --shadow-elevated: 0 4px 20px rgba(0, 89, 64, 0.12);
 
   --font-brand: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
 
   /* Gradiente de fondo principal */
-  --bg-gradient-main: radial-gradient(
-    circle at top,
-    var(--color-primary) 0,
-    var(--color-primary-light) 55%,
-    var(--color-bg) 100%
-  );
+  --bg-gradient-main: linear-gradient(180deg, #edf7f2 0%, #f5faf7 100%);
 }
 
 /* ===== BASE GLOBAL ===== */
@@ -63,7 +58,7 @@ body {
   font-size: clamp(1.6rem, 1.2rem + 1vw, 2rem);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-gray-soft);
+  color: var(--color-text-main);
 }
 
 .subtitle {
@@ -77,16 +72,12 @@ body {
 .card,
 .detail-panel,
 .added-block {
-  background: radial-gradient(
-      circle at top left,
-      rgba(0, 0, 0, 0.32),
-      transparent 60%
-    ),
-    var(--color-surface);
+  background: #ffffff;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(0, 0, 0, 0.45);
-  box-shadow: var(--shadow-elevated);
+  border: 1px solid #d1e8e0;
+  box-shadow: 0 4px 16px rgba(0, 89, 64, 0.10);
   color: var(--color-text-main);
+  transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .detail-panel {
@@ -98,7 +89,7 @@ body {
 }
 
 .card-id {
-  color: var(--color-gray-soft);
+  color: var(--color-text-main);
 }
 
 .card-sub,
@@ -118,15 +109,10 @@ body {
 /* ===== FORMULARIOS (login + registrar invitado) ===== */
 
 .form-container {
-  background: radial-gradient(
-      circle at top left,
-      rgba(0, 0, 0, 0.55),
-      transparent 65%
-    ),
-    var(--color-surface);
+  background: #ffffff;
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(0, 0, 0, 0.65);
-  box-shadow: var(--shadow-elevated);
+  border: 1px solid #d1e8e0;
+  box-shadow: 0 4px 20px rgba(0, 89, 64, 0.10);
 }
 
 .field {
@@ -139,17 +125,18 @@ body {
   font-size: 0.85rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--color-gray-soft);
+  color: var(--color-text-muted);
 }
 
 .input,
 textarea {
   border-radius: 999px;
-  border: 1px solid rgba(0, 0, 0, 0.55);
+  border: 1px solid #c0ddd4;
   padding: 0.55rem 0.9rem;
-  background: rgba(0, 0, 0, 0.35);
+  background: #ffffff;
   color: var(--color-text-main);
   outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .input:focus,
@@ -172,11 +159,11 @@ textarea:focus {
     var(--color-primary-light) 40%,
     var(--color-accent) 100%
   );
-  color: var(--color-text-main);
+  color: #ffffff;
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 14px rgba(0, 89, 64, 0.28);
   transition:
     transform 0.12s ease,
     box-shadow 0.12s ease,
@@ -219,16 +206,16 @@ textarea:focus {
 /* Botón flotante de logout (+layout.svelte) */
 .logout-btn {
   border-radius: var(--radius-pill);
-  border: 1px solid var(--color-primary-light);
-  background: rgba(0, 27, 27, 0.95);
-  color: var(--color-gray-soft);
+  border: 1px solid #c0ddd4;
+  background: #ffffff;
+  color: var(--color-primary);
   font-weight: 600;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 4px 14px rgba(0, 89, 64, 0.14);
 }
 
 .logout-btn:hover {
-  border-color: var(--color-accent);
-  background: rgba(1, 38, 38, 0.98);
+  border-color: var(--color-primary);
+  background: #edf7f2;
 }
 
 /* ===== CHIPS (cedulas agregadas) ===== */
@@ -245,13 +232,13 @@ textarea:focus {
   gap: 0.35rem;
   padding: 0.25rem 0.7rem;
   border-radius: 999px;
-  background: rgba(1, 53, 59, 0.85);
-  border: 1px solid rgba(0, 0, 0, 0.5);
+  background: #edf7f2;
+  border: 1px solid #c0ddd4;
 }
 
 .chip-text {
   font-size: 0.8rem;
-  color: var(--color-text-soft);
+  color: var(--color-text-main);
 }
 
 .chip-remove {
@@ -284,7 +271,7 @@ textarea:focus {
 /* ===== ESTADÍSTICAS DETALLE SUITE ===== */
 
 .suite-stats {
-  border-top: 1px solid rgba(0, 0, 0, 0.5);
+  border-top: 1px solid #d1e8e0;
 }
 
 .stat-label {

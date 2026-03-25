@@ -591,11 +591,11 @@
   .form-container {
     width: 100%;
     max-width: 820px;
-    background: var(--color-surface);
+    background: #ffffff;
     border-radius: 1rem;
     padding: 1.5rem 1.7rem;
-    border: 1px solid var(--color-primary);
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.55);
+    border: 1px solid #d1e8e0;
+    box-shadow: 0 4px 20px rgba(0, 89, 64, 0.10);
   }
 
   .header-row {
@@ -686,7 +686,7 @@
   .label {
     font-size: 0.95rem;
     font-weight: 700;
-    color: #e6fff5;
+    color: var(--color-text-main);
   }
 
   .cedula-row {
@@ -699,33 +699,34 @@
   .input {
     padding: 0.65rem 0.8rem;
     border-radius: 0.8rem;
-    border: 1px solid var(--color-primary);
-    background: var(--color-surface-soft);
-    color: #e6fff5;
+    border: 1px solid #c0ddd4;
+    background: #ffffff;
+    color: var(--color-text-main);
     font-size: 1rem;
     outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
   }
 
   .input::placeholder {
-    color: #8fbcae;
+    color: #8a9e95;
   }
 
   .input:focus {
-    border-color: #009933;
-    box-shadow: 0 0 0 1px #009933;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 2px rgba(0, 89, 64, 0.15);
   }
 
   .btn-add {
     width: 52px;
     height: 44px;
     border-radius: 0.9rem;
-    border: 1px solid var(--color-primary);
-    background: var(--color-surface);
-    color: var(--color-success);
+    border: 1px solid #c0ddd4;
+    background: #ffffff;
+    color: var(--color-primary);
     font-size: 1.6rem;
     font-weight: 900;
     cursor: pointer;
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 2px 8px rgba(0, 89, 64, 0.12);
     transition:
       transform 0.12s ease,
       background 0.12s ease,
@@ -734,8 +735,8 @@
 
   .btn-add:hover {
     transform: translateY(-1px);
-    border-color: #009933;
-    background: #014040;
+    border-color: var(--color-primary);
+    background: #edf7f2;
   }
 
   .error {
@@ -767,15 +768,15 @@
     align-items: center;
     gap: 0.55rem;
     border-radius: 999px;
-    border: 1px solid var(--color-primary);
-    background: var(--color-surface-soft);
+    border: 1px solid #c0ddd4;
+    background: #edf7f2;
     padding: 0.45rem 0.65rem 0.45rem 0.85rem;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    box-shadow: 0 2px 6px rgba(0, 89, 64, 0.10);
   }
 
   .chip-text {
     font-weight: 800;
-    color: var(--color-success);
+    color: var(--color-primary);
     letter-spacing: 0.02em;
   }
 
@@ -783,9 +784,9 @@
     width: 28px;
     height: 28px;
     border-radius: 999px;
-    border: 1px solid var(--color-primary);
-    background: var(--color-surface);
-    color: #e6fff5;
+    border: 1px solid #e0e0e0;
+    background: #ffffff;
+    color: var(--color-error);
     cursor: pointer;
     font-size: 1.2rem;
     line-height: 1;
@@ -799,8 +800,8 @@
 
   .chip-remove:hover {
     transform: scale(1.05);
-    border-color: #009933;
-    background: #014040;
+    border-color: var(--color-error);
+    background: #fee2e2;
   }
 
   .hint {
@@ -810,8 +811,8 @@
   }
 
   .summary-box {
-    border: 1px solid var(--color-primary);
-    background: rgba(0, 38, 38, 0.55);
+    border: 1px solid #d1e8e0;
+    background: #f5faf7;
     border-radius: 1rem;
     padding: 0.9rem 1rem;
   }
@@ -851,8 +852,8 @@
 
   .btn-confirm:hover:enabled {
     transform: translateY(-1px);
-    border-color: #009933;
-    background: rgba(1, 64, 64, 0.6);
+    border-color: var(--color-primary);
+    background: #edf7f2;
   }
 
   .btn-confirm:disabled {
@@ -864,8 +865,9 @@
   .modal-overlay {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.55);
+    background: rgba(0, 0, 0, 0.30);
     z-index: 9998;
+    backdrop-filter: blur(2px);
   }
 
   .modal {
@@ -874,17 +876,17 @@
     top: 50%;
     transform: translate(-50%, -50%);
     width: min(520px, calc(100% - 2rem));
-    background: var(--color-surface);
-    border: 1px solid var(--color-primary);
+    background: #ffffff;
+    border: 1px solid #d1e8e0;
     border-radius: 1rem;
     padding: 1.1rem 1.1rem 1rem;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
+    box-shadow: 0 10px 40px rgba(0, 89, 64, 0.18);
     z-index: 9999;
   }
 
   .modal-text {
     margin: 0 0 0.9rem 0;
-    color: #e6fff5;
+    color: var(--color-text-main);
     font-size: 1rem;
     line-height: 1.35;
   }
@@ -895,11 +897,11 @@
     border-radius: 999px;
     border: none;
     background: var(--color-primary);
-    color: var(--color-text-main);
+    color: #ffffff;
     font-size: 1rem;
     font-weight: 800;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 51, 51, 0.6);
+    box-shadow: 0 4px 12px rgba(0, 89, 64, 0.28);
     transition:
       transform 0.12s ease,
       box-shadow 0.12s ease,
@@ -908,13 +910,13 @@
 
   .btn-primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 14px 30px rgba(0, 51, 51, 0.85);
+    box-shadow: 0 8px 20px rgba(0, 89, 64, 0.40);
     background: #009933;
   }
 
   .btn-primary:active {
     transform: translateY(0);
-    box-shadow: 0 8px 18px rgba(0, 51, 51, 0.9);
+    box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
   .btn-secondary {
@@ -930,7 +932,8 @@
   }
 
   .btn-secondary:hover:enabled {
-    background: rgba(1, 64, 64, 0.6);
+    background: #edf7f2;
+    border-color: var(--color-primary);
   }
 
   .modal-actions {

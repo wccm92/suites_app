@@ -115,13 +115,13 @@
   .btn-back {
     padding: 0.4rem 0.9rem;
     border-radius: 999px;
-    border: 1px solid var(--color-primary-light);
-    background: var(--color-surface);
-    color: var(--color-text-main);
+    border: 1px solid #c0ddd4;
+    background: #ffffff;
+    color: var(--color-primary);
     font-size: 0.85rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 2px 8px rgba(0, 89, 64, 0.12);
     transition:
       background 0.15s ease,
       border-color 0.15s ease,
@@ -130,8 +130,8 @@
   }
 
   .btn-back:hover {
-    background: #014040;
-    border-color: #009933;
+    background: #edf7f2;
+    border-color: var(--color-primary);
     transform: translateY(-1px);
   }
 
@@ -154,11 +154,11 @@
   }
 
   .card {
-    background: var(--color-surface);
+    background: #ffffff;
     border-radius: 1rem;
     padding: 1rem 1.2rem;
-    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5);
-    border: 1px solid var(--color-primary);
+    box-shadow: 0 4px 12px rgba(0, 89, 64, 0.10);
+    border: 1px solid #d1e8e0;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
@@ -200,7 +200,7 @@
   .card-id {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #ffffff;
+    color: var(--color-text-main);
     margin: 0;
   }
 

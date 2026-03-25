@@ -33,17 +33,18 @@
 
     padding: 0.45rem 0.9rem;
     border-radius: 999px;
-    border: 1px solid #027c68;
-    background: #001f1f;
-    color: #b0e892;
+    border: 1px solid #c0ddd4;
+    background: #ffffff;
+    color: var(--color-primary);
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 4px 14px rgba(0, 89, 64, 0.14);
+    transition: background 0.15s ease, border-color 0.15s ease;
   }
 
   .logout-btn:hover {
-    border-color: #009933;
-    background: #014040;
+    border-color: var(--color-primary);
+    background: #edf7f2;
   }
 
   @media (max-width: 768px) {
