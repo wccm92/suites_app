@@ -260,7 +260,7 @@
 
       <div class="login-shield">
         <img
-          src={`${base}/images/main_logo_v2.png`}
+          src={`${base}/images/main_logo_v2_dark.png`}
           alt="Escudo Deportivo Cali"
         />
       </div>
