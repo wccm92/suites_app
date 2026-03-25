@@ -56,6 +56,10 @@
 
 <main class="page">
   <div class="top-bar">
+    <div class="top-bar__left">
+      <h1 class="title">Parqueaderos</h1>
+    </div>
+
     <button
       class="btn-back"
       type="button"
@@ -63,7 +67,6 @@
     >
       ← Volver
     </button>
-    <h1 class="title">Parqueaderos</h1>
   </div>
 
   {#if loading}
@@ -100,9 +103,36 @@
   .top-bar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     gap: 1rem;
-    margin-bottom: 1.5rem;
-    flex-wrap: wrap;
+    margin-bottom: 1.8rem;
+    padding: 1rem 1.2rem;
+    border-radius: 1.2rem;
+
+    background: linear-gradient(
+      135deg,
+      rgba(0, 89, 64, 0.08) 0%,
+      rgba(0, 153, 51, 0.10) 100%
+    );
+
+    border: 1px solid rgba(0, 153, 51, 0.15);
+
+    box-shadow:
+      0 6px 20px rgba(0, 89, 64, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+    backdrop-filter: blur(6px);
+  }
+
+  .top-bar__left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 0.15rem;
   }
 
   .title {

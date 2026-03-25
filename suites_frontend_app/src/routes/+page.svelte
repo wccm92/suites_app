@@ -207,7 +207,10 @@
 
 <main class="page">
   <div class="top-bar">
-    <h1 class="title">Mis suites</h1>
+    <div class="top-bar__left">
+      <h1 class="title">Mis suites</h1>
+    </div>
+
     <button
       class="btn-nav"
       type="button"
@@ -219,8 +222,8 @@
         </svg>
       </span>
       <span class="btn-nav__body">
-        <span class="btn-nav__label">Ver parqueaderos</span>
-        <span class="btn-nav__sub">Consultar disponibilidad</span>
+        <span class="btn-nav__label">Parqueaderos</span>
+        <span class="btn-nav__sub">Ver disponibilidad</span>
       </span>
       <span class="btn-nav__arrow">›</span>
     </button>
@@ -417,9 +420,97 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-    margin-bottom: 1.5rem;
+    gap: 1rem;
+    margin-bottom: 1.8rem;
+    padding: 1rem 1.2rem;
+    border-radius: 1.2rem;
+
+    background: linear-gradient(
+      135deg,
+      rgba(0, 89, 64, 0.08) 0%,
+      rgba(0, 153, 51, 0.10) 100%
+    );
+
+    border: 1px solid rgba(0, 153, 51, 0.15);
+
+    box-shadow:
+      0 6px 20px rgba(0, 89, 64, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.6);
+
+    backdrop-filter: blur(6px);
+  }
+
+  .top-bar__left {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .title {
+    font-size: 1.9rem;
+    font-weight: 800;
+    margin: 0;
+    color: var(--color-success);
+    letter-spacing: -0.5px;
+  }
+
+  .subtitle {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: 0.15rem;
+  }
+
+  /* BOTÓN MÁS PREMIUM */
+  .btn-nav {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.7rem 1rem;
+    border-radius: 0.9rem;
+
+    border: 1px solid rgba(0, 153, 51, 0.25);
+    background: #ffffff;
+
+    box-shadow:
+      0 4px 12px rgba(0, 89, 64, 0.10),
+      inset 0 1px 0 rgba(255,255,255,0.6);
+
+    transition: all 0.18s ease;
+  }
+
+  .btn-nav:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(0, 89, 64, 0.18);
+    border-color: var(--color-primary);
+  }
+
+  .btn-nav__icon {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 0.8rem;
+
+    background: linear-gradient(135deg, #009933, #00cc44);
+    color: white;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-shadow: 0 8px 20px rgba(0, 153, 51, 0.5);
+  }
+
+  .btn-nav__label {
+    font-size: 0.9rem;
+    font-weight: 700;
+  }
+
+  .btn-nav__sub {
+    font-size: 0.7rem;
+    opacity: 0.7;
+  }
+
+  .btn-nav__arrow {
+    font-size: 1.3rem;
+    color: #009933;
   }
 
   .title {
