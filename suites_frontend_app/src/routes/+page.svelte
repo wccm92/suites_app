@@ -35,6 +35,10 @@
   $: suiteAlquilada =
     !!selectedSuite && selectedSuite.suite_alquilada === true;
 
+  // Derivado: indica si la suite ya tiene visitantes inscritos
+  $: suiteConVisitantes =
+    !!selectedSuite && (selectedSuite.invitados_inscritos?.length ?? 0) > 0;
+
   // 1) Revisamos JWT en localStorage (via store session)
   // 2) Si no hay JWT → login
   // 3) Si hay JWT → llamar /suites_app/suites
@@ -301,14 +305,16 @@
           </div>
           <div class="detail-actions">
             <button
-              class="btn-secondary {suiteAlquilada ? 'btn-rented' : ''}"
+              class="btn-secondary {suiteAlquilada ? 'btn-rented' : ''} {!suiteAlquilada && suiteConVisitantes ? 'btn-disabled' : ''}"
               type="button"
-              on:click={suiteAlquilada ? undefined : openRentModal}
-              disabled={suiteAlquilada}
-              aria-disabled={suiteAlquilada}
+              on:click={suiteAlquilada || suiteConVisitantes ? undefined : openRentModal}
+              disabled={suiteAlquilada || suiteConVisitantes}
+              aria-disabled={suiteAlquilada || suiteConVisitantes}
               title={suiteAlquilada
                 ? "Esta suite ya está alquilada."
-                : "Alquilar esta suite"}
+                : suiteConVisitantes
+                  ? "No puedes alquilar esta suite: ya tiene visitantes inscritos."
+                  : "Alquilar esta suite"}
             >
               {suiteAlquilada ? 'Suite Alquilada' : 'Alquilar suite'}
             </button>
@@ -790,6 +796,18 @@
     transform: none;
     background: #7c3a00;
     box-shadow: 0 6px 18px rgba(180, 80, 0, 0.35);
+  }
+
+  .btn-secondary.btn-disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .btn-secondary.btn-disabled:hover {
+    transform: none;
+    background: #009933;
+    box-shadow: none;
   }
 
   .btn-primary {
