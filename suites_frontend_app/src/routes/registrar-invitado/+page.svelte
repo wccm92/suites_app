@@ -203,9 +203,17 @@
     isSubmittingFinal = true;
 
     try {
+      const invitadosAmparados = invitados
+        .filter((id) => ninosPorInvitado[id])
+        .map((id) => `0${id}`);
+
       const res = await apiFetch("/suites_app/register_guests", {
         method: "POST",
-        body: JSON.stringify({ id_suite: suiteId, invitados }),
+        body: JSON.stringify({
+          id_suite: suiteId,
+          invitados,
+          invitados_amparados: invitadosAmparados,
+        }),
       });
 
       if (!res.ok) {
