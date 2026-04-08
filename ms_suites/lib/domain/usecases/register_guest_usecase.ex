@@ -51,15 +51,15 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
     amparado = Map.get(amparados_map, documento)
 
     if SuitesQueryAdapter.validate_blacklisted(documento) do
-      padre_bloqueado = [error_result(documento, "blocked")]
-      amparado_bloqueado = if amparado, do: [error_result(amparado, "blocked")], else: []
+      padre_bloqueado = [tag(error_result(documento, "blocked"), :adult)]
+      amparado_bloqueado = if amparado, do: [tag(error_result(amparado, "blocked"), :amparado)], else: []
       padre_bloqueado ++ amparado_bloqueado
     else
-      parent_result = register_one_doc(id, id_suite, documento)
+      parent_result = tag(register_one_doc(id, id_suite, documento), :adult)
 
       amparado_results =
         if amparado && parent_result.status == "OK" do
-          [register_one_doc(id, id_suite, amparado)]
+          [tag(register_one_doc(id, id_suite, amparado), :amparado)]
         else
           []
         end
@@ -67,6 +67,8 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
       [parent_result | amparado_results]
     end
   end
+
+  defp tag(result, tipo), do: Map.put(result, :tipo, tipo)
 
   #registra un documento (sin chequeo de blacklist, ya fue validado en el padre)
   defp register_one_doc(id, id_suite, documento) do
@@ -118,10 +120,14 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
   end
 
   defp build_response(results) do
+    adults    = Enum.filter(results, &(&1.tipo == :adult))
+    amparados = Enum.filter(results, &(&1.tipo == :amparado))
+
     %{
-      successful_registrations: successful(results),
-      not_registered_blocked: blocked_docs(results),
-      not_registered_already_suites: already_registered_docs(results)
+      successful_registrations: successful(adults),
+      not_registered_blocked: blocked_docs(adults),
+      not_registered_already_suites: already_registered_docs(adults),
+      successful_registrations_amparados: successful(amparados)
     }
   end
 
