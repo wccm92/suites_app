@@ -873,18 +873,22 @@
   .guests-grid {
     margin-top: 0.35rem;
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 0.4rem;
+    max-height: 9rem;
+    overflow-y: auto;
+    padding-right: 0.15rem;
   }
 
   .guest-pill {
     background: #edf7f2;
     border-radius: 999px;
-    padding: 0.3rem 0.5rem;
+    padding: 0.3rem 0.65rem;
     border: 1px solid #c0ddd4;
     box-shadow: 0 2px 6px rgba(0, 89, 64, 0.10);
-    text-align: center;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
 
   .guest-id {
