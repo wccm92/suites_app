@@ -51,8 +51,6 @@
   // ── Modals ────────────────────────────────────────────────────────────
   let showModal = false;
   let modalMessage = "";
-  let showResultModal = false;
-  let resultMessage = "";
 
   function openModal(message: string) {
     modalMessage = message;
@@ -62,13 +60,25 @@
     showModal = false;
     modalMessage = "";
   }
-  function openResultModal(message: string) {
-    resultMessage = message;
+
+  // ── Result modal ──────────────────────────────────────────────────────
+  type RegistroResult = {
+    adultos: string[];
+    ninos: string[];
+    bloqueados: string[];
+    yaEnSuites: string[];
+  };
+
+  let showResultModal = false;
+  let registroResult: RegistroResult | null = null;
+
+  function openResultModal(result: RegistroResult) {
+    registroResult = result;
     showResultModal = true;
   }
   function closeResultModal() {
     showResultModal = false;
-    resultMessage = "";
+    registroResult = null;
     setTimeout(() => goto(getHomeRoute()), 300);
   }
 
@@ -232,36 +242,18 @@
 
       const body = (await res.json()) as {
         successful_registrations?: string[];
+        successful_registrations_amparados?: string[];
         not_registered_blocked?: string[];
         not_registered_already_suites?: string[];
       };
 
-      const okList = body.successful_registrations ?? [];
-      const blockedList = body.not_registered_blocked ?? [];
-      const alreadySuitesList = body.not_registered_already_suites ?? [];
-
-      let msg = "";
-      if (okList.length > 0)
-        msg +=
-          "Los siguientes visitantes fueron registrados exitosamente:\n\n" +
-          okList.join("\n") +
-          "\n\n";
-      if (blockedList.length > 0)
-        msg +=
-          "Los siguientes visitantes no fueron registrados debido a que están reportados por Logística:\n\n" +
-          blockedList.join("\n") +
-          "\n\n";
-      if (alreadySuitesList.length > 0)
-        msg +=
-          "Los siguientes visitantes no fueron registrados porque ya se encuentran en otras suites para este evento:\n\n" +
-          alreadySuitesList.join("\n") +
-          "\n\n";
-      if (!msg)
-        msg =
-          "La operación de registro se completó, pero no se devolvieron detalles específicos.";
-
       invitados = [];
-      openResultModal(msg.trim());
+      openResultModal({
+        adultos:    body.successful_registrations ?? [],
+        ninos:      body.successful_registrations_amparados ?? [],
+        bloqueados: body.not_registered_blocked ?? [],
+        yaEnSuites: body.not_registered_already_suites ?? [],
+      });
     } catch {
       openModal(
         "No fue posible comunicarse con el servidor para confirmar el registro. Inténtalo nuevamente."
@@ -534,14 +526,78 @@
     </section>
   {/if}
 
-  {#if showResultModal}
+  {#if showResultModal && registroResult}
     <section
-      class="modal"
+      class="modal modal--result"
       role="dialog"
       aria-modal="true"
       aria-label="Resultado registro visitantes"
     >
-      <p class="modal-text" style="white-space: pre-line;">{resultMessage}</p>
+      <h2 class="result-title">Resultado del registro</h2>
+
+      <!-- ── Registros exitosos ── -->
+      {#if registroResult.adultos.length > 0 || registroResult.ninos.length > 0}
+        <div class="result-section result-section--success">
+          <h3 class="result-section-title">Registros exitosos</h3>
+          <div class="result-groups">
+            {#if registroResult.adultos.length > 0}
+              <div class="result-group">
+                <p class="result-group-label">Adultos</p>
+                <div class="result-group-list">
+                  {#each registroResult.adultos as id}
+                    <span class="result-item">{id}</span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+            {#if registroResult.ninos.length > 0}
+              <div class="result-group">
+                <p class="result-group-label">Niños</p>
+                <div class="result-group-list">
+                  {#each registroResult.ninos as id}
+                    <span class="result-item">{id}</span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
+
+      <!-- ── Registros no exitosos ── -->
+      {#if registroResult.bloqueados.length > 0 || registroResult.yaEnSuites.length > 0}
+        <div class="result-section result-section--failure">
+          <h3 class="result-section-title">Registros no exitosos</h3>
+          <div class="result-groups">
+            {#if registroResult.bloqueados.length > 0}
+              <div class="result-group">
+                <p class="result-group-label">Reportados por logística</p>
+                <div class="result-group-list">
+                  {#each registroResult.bloqueados as id}
+                    <span class="result-item">{id}</span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+            {#if registroResult.yaEnSuites.length > 0}
+              <div class="result-group">
+                <p class="result-group-label">Ya están registrados en este evento</p>
+                <div class="result-group-list">
+                  {#each registroResult.yaEnSuites as id}
+                    <span class="result-item">{id}</span>
+                  {/each}
+                </div>
+              </div>
+            {/if}
+          </div>
+        </div>
+      {/if}
+
+      <!-- Edge case: all empty -->
+      {#if registroResult.adultos.length === 0 && registroResult.ninos.length === 0 && registroResult.bloqueados.length === 0 && registroResult.yaEnSuites.length === 0}
+        <p class="result-empty">La operación se completó, pero no se devolvieron detalles específicos.</p>
+      {/if}
+
       <button type="button" class="btn-primary" on:click={closeResultModal}>
         Volver al listado de suites
       </button>
@@ -1118,6 +1174,103 @@
     color: var(--color-text-main);
     font-size: 1rem;
     line-height: 1.45;
+  }
+
+  /* ── Result modal variant ────────────────────────────────────────── */
+  .modal--result {
+    width: min(680px, calc(100% - 2rem));
+    max-height: 90vh;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1.4rem 1.4rem 1.1rem;
+  }
+
+  .result-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--color-success);
+    text-align: center;
+  }
+
+  /* Section card */
+  .result-section {
+    border-radius: 0.85rem;
+    padding: 1rem 1rem 0.85rem;
+  }
+
+  .result-section--success {
+    border: 2px solid #86efac;
+    background: #f0fdf4;
+  }
+
+  .result-section--failure {
+    border: 2px solid #fbbf24;
+    background: #fffbeb;
+  }
+
+  .result-section-title {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.85rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .result-section--success .result-section-title {
+    color: #166534;
+  }
+
+  .result-section--failure .result-section-title {
+    color: #92400e;
+  }
+
+  /* Side-by-side sub-groups */
+  .result-groups {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+
+  /* Dashed inner box */
+  .result-group {
+    border: 1.5px dashed #c0ddd4;
+    border-radius: 0.65rem;
+    padding: 0.65rem 0.75rem;
+    background: rgba(255, 255, 255, 0.65);
+  }
+
+  .result-section--failure .result-group {
+    border-color: #fcd34d;
+  }
+
+  .result-group-label {
+    margin: 0 0 0.5rem 0;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--color-text-main);
+  }
+
+  .result-group-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .result-item {
+    font-size: 0.88rem;
+    color: var(--color-text-main);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+  }
+
+  .result-empty {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    text-align: center;
   }
 
   .btn-primary {
