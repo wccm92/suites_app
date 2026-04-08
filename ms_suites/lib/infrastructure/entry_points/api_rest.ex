@@ -133,8 +133,9 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   post "/suites_app/register_guests" do
     token = extract_auth(conn)
     case conn.body_params do
-      %{"id_suite" => id_suite, "invitados" => invitados} ->
-        case RegisterGuestsUsecase.handle_register_guests(id_suite, invitados, token) do
+      %{"id_suite" => id_suite, "invitados" => invitados} = params ->
+        invitados_amparados = Map.get(params, "invitados_amparados", [])
+        case RegisterGuestsUsecase.handle_register_guests(id_suite, invitados, invitados_amparados, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->

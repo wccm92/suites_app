@@ -5,22 +5,35 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
 
 
-  def handle_register_guests(id_suite, visitantes, token) when is_list(visitantes)do
+  def handle_register_guests(id_suite, visitantes, invitados_amparados, token)
+      when is_list(visitantes) and is_list(invitados_amparados) do
     with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token),
-         {:ok, results} <- register_guests(event_user_info.id, id_suite, visitantes) do
+         {:ok, results} <- register_guests(event_user_info.id, id_suite, visitantes, invitados_amparados) do
       {:ok, results}
     else
       {:error, _} = err -> err
       false -> {:error, :invalid_body}
     end
   end
+
+  # Construye un mapa padre_doc -> amparado_doc (quitando el "0" inicial del amparado)
+  defp build_amparados_map(invitados_amparados) do
+    Enum.reduce(invitados_amparados, %{}, fn doc, acc ->
+      normalized = normalize_doc(doc)
+      parent = String.replace_prefix(normalized, "0", "")
+      Map.put(acc, parent, normalized)
+    end)
+  end
+
   #mapea los documentos
-  defp register_guests(id, id_suite, visitantes) do
+  defp register_guests(id, id_suite, visitantes, invitados_amparados) do
+    amparados_map = build_amparados_map(invitados_amparados)
+
     results =
       visitantes
       |> Enum.map(&normalize_doc/1)
       |> Enum.reject(&is_nil_or_empty?/1)
-      |> Enum.map(&register_one(id, id_suite, &1))
+      |> Enum.flat_map(&register_with_amparado(id, id_suite, &1, amparados_map))
 
     {:ok, build_response(results)}
   end
@@ -32,11 +45,31 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
     |> to_string()
     |> String.trim()
   end
-  #registra visitantes
-  defp register_one(id, id_suite, documento) do
+
+  # Si el padre está bloqueado, bloquea también al amparado sin intentar registrarlo
+  defp register_with_amparado(id, id_suite, documento, amparados_map) do
+    amparado = Map.get(amparados_map, documento)
+
     if SuitesQueryAdapter.validate_blacklisted(documento) do
-      error_result(documento, "blocked")
+      padre_bloqueado = [error_result(documento, "blocked")]
+      amparado_bloqueado = if amparado, do: [error_result(amparado, "blocked")], else: []
+      padre_bloqueado ++ amparado_bloqueado
     else
+      parent_result = register_one_doc(id, id_suite, documento)
+
+      amparado_results =
+        if amparado && parent_result.status == "OK" do
+          [register_one_doc(id, id_suite, amparado)]
+        else
+          []
+        end
+
+      [parent_result | amparado_results]
+    end
+  end
+
+  #registra un documento (sin chequeo de blacklist, ya fue validado en el padre)
+  defp register_one_doc(id, id_suite, documento) do
     case SuitesQueryAdapter.ensure_visitante_exists(documento) do
       :ok ->
         do_register_one(id, id_suite, documento)
@@ -46,7 +79,6 @@ defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
 
       other ->
         error_result(documento, "error", %{detail: inspect(other)})
-        end
     end
   end
   #registra visitantesxevento
