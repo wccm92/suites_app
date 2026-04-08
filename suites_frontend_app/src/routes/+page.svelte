@@ -39,6 +39,12 @@
   $: suiteConVisitantes =
     !!selectedSuite && (selectedSuite.invitados_inscritos?.length ?? 0) > 0;
 
+  // Derivados: separa visitantes adultos (cédula normal) de niños (cédula con '0' al inicio)
+  $: visitantesAdultos =
+    selectedSuite?.invitados_inscritos?.filter((g) => !g.startsWith("0")) ?? [];
+  $: niosInscritos =
+    selectedSuite?.invitados_inscritos?.filter((g) => g.startsWith("0")) ?? [];
+
   // 1) Revisamos JWT en localStorage (via store session)
   // 2) Si no hay JWT → login
   // 3) Si hay JWT → llamar /suites_app/suites
@@ -290,9 +296,9 @@
             </div>
             <div class="detail-row detail-row-column">
               <span class="detail-label">Visitantes inscritos</span>
-              {#if selectedSuite.invitados_inscritos?.length}
+              {#if visitantesAdultos.length}
                 <div class="guests-grid">
-                  {#each selectedSuite.invitados_inscritos as guest}
+                  {#each visitantesAdultos as guest}
                     <div class="guest-pill">
                       <span class="guest-id">{guest}</span>
                     </div>
@@ -300,6 +306,20 @@
                 </div>
               {:else}
                 <span class="detail-value">Sin visitantes</span>
+              {/if}
+            </div>
+            <div class="detail-row detail-row-column">
+              <span class="detail-label">Niños inscritos</span>
+              {#if niosInscritos.length}
+                <div class="guests-grid">
+                  {#each niosInscritos as guest}
+                    <div class="guest-pill guest-pill--child">
+                      <span class="guest-id">{guest}</span>
+                    </div>
+                  {/each}
+                </div>
+              {:else}
+                <span class="detail-value">Sin niños inscritos</span>
               {/if}
             </div>
           </div>
@@ -872,6 +892,15 @@
     font-weight: 500;
     color: var(--color-success);
     letter-spacing: 0.02em;
+  }
+
+  .guest-pill--child {
+    background: #fef9ec;
+    border-color: #f5c842;
+  }
+
+  .guest-pill--child .guest-id {
+    color: #92610a;
   }
 
   /* ── Modal styles ──────────────────────────────────────────────────── */
