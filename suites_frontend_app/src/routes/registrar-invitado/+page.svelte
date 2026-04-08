@@ -533,29 +533,52 @@
       aria-modal="true"
       aria-label="Resultado registro visitantes"
     >
-      <h2 class="result-title">Resultado del registro</h2>
+      <!-- Header -->
+      <div class="result-header">
+        <div class="result-header-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25z" clip-rule="evenodd"/>
+          </svg>
+        </div>
+        <div>
+          <h2 class="result-title">Resultado del registro</h2>
+          <p class="result-subtitle">Suite <strong>{suiteId}</strong></p>
+        </div>
+      </div>
 
       <!-- ── Registros exitosos ── -->
       {#if registroResult.adultos.length > 0 || registroResult.ninos.length > 0}
         <div class="result-section result-section--success">
-          <h3 class="result-section-title">Registros exitosos</h3>
+          <div class="result-section-header">
+            <span class="result-section-dot result-section-dot--success"></span>
+            <h3 class="result-section-title">Registros exitosos</h3>
+            <span class="result-count result-count--success">
+              {registroResult.adultos.length + registroResult.ninos.length}
+            </span>
+          </div>
           <div class="result-groups">
             {#if registroResult.adultos.length > 0}
-              <div class="result-group">
-                <p class="result-group-label">Adultos</p>
-                <div class="result-group-list">
+              <div class="result-group result-group--success">
+                <p class="result-group-label">
+                  <span class="result-group-icon">👤</span> Adultos
+                  <span class="result-group-count">{registroResult.adultos.length}</span>
+                </p>
+                <div class="result-pills">
                   {#each registroResult.adultos as id}
-                    <span class="result-item">{id}</span>
+                    <span class="result-pill result-pill--success">{id}</span>
                   {/each}
                 </div>
               </div>
             {/if}
             {#if registroResult.ninos.length > 0}
-              <div class="result-group">
-                <p class="result-group-label">Niños</p>
-                <div class="result-group-list">
+              <div class="result-group result-group--success">
+                <p class="result-group-label">
+                  <span class="result-group-icon">🧒</span> Niños
+                  <span class="result-group-count">{registroResult.ninos.length}</span>
+                </p>
+                <div class="result-pills">
                   {#each registroResult.ninos as id}
-                    <span class="result-item">{id}</span>
+                    <span class="result-pill result-pill--success">{id}</span>
                   {/each}
                 </div>
               </div>
@@ -567,24 +590,36 @@
       <!-- ── Registros no exitosos ── -->
       {#if registroResult.bloqueados.length > 0 || registroResult.yaEnSuites.length > 0}
         <div class="result-section result-section--failure">
-          <h3 class="result-section-title">Registros no exitosos</h3>
+          <div class="result-section-header">
+            <span class="result-section-dot result-section-dot--failure"></span>
+            <h3 class="result-section-title">No registrados</h3>
+            <span class="result-count result-count--failure">
+              {registroResult.bloqueados.length + registroResult.yaEnSuites.length}
+            </span>
+          </div>
           <div class="result-groups">
             {#if registroResult.bloqueados.length > 0}
-              <div class="result-group">
-                <p class="result-group-label">Reportados por logística</p>
-                <div class="result-group-list">
+              <div class="result-group result-group--failure">
+                <p class="result-group-label">
+                  <span class="result-group-icon">🚫</span> Reportados por logística
+                  <span class="result-group-count">{registroResult.bloqueados.length}</span>
+                </p>
+                <div class="result-pills">
                   {#each registroResult.bloqueados as id}
-                    <span class="result-item">{id}</span>
+                    <span class="result-pill result-pill--failure">{id}</span>
                   {/each}
                 </div>
               </div>
             {/if}
             {#if registroResult.yaEnSuites.length > 0}
-              <div class="result-group">
-                <p class="result-group-label">Ya están registrados en este evento</p>
-                <div class="result-group-list">
+              <div class="result-group result-group--failure">
+                <p class="result-group-label">
+                  <span class="result-group-icon">📋</span> Ya registrados en este evento
+                  <span class="result-group-count">{registroResult.yaEnSuites.length}</span>
+                </p>
+                <div class="result-pills">
                   {#each registroResult.yaEnSuites as id}
-                    <span class="result-item">{id}</span>
+                    <span class="result-pill result-pill--failure">{id}</span>
                   {/each}
                 </div>
               </div>
@@ -598,7 +633,7 @@
         <p class="result-empty">La operación se completó, pero no se devolvieron detalles específicos.</p>
       {/if}
 
-      <button type="button" class="btn-primary" on:click={closeResultModal}>
+      <button type="button" class="btn-primary result-btn" on:click={closeResultModal}>
         Volver al listado de suites
       </button>
     </section>
@@ -1178,92 +1213,196 @@
 
   /* ── Result modal variant ────────────────────────────────────────── */
   .modal--result {
-    width: min(680px, calc(100% - 2rem));
-    max-height: 90vh;
+    width: min(700px, calc(100% - 2rem));
+    max-height: 88vh;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 1rem;
-    padding: 1.4rem 1.4rem 1.1rem;
+    gap: 1.1rem;
+    padding: 1.5rem 1.5rem 1.2rem;
+    border-radius: 1.3rem;
+    border: 1px solid #d1e8e0;
+  }
+
+  /* ── Header ── */
+  .result-header {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #edf7f2;
+  }
+
+  .result-header-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+    background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-light) 100%);
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 6px 16px rgba(0, 89, 64, 0.35);
+  }
+
+  .result-header-icon svg {
+    width: 1.6rem;
+    height: 1.6rem;
   }
 
   .result-title {
-    margin: 0;
-    font-size: 1.25rem;
+    margin: 0 0 0.1rem 0;
+    font-size: 1.2rem;
     font-weight: 800;
-    color: var(--color-success);
-    text-align: center;
+    color: var(--color-primary);
+    letter-spacing: -0.3px;
   }
 
-  /* Section card */
+  .result-subtitle {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+  }
+
+  .result-subtitle strong {
+    color: var(--color-primary);
+  }
+
+  /* ── Section cards ── */
   .result-section {
-    border-radius: 0.85rem;
-    padding: 1rem 1rem 0.85rem;
+    border-radius: 1rem;
+    padding: 1rem;
+    border: 1px solid transparent;
   }
 
   .result-section--success {
-    border: 2px solid #86efac;
-    background: #f0fdf4;
+    background: linear-gradient(135deg, rgba(0, 89, 64, 0.04) 0%, rgba(6, 151, 71, 0.06) 100%);
+    border-color: rgba(0, 153, 51, 0.2);
   }
 
   .result-section--failure {
-    border: 2px solid #fbbf24;
-    background: #fffbeb;
+    background: linear-gradient(135deg, rgba(163, 106, 46, 0.05) 0%, rgba(163, 106, 46, 0.09) 100%);
+    border-color: rgba(163, 106, 46, 0.25);
   }
+
+  /* ── Section header row ── */
+  .result-section-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+  }
+
+  .result-section-dot {
+    width: 0.55rem;
+    height: 0.55rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .result-section-dot--success { background: #009933; }
+  .result-section-dot--failure { background: var(--color-accent); }
 
   .result-section-title {
-    margin: 0 0 0.75rem 0;
-    font-size: 0.85rem;
+    margin: 0;
+    font-size: 0.78rem;
     font-weight: 800;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
+    letter-spacing: 0.07em;
+    flex: 1;
   }
 
-  .result-section--success .result-section-title {
-    color: #166534;
+  .result-section--success .result-section-title { color: var(--color-primary); }
+  .result-section--failure .result-section-title { color: var(--color-accent); }
+
+  .result-count {
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 0.15rem 0.55rem;
+    border-radius: 999px;
   }
 
-  .result-section--failure .result-section-title {
-    color: #92400e;
+  .result-count--success {
+    background: rgba(0, 153, 51, 0.12);
+    color: var(--color-primary);
   }
 
-  /* Side-by-side sub-groups */
+  .result-count--failure {
+    background: rgba(163, 106, 46, 0.14);
+    color: var(--color-accent);
+  }
+
+  /* ── Side-by-side sub-groups ── */
   .result-groups {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
     gap: 0.75rem;
   }
 
-  /* Dashed inner box */
+  /* ── Inner group box ── */
   .result-group {
-    border: 1.5px dashed #c0ddd4;
-    border-radius: 0.65rem;
-    padding: 0.65rem 0.75rem;
-    background: rgba(255, 255, 255, 0.65);
+    border-radius: 0.75rem;
+    padding: 0.75rem 0.85rem;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 89, 64, 0.07);
   }
 
-  .result-section--failure .result-group {
-    border-color: #fcd34d;
-  }
+  .result-group--success { border: 1px solid #c0ddd4; }
+  .result-group--failure { border: 1px solid rgba(163, 106, 46, 0.3); }
 
   .result-group-label {
-    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin: 0 0 0.6rem 0;
     font-size: 0.82rem;
     font-weight: 700;
     color: var(--color-text-main);
   }
 
-  .result-group-list {
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+  .result-group-icon { font-size: 0.9rem; }
+
+  .result-group-count {
+    margin-left: auto;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    background: #edf7f2;
+    border-radius: 999px;
+    padding: 0.1rem 0.45rem;
   }
 
-  .result-item {
-    font-size: 0.88rem;
-    color: var(--color-text-main);
-    font-weight: 500;
+  .result-group--failure .result-group-count {
+    background: rgba(163, 106, 46, 0.1);
+  }
+
+  /* ── Pills per item ── */
+  .result-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+  }
+
+  .result-pill {
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.65rem;
+    border-radius: 999px;
+    white-space: nowrap;
     letter-spacing: 0.01em;
+  }
+
+  .result-pill--success {
+    background: #edf7f2;
+    border: 1px solid #c0ddd4;
+    color: var(--color-primary);
+  }
+
+  .result-pill--failure {
+    background: rgba(163, 106, 46, 0.08);
+    border: 1px solid rgba(163, 106, 46, 0.28);
+    color: #7a4e1a;
   }
 
   .result-empty {
@@ -1271,6 +1410,10 @@
     font-size: 0.95rem;
     color: var(--color-text-muted);
     text-align: center;
+  }
+
+  .result-btn {
+    margin-top: 0.25rem;
   }
 
   .btn-primary {
