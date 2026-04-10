@@ -291,7 +291,7 @@
       <span class="step-arrow" aria-hidden="true">›</span>
       <div class="step {currentStep === 2 ? 'step--active' : ''} {currentStep > 2 ? 'step--done' : ''}">
         <span class="step-bubble">{currentStep > 2 ? '✓' : '2'}</span>
-        <span class="step-label">Niños amparados</span>
+        <span class="step-label">Registro de amparados</span>
       </div>
       <span class="step-arrow" aria-hidden="true">›</span>
       <div class="step {currentStep === 3 ? 'step--active' : ''}">
@@ -396,17 +396,17 @@
     {#if currentStep === 2}
       <div class="step-content">
         <div class="step-heading">
-          <h1 class="step-title">Registro de niños amparados (opcional)</h1>
+          <h1 class="step-title">Registro de amparados (opcional)</h1>
           <span class="step-count">2 de 3</span>
         </div>
         <p class="step-subtitle">
-          Marca la casilla de las cédulas que llevarán un niño amparado
+          Marca la casilla de los visitantes adultos que llevarán un niño menor de siete años
         </p>
 
         <div class="visitors-table">
           <div class="visitors-header">
             <span>Visitante</span>
-            <span>Viene con niño amparado</span>
+            <span>Viene con un menor de siete años</span>
           </div>
           {#each invitados as inv}
             <div class="visitors-row">
@@ -455,7 +455,7 @@
         <div class="visitors-table">
           <div class="visitors-header">
             <span>Visitantes</span>
-            <span>Viene con niño amparado</span>
+            <span>Viene con un menor de siete años</span>
           </div>
           {#each invitados as inv}
             <div class="visitors-row">
@@ -469,11 +469,11 @@
 
         <div class="totals-box">
           <div class="total-row">
-            <span class="total-label">Total de adultos a inscribir</span>
+            <span class="total-label">Adultos</span>
             <strong class="total-value">{totalAgregados}</strong>
           </div>
           <div class="total-row">
-            <span class="total-label">Total de niños a inscribir</span>
+            <span class="total-label">Menores de siete años</span>
             <strong class="total-value">{totalNinos}</strong>
           </div>
           <div class="total-row total-row--highlight">
@@ -573,7 +573,7 @@
             {#if registroResult.ninos.length > 0}
               <div class="result-group result-group--success">
                 <p class="result-group-label">
-                  <span class="result-group-icon">🧒</span> Niños
+                  <span class="result-group-icon">🧒</span> Menores de siete años
                   <span class="result-group-count">{registroResult.ninos.length}</span>
                 </p>
                 <div class="result-pills">

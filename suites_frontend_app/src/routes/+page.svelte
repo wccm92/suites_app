@@ -294,32 +294,33 @@
                 {selectedSuite.cupos_disponibles}
               </span>
             </div>
-            <div class="detail-row detail-row-column">
-              <span class="detail-label">Visitantes inscritos</span>
-              {#if visitantesAdultos.length}
-                <div class="guests-grid">
-                  {#each visitantesAdultos as guest}
-                    <div class="guest-pill">
-                      <span class="guest-id">{guest}</span>
-                    </div>
-                  {/each}
-                </div>
-              {:else}
-                <span class="detail-value">Sin visitantes</span>
-              {/if}
-            </div>
-            <div class="detail-row detail-row-column">
-              <span class="detail-label">Niños inscritos</span>
+            <div class="inscritos-section">
+              <h3 class="inscritos-title">Inscritos</h3>
+              <div class="inscritos-group">
+                <span class="inscritos-group-label">Adultos</span>
+                {#if visitantesAdultos.length}
+                  <div class="guests-grid">
+                    {#each visitantesAdultos as guest}
+                      <div class="guest-pill">
+                        <span class="guest-id">{guest}</span>
+                      </div>
+                    {/each}
+                  </div>
+                {:else}
+                  <span class="detail-value">Sin visitantes</span>
+                {/if}
+              </div>
               {#if niosInscritos.length}
-                <div class="guests-grid">
-                  {#each niosInscritos as guest}
-                    <div class="guest-pill guest-pill--child">
-                      <span class="guest-id">{guest}</span>
-                    </div>
-                  {/each}
+                <div class="inscritos-group inscritos-group--child">
+                  <span class="inscritos-group-label inscritos-group-label--child">Menores de siete años</span>
+                  <div class="guests-grid">
+                    {#each niosInscritos as guest}
+                      <div class="guest-pill guest-pill--child">
+                        <span class="guest-id">{guest}</span>
+                      </div>
+                    {/each}
+                  </div>
                 </div>
-              {:else}
-                <span class="detail-value">Sin niños inscritos</span>
               {/if}
             </div>
           </div>
@@ -864,10 +865,53 @@
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
   }
 
-  /* Que esta fila se apile en columna para el grid de invitados */
-  .detail-row-column {
-    flex-direction: column;
-    align-items: flex-start;
+  /* ── Inscritos section ────────────────────────────────────────────── */
+  .inscritos-section {
+    border-top: 1px solid #e8f0ed;
+    padding-top: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  .inscritos-title {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--color-primary, #1a5c3a);
+    text-align: center;
+    margin: 0 0 0.75rem;
+    letter-spacing: 0.01em;
+  }
+
+  .inscritos-group {
+    margin-bottom: 0.6rem;
+    background: #f4faf7;
+    border: 1px solid #c8e6d8;
+    border-radius: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    box-shadow: 0 2px 6px rgba(0, 89, 64, 0.07);
+  }
+
+  .inscritos-group:last-child {
+    margin-bottom: 0;
+  }
+
+  .inscritos-group--child {
+    background: #fef9ec;
+    border-color: #f0d080;
+    box-shadow: 0 2px 6px rgba(146, 97, 10, 0.08);
+  }
+
+  .inscritos-group-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--color-success, #1a5c3a);
+    margin-bottom: 0.45rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .inscritos-group-label--child {
+    color: #92610a;
   }
 
   .guests-grid {
