@@ -30,6 +30,10 @@ defmodule MsSuitesApp.Domain.LoginLeaseHolderUsecase do
         Logger.debug("llego a credenciales")
         {:error, :invalid_credentials}
 
+      {:error, reason} ->
+        Logger.debug("ERROR: #{inspect(reason)}")
+        {:error, reason}
+
       _ ->
         Logger.debug("llego a error token")
         {:error, :internal_error, "Error generando token"}
