@@ -50,7 +50,8 @@ defmodule MsSuitesApp.Infrastructure.Adapters.Users do
         :ok,
         %{
           id: 2,
-          username: "prueba"
+          username: "prueba",
+          id_evento: 10
         }
       }
     else

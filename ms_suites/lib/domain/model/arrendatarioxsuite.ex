@@ -13,12 +13,14 @@ defmodule MsSuitesApp.Domain.Model.ArrendatarioXSuite do
                foreign_key: :username,
                references: :username,
                type: :string
+
+    field :id_evento, :integer
   end
 
   def changeset(asg, attrs) do
     asg
-    |> cast(attrs, [:id_suite, :username])
-    |> validate_required([:id_suite, :username])
+    |> cast(attrs, [:id_suite, :username, :id_evento])
+    |> validate_required([:id_suite, :username, :id_evento])
   end
 end
 

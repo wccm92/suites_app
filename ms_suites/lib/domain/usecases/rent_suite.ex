@@ -15,7 +15,7 @@ defmodule MsSuitesApp.Domain.RentSuiteUsecase do
           {:ok, true} <- validate_suite_admin(id_suite, event_user_info.user.id_user),
          {:ok, hash} <- BridgeAuthClient.hash_password(cedula),
          {:ok, _user} <- Users.upsert_leaseholder(cedula, hash, event_user_info.id),
-         {:ok, result} <- SuitesQueryAdapter.upsert_leaseholder_suite(id_suite, cedula),
+         {:ok, result} <- SuitesQueryAdapter.upsert_leaseholder_suite(id_suite, cedula, event_user_info.id),
          {:ok, body} <- build_body(id_suite) do
       {:ok, body}
     else

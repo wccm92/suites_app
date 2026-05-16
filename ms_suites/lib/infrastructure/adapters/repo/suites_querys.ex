@@ -30,12 +30,13 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
     |> Repo.one()
   end
 
-  def upsert_leaseholder_suite(id_suite, username) do
+  def upsert_leaseholder_suite(id_suite, username, id_evento) do
     exists? =
       from(a in ArrendatarioXSuite,
         where:
           a.id_suite == ^id_suite and
-          a.username == ^username
+          a.username == ^username and
+          a.id_evento == ^id_evento
       )
       |> Repo.exists?()
 
@@ -46,6 +47,7 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
       |> ArrendatarioXSuite.changeset(%{
         id_suite: id_suite,
         username: username,
+        id_evento: id_evento
       })
       |> Repo.insert()
     end
