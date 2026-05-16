@@ -208,6 +208,14 @@
       isSubmittingRent = false;
     }
   }
+
+  async function closeRentSuccess() {
+    const idToRefresh = selectedSuite?.id_suite;
+    showRentSuccess = false;
+    if (idToRefresh) {
+      await handleSelectSuite(idToRefresh);
+    }
+  }
 </script>
 
 <svelte:head>
@@ -427,7 +435,7 @@
     <h3 class="modal-title modal-title-success" id="rent-success-title">¡Registro exitoso!</h3>
     <p class="modal-text">La suite ha sido alquilada correctamente.</p>
     <div class="modal-actions">
-      <button class="modal-btn-primary" type="button" on:click={() => showRentSuccess = false}>
+      <button class="modal-btn-primary" type="button" on:click={closeRentSuccess}>
         Cerrar
       </button>
     </div>
