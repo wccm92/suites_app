@@ -56,10 +56,12 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
   def suite_alquilada?(id_suite, id_evento) do
     from(axs in ArrendatarioXSuite,
       join: sxe in SuiteXEvento,
-      on: sxe.id_suite == axs.id_suite,
+      on:
+        sxe.id_suite == axs.id_suite and
+        sxe.id_evento == axs.id_evento,
       where:
         axs.id_suite == ^id_suite and
-        sxe.id_evento == ^id_evento
+        axs.id_evento == ^id_evento
     )
     |> Repo.exists?()
   end
