@@ -68,9 +68,15 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
 
   def list_suites_by_event_and_lease_holder(event_id, admin_id) do
     from(s in Suites,
-      join: e in assoc(s, :eventos),
-      join: a in assoc(s, :arrendatarios),
-      where: e.id == ^event_id and a.username == ^admin_id and s.tipo == "SUITE",
+      join: se in assoc(s, :eventos),
+      join: axs in MsSuitesApp.Domain.Model.ArrendatarioXSuite,
+      on:
+        axs.id_suite == s.id_suite and
+        axs.id_evento == ^event_id and
+        axs.username == ^admin_id,
+      where:
+        se.id == ^event_id and
+        s.tipo == "SUITE",
       distinct: true
     )
     |> Repo.all()
