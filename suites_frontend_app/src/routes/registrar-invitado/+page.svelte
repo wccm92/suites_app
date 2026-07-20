@@ -989,6 +989,19 @@
     font-weight: 800;
   }
 
+  .cupos-badge--zero {
+    background: #fff5f5;
+    border-color: var(--color-error-soft);
+    color: var(--color-error);
+  }
+
+  .cupos-warning {
+    margin: 0.5rem 0 0;
+    font-size: 0.85rem;
+    line-height: 1.35;
+    color: var(--color-error);
+  }
+
   /* ── Steps 2 & 3: Table ──────────────────────────────────────────── */
   .visitors-table {
     border: 1px solid #d1e8e0;
