@@ -44,6 +44,16 @@
     0,
     cuposDisponiblesSafe - totalAgregados - totalNinos
   );
+  $: sinCuposParaNinos = restantesConNinos === 0;
+
+  function handleNinoChange(inv: string, target: HTMLInputElement) {
+    // Sin cupos libres no se pueden marcar más amparados (solo desmarcar).
+    if (target.checked && restantesConNinos === 0) {
+      target.checked = false;
+      return;
+    }
+    ninosPorInvitado = { ...ninosPorInvitado, [inv]: target.checked };
+  }
 
   // ── Submission state ──────────────────────────────────────────────────
   let isSubmittingFinal = false;
@@ -411,26 +421,34 @@
           {#each invitados as inv}
             <div class="visitors-row">
               <span class="visitor-cedula">{inv}</span>
-              <label class="checkbox-wrap">
+              <label
+                class="checkbox-wrap {sinCuposParaNinos && !ninosPorInvitado[inv] ? 'checkbox-wrap--disabled' : ''}"
+                title={sinCuposParaNinos && !ninosPorInvitado[inv]
+                  ? "No quedan cupos disponibles en esta suite."
+                  : "Viene con un menor de siete años"}
+              >
                 <input
                   type="checkbox"
                   class="checkbox"
                   checked={ninosPorInvitado[inv] ?? false}
-                  on:change={(e) => {
-                    ninosPorInvitado = {
-                      ...ninosPorInvitado,
-                      [inv]: (e.target as HTMLInputElement).checked,
-                    };
-                  }}
+                  disabled={sinCuposParaNinos && !ninosPorInvitado[inv]}
+                  on:change={(e) => handleNinoChange(inv, e.currentTarget)}
                 />
               </label>
             </div>
           {/each}
         </div>
 
-        <div class="cupos-badge" aria-live="polite">
+        <div class="cupos-badge {sinCuposParaNinos ? 'cupos-badge--zero' : ''}" aria-live="polite">
           Quedan <strong>{restantesConNinos}</strong> cupo{restantesConNinos !== 1 ? 's' : ''} libre{restantesConNinos !== 1 ? 's' : ''}
         </div>
+
+        {#if sinCuposParaNinos}
+          <p class="cupos-warning" aria-live="polite">
+            No quedan cupos disponibles. Para agregar un menor, desmarca otro o
+            regresa al paso anterior y quita un visitante.
+          </p>
+        {/if}
 
         <div class="step-actions">
           <button type="button" class="btn-back" on:click={handleBack}>
@@ -1031,6 +1049,15 @@
     height: 1.25rem;
     accent-color: var(--color-primary);
     cursor: pointer;
+  }
+
+  .checkbox-wrap--disabled {
+    cursor: not-allowed;
+  }
+
+  .checkbox:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
   }
 
   /* ── Sí/No tag (Step 3) ──────────────────────────────────────────── */
