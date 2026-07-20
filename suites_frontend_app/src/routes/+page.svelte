@@ -145,6 +145,18 @@
     goto(`${base}/registrar-invitado?${qs.toString()}`);
   }
 
+  function goToManageSuite() {
+    if (!selectedSuite) return;
+
+    const qs = new URLSearchParams({
+      id_suite: selectedSuite.id_suite,
+      capacidad: String(selectedSuite.capacidad),
+      cupos_disponibles: String(selectedSuite.cupos_disponibles),
+    });
+
+    goto(`${base}/gestionar-suites?${qs.toString()}`);
+  }
+
   // ── Alquilar suite – 3-step modal flow ──────────────────────────────────
   let showRentModal = false;
   let showRentConfirm = false;
@@ -360,6 +372,14 @@
                   : "Registrar invitado en esta suite"}
             >
               Registrar visitante
+            </button>
+            <button
+              class="btn-manage"
+              type="button"
+              on:click={goToManageSuite}
+              title="Gestionar esta suite"
+            >
+              Gestionar suite
             </button>
           </div>
         {:else}
@@ -873,6 +893,33 @@
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
   }
 
+  .btn-manage {
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: none;
+    background: var(--color-accent);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(163, 106, 46, 0.32);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease;
+  }
+
+  .btn-manage:hover {
+    transform: translateY(-1px);
+    background: #b87d3c;
+    box-shadow: 0 8px 20px rgba(163, 106, 46, 0.45);
+  }
+
+  .btn-manage:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(163, 106, 46, 0.3);
+  }
+
   /* ── Inscritos section ────────────────────────────────────────────── */
   .inscritos-section {
     border-top: 1px solid #e8f0ed;
@@ -1137,6 +1184,19 @@
      porque la grilla ya no crece infinito */
     .detail-panel {
       margin-top: 0.5rem;
+    }
+
+    /* Los botones del detalle se apilan a lo ancho en móvil */
+    .detail-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .detail-actions .btn-secondary,
+    .detail-actions .btn-primary,
+    .detail-actions .btn-manage {
+      width: 100%;
+      text-align: center;
     }
   }
 </style>
