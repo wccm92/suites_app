@@ -357,6 +357,21 @@
                   ? "No puedes alquilar esta suite: ya tiene visitantes inscritos."
                   : "Alquilar esta suite"}
             >
+              <svg
+                class="btn-secondary__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="7.5" cy="15.5" r="4.5" />
+                <path d="M10.7 12.3 21 2" />
+                <path d="M16.5 6.5 20 10" />
+                <path d="M13.5 9.5 17 13" />
+              </svg>
               {suiteAlquilada ? 'Suite Alquilada' : 'Alquilar suite'}
             </button>
             <button
@@ -371,6 +386,21 @@
                   ? "No puedes registrar invitados: no hay cupos disponibles en esta suite."
                   : "Registrar invitado en esta suite"}
             >
+              <svg
+                class="btn-primary__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <line x1="20" y1="8" x2="20" y2="14" />
+                <line x1="23" y1="11" x2="17" y2="11" />
+              </svg>
               Registrar visitante
             </button>
             <button
@@ -379,6 +409,21 @@
               on:click={goToManageSuite}
               title="Gestionar esta suite"
             >
+              <svg
+                class="btn-manage__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
               Gestionar suite
             </button>
           </div>
@@ -808,6 +853,9 @@
   }
 
   .btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     padding: 0.5rem 1rem;
     border-radius: 999px;
     border: none;
@@ -821,6 +869,12 @@
       transform 0.12s ease,
       background 0.12s ease,
       box-shadow 0.12s ease;
+  }
+
+  .btn-secondary__icon {
+    width: 1.05em;
+    height: 1.05em;
+    flex-shrink: 0;
   }
 
   .btn-secondary:hover {
@@ -860,6 +914,9 @@
   }
 
   .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     padding: 0.5rem 1rem;
     border-radius: 999px;
     border: none;
@@ -873,6 +930,12 @@
       transform 0.12s ease,
       box-shadow 0.12s ease,
       background 0.12s ease;
+  }
+
+  .btn-primary__icon {
+    width: 1.05em;
+    height: 1.05em;
+    flex-shrink: 0;
   }
 
   /* ✅ solo hover cuando está habilitado */
@@ -894,30 +957,39 @@
   }
 
   .btn-manage {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     padding: 0.5rem 1rem;
     border-radius: 999px;
     border: none;
-    background: var(--color-accent);
+    background: var(--color-primary);
     color: #ffffff;
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
-    box-shadow: 0 4px 12px rgba(163, 106, 46, 0.32);
+    box-shadow: 0 4px 12px rgba(0, 89, 64, 0.28);
     transition:
       transform 0.12s ease,
       box-shadow 0.12s ease,
       background 0.12s ease;
   }
 
+  .btn-manage__icon {
+    width: 1.05em;
+    height: 1.05em;
+    flex-shrink: 0;
+  }
+
   .btn-manage:hover {
     transform: translateY(-1px);
-    background: #b87d3c;
-    box-shadow: 0 8px 20px rgba(163, 106, 46, 0.45);
+    background: #009933;
+    box-shadow: 0 8px 20px rgba(0, 89, 64, 0.40);
   }
 
   .btn-manage:active {
     transform: translateY(0);
-    box-shadow: 0 4px 10px rgba(163, 106, 46, 0.3);
+    box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
   /* ── Inscritos section ────────────────────────────────────────────── */
@@ -1197,6 +1269,7 @@
     .detail-actions .btn-manage {
       width: 100%;
       text-align: center;
+      justify-content: center;
     }
   }
 </style>

@@ -207,6 +207,21 @@
                 ? "No puedes registrar invitados: no hay cupos disponibles en esta suite."
                 : "Registrar invitado en esta suite"}
             >
+              <svg
+                class="btn-primary__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                <circle cx="8.5" cy="7" r="4" />
+                <line x1="20" y1="8" x2="20" y2="14" />
+                <line x1="23" y1="11" x2="17" y2="11" />
+              </svg>
               Registrar visitante
             </button>
           </div>
@@ -498,6 +513,9 @@
   }
 
   .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
     padding: 0.5rem 1rem;
     border-radius: 999px;
     border: none;
@@ -511,6 +529,12 @@
       transform 0.12s ease,
       box-shadow 0.12s ease,
       background 0.12s ease;
+  }
+
+  .btn-primary__icon {
+    width: 1.05em;
+    height: 1.05em;
+    flex-shrink: 0;
   }
 
   .btn-primary:hover:enabled {
