@@ -213,4 +213,81 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
          _ -> true
        end
   end
+
+  def get_guest_registration(id_evento, id_suite, id_visitante) do
+    from(v in VisitanteXEvento,
+      where:
+        v.id_evento == ^id_evento and
+        v.id_suite == ^id_suite and
+        v.id_visitante == ^id_visitante,
+      limit: 1
+    )
+    |> Repo.one()
+    |> case do
+         nil ->
+           {:error, :guest_not_found}
+
+         registro ->
+           {:ok, registro}
+       end
+  end
+
+  def delete_guest(id_evento, id_suite, id_visitante) do
+    from(v in VisitanteXEvento,
+      where:
+        v.id_evento == ^id_evento and
+        v.id_suite == ^id_suite and
+        v.id_visitante == ^id_visitante
+    )
+    |> Repo.delete_all()
+
+    :ok
+  end
+
+  def delete_dependents(id_evento, id_suite, id_visitante) do
+    from(v in VisitanteXEvento,
+      where:
+        v.id_evento == ^id_evento and
+        v.id_suite == ^id_suite and
+        v.id_visitante == ^("0" <> id_visitante)
+    )
+    |> Repo.delete_all()
+
+    :ok
+  end
+
+  def update_guest_document(registro, nuevo_documento) do
+    from(v in VisitanteXEvento,
+      where:
+        v.id_evento == ^registro.id_evento and
+        v.id_suite == ^registro.id_suite and
+        v.id_visitante == ^registro.id_visitante
+    )
+    |> Repo.update_all(set: [id_visitante: nuevo_documento])
+  end
+
+  def guest_registered?(id_evento, documento) do
+    case validate_guess_in_event(id_evento, documento) do
+      {:ok, _} ->
+        true
+
+      :not_found ->
+        false
+    end
+  end
+
+  def register_amparado(id_evento, id_suite, documento) do
+    %VisitanteXEvento{
+      id_evento: id_evento,
+      id_suite: id_suite,
+      id_visitante: documento
+    }
+    |> Repo.insert()
+
+    :ok
+  rescue
+    Ecto.ConstraintError ->
+      {:error, :visitor_already_registered}
+  end
+
 end

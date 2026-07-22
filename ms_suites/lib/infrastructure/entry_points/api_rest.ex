@@ -17,6 +17,9 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Domain.LoginLeaseHolderUsecase
   alias MsSuitesApp.Domain.LeaseHolderUsecase
   alias MsSuitesApp.Domain.RentSuiteUsecase
+  alias MsSuitesApp.Domain.DeleteGuestUsecase
+  alias MsSuitesApp.Domain.ReplaceGuestUsecase
+  alias MsSuitesApp.Domain.RegisterAmparadoUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -136,6 +139,45 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
       %{"id_suite" => id_suite, "invitados" => invitados} = params ->
         invitados_amparados = Map.get(params, "invitados_amparados", [])
         case RegisterGuestsUsecase.handle_register_guests(id_suite, invitados, invitados_amparados, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
+    end
+  end
+
+  post "/suites_app/delete_guest" do
+    token = extract_auth(conn)
+    case conn.body_params do
+      %{"id_suite" => id_suite, "invitado" => invitado} = params ->
+        case DeleteGuestUsecase.handle_delete_guest(id_suite, invitado, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
+    end
+  end
+
+  post "/suites_app/replace_guest" do
+    token = extract_auth(conn)
+    case conn.body_params do
+      %{"id_suite" => id_suite, "invitado" => invitado, "nuevo_invitado" => nuevo_invitado} = params ->
+        case ReplaceGuestUsecase.handle_replace_guest(id_suite, invitado, nuevo_invitado, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
+    end
+  end
+
+  post "/suites_app/register_amparado" do
+    token = extract_auth(conn)
+    case conn.body_params do
+      %{"id_suite" => id_suite, "amparado" => amparado} = params ->
+        case RegisterAmparadoUsecase.handle_register_amparado(id_suite, amparado, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->
