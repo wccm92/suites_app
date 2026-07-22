@@ -1,7 +1,7 @@
 defmodule MsSuitesApp.Domain.DeleteGuestUsecase do
   alias MsSuitesApp.Domain.LoginUsecase
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
-  alias alias MsSuitesApp.Infrastructure.Adapters.Repo
+  alias MsSuitesApp.Infrastructure.Adapters.Repo
 
   def handle_delete_guest(id_suite, invitado, token) do
     with {:ok, event_user} <- LoginUsecase.validate_event_and_session(token),
