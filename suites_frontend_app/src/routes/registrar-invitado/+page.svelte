@@ -141,10 +141,10 @@
   }
 
   function isValidCedula(value: string): string {
-    if (!value) return "La cédula es obligatoria.";
-    if (value.length < 6) return "La cédula debe tener entre 6 y 10 dígitos.";
+    if (!value) return "El documento es obligatorio.";
+    if (value.length < 6) return "El documento debe tener entre 6 y 10 dígitos.";
     if (!/^\d+$/.test(value))
-      return "La cédula debe contener únicamente números.";
+      return "El documento debe contener únicamente números.";
     return "";
   }
 
@@ -332,7 +332,7 @@
         </div>
 
         <div class="field">
-          <label for="cedula" class="label">Cédula</label>
+          <label for="cedula" class="label">Número de documento</label>
           <div class="cedula-row">
             <input
               id="cedula"
