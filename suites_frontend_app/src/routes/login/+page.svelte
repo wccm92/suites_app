@@ -10,6 +10,7 @@
 
   let username = "";
   let password = "";
+  let showPassword = false;
   let loading = false;
   let loadingLeaseholder = false;
   let error = "";
@@ -169,10 +170,6 @@
       loadingLeaseholder = false;
     }
   }
-
-  function goToForgotPassword() {
-    goto(`${base}/forgot-password`);
-  }
 </script>
 
 <svelte:head>
@@ -200,15 +197,70 @@
 
       <div class="field">
         <label for="password" class="label">Contraseña</label>
-        <input
-          id="password"
-          name="password"
-          type="password"
-          class="input"
-          bind:value={password}
-          autocomplete="current-password"
-          placeholder="••••••••"
-        />
+        <div class="input-wrapper">
+          {#if showPassword}
+            <input
+              id="password"
+              name="password"
+              type="text"
+              class="input input--password"
+              bind:value={password}
+              autocomplete="current-password"
+              placeholder="••••••••"
+            />
+          {:else}
+            <input
+              id="password"
+              name="password"
+              type="password"
+              class="input input--password"
+              bind:value={password}
+              autocomplete="current-password"
+              placeholder="••••••••"
+            />
+          {/if}
+          <button
+            type="button"
+            class="toggle-password"
+            on:click={() => (showPassword = !showPassword)}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            aria-pressed={showPassword}
+            title={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+            tabindex="-1"
+          >
+            {#if showPassword}
+              <!-- Ojo tachado (ocultar) -->
+              <svg
+                class="toggle-password__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24" />
+                <line x1="1" y1="1" x2="23" y2="23" />
+              </svg>
+            {:else}
+              <!-- Ojo abierto (mostrar) -->
+              <svg
+                class="toggle-password__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+            {/if}
+          </button>
+        </div>
       </div>
 
       {#if error}
@@ -236,14 +288,6 @@
         {:else}
           Ingresar como arrendatario
         {/if}
-      </button>
-
-      <button
-        type="button"
-        class="btn-link-forgot"
-        on:click={goToForgotPassword}
-      >
-        Olvidé mi contraseña
       </button>
 
       {#if eventInfo}
@@ -337,6 +381,52 @@
   .input:focus {
     border-color: var(--color-primary);
     box-shadow: 0 0 0 2px rgba(0, 89, 64, 0.15);
+  }
+
+  .input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  .input--password {
+    width: 100%;
+    /* Deja espacio a la derecha para el botón del ojo */
+    padding-right: 2.6rem;
+  }
+
+  .toggle-password {
+    position: absolute;
+    right: 0.35rem;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    padding: 0;
+    border: none;
+    background: transparent;
+    color: #8a9e95;
+    cursor: pointer;
+    border-radius: 0.4rem;
+    transition: color 0.15s ease, background 0.15s ease;
+  }
+
+  .toggle-password:hover {
+    color: var(--color-primary);
+    background: rgba(0, 89, 64, 0.08);
+  }
+
+  .toggle-password:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 1px;
+  }
+
+  .toggle-password__icon {
+    width: 1.2rem;
+    height: 1.2rem;
   }
 
   .error {
@@ -439,22 +529,6 @@
     .title {
       font-size: 1.3rem;
     }
-  }
-
-  .btn-link-forgot {
-    margin-top: 0.6rem;
-    border: none;
-    background: transparent;
-    font-size: 0.85rem;
-    color: var(--color-success);
-    cursor: pointer;
-    text-decoration: underline;
-    align-self: flex-start;
-    padding: 0;
-  }
-
-  .btn-link-forgot:hover {
-    color: #e0ffd0;
   }
 
   .form-container {

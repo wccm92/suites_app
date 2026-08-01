@@ -192,17 +192,6 @@ textarea:focus {
   box-shadow: none;
 }
 
-.btn-link-forgot {
-  margin-top: 0.6rem;
-  border: none;
-  background: transparent;
-  font-size: 0.85rem;
-  color: var(--color-gray-soft);
-  cursor: pointer;
-  text-decoration: underline;
-  align-self: flex-start;
-}
-
 /* Botón flotante de logout (+layout.svelte) */
 .logout-btn {
   border-radius: var(--radius-pill);

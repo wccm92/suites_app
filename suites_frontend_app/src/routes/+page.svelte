@@ -241,6 +241,8 @@
       <h1 class="title">Mis suites</h1>
     </div>
 
+    <!-- Botón "Parqueaderos - Ver disponibilidad" oculto temporalmente; la funcionalidad se usará más adelante -->
+    {#if false}
     <button
       class="btn-nav"
       type="button"
@@ -257,6 +259,7 @@
       </span>
       <span class="btn-nav__arrow">›</span>
     </button>
+    {/if}
   </div>
 
   {#if suitesError}
