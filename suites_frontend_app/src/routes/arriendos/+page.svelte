@@ -115,6 +115,18 @@
 
     goto(`${base}/registrar-invitado?${qs.toString()}`);
   }
+
+  function goToManageSuite() {
+    if (!selectedSuite) return;
+
+    const qs = new URLSearchParams({
+      id_suite: selectedSuite.id_suite,
+      capacidad: String(selectedSuite.capacidad),
+      cupos_disponibles: String(selectedSuite.cupos_disponibles),
+    });
+
+    goto(`${base}/gestionar-suites?${qs.toString()}`);
+  }
 </script>
 
 <svelte:head>
@@ -223,6 +235,29 @@
                 <line x1="23" y1="11" x2="17" y2="11" />
               </svg>
               Registrar visitante
+            </button>
+            <button
+              class="btn-manage"
+              type="button"
+              on:click={goToManageSuite}
+              title="Gestionar esta suite"
+            >
+              <svg
+                class="btn-manage__icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path
+                  d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
+                />
+              </svg>
+              Gestionar suite
             </button>
           </div>
         {:else}
@@ -510,6 +545,8 @@
     margin-top: 1rem;
     display: flex;
     justify-content: flex-end;
+    gap: 0.6rem;
+    flex-wrap: wrap;
   }
 
   .btn-primary {
@@ -552,6 +589,42 @@
     opacity: 0.55;
     cursor: not-allowed;
     box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  .btn-manage {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: none;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 89, 64, 0.28);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease;
+  }
+
+  .btn-manage__icon {
+    width: 1.05em;
+    height: 1.05em;
+    flex-shrink: 0;
+  }
+
+  .btn-manage:hover {
+    transform: translateY(-1px);
+    background: #009933;
+    box-shadow: 0 8px 20px rgba(0, 89, 64, 0.40);
+  }
+
+  .btn-manage:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
   .detail-row-column {
@@ -633,6 +706,19 @@
 
     .detail-panel {
       margin-top: 0.5rem;
+    }
+
+    /* Los botones del detalle se apilan a lo ancho en móvil */
+    .detail-actions {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .detail-actions .btn-primary,
+    .detail-actions .btn-manage {
+      width: 100%;
+      text-align: center;
+      justify-content: center;
     }
   }
 </style>
