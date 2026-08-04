@@ -46,6 +46,22 @@ function createSessionStore() {
       if (browser) {
         localStorage.removeItem(STORAGE_KEY);
       }
+    },
+    /**
+     * Decodifica el payload del JWT activo y devuelve el claim `profile`.
+     * Devuelve null si no hay sesión o el token no es decodificable.
+     */
+    getProfile(): string | null {
+      let jwt: string | null = null;
+      const unsub = subscribe((s) => (jwt = s.jwt));
+      unsub();
+      if (!jwt) return null;
+      try {
+        const payload = JSON.parse(atob((jwt as string).split('.')[1]));
+        return typeof payload?.profile === 'string' ? payload.profile : null;
+      } catch {
+        return null;
+      }
     }
   };
 }

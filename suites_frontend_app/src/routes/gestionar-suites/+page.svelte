@@ -25,6 +25,9 @@
   let loadError = "";
   let processing = false; // deshabilita acciones mientras hay una petición en curso
 
+  // Solo el propietario (profile === "owner") puede gestionar abonados
+  let isOwner = false;
+
   // Valores mostrados: los frescos del backend si ya cargó, si no los del query
   $: capacidadShown = suiteDetail?.capacidad ?? capacidadParam;
   $: cuposShown = suiteDetail?.cupos_disponibles ?? Math.max(0, cuposParam);
@@ -89,6 +92,12 @@
     goto(getHomeRoute());
   }
 
+  function goToManageAbonados() {
+    if (!suiteId) return;
+    const qs = new URLSearchParams({ id_suite: suiteId });
+    goto(`${base}/gestionar-abonados?${qs.toString()}`);
+  }
+
   async function handleUnauthorized() {
     session.clear();
     await goto(`${base}/login`);
@@ -144,6 +153,7 @@
       goto(`${base}/login`);
       return;
     }
+    isOwner = session.getProfile() === "owner";
     loadSuite();
   });
 
@@ -309,6 +319,31 @@
   <section class="form-container">
     <div class="step-heading">
       <h1 class="step-title">Gestionar suite</h1>
+      {#if isOwner}
+        <button
+          type="button"
+          class="btn-abonados"
+          on:click={goToManageAbonados}
+          title="Gestionar abonados de esta suite"
+        >
+          <svg
+            class="btn-abonados__icon"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            aria-hidden="true"
+          >
+            <path d="M2 9a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v2a2 2 0 0 0 0 4v2a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-2a2 2 0 0 0 0-4z" />
+            <path d="M13 5v2" />
+            <path d="M13 17v2" />
+            <path d="M13 11v2" />
+          </svg>
+          Abonados
+        </button>
+      {/if}
     </div>
 
     <!-- ── Suite meta ─────────────────────────────────────────────────── -->
@@ -484,6 +519,43 @@
     font-size: clamp(1.3rem, 1.05rem + 1vw, 1.7rem);
     font-weight: 700;
     color: var(--color-text-main);
+  }
+
+  .btn-abonados {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.5rem 1rem;
+    border-radius: 999px;
+    border: none;
+    background: var(--color-primary);
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 4px 12px rgba(0, 89, 64, 0.28);
+    transition:
+      transform 0.12s ease,
+      box-shadow 0.12s ease,
+      background 0.12s ease;
+  }
+
+  .btn-abonados__icon {
+    width: 1.05em;
+    height: 1.05em;
+    flex-shrink: 0;
+  }
+
+  .btn-abonados:hover {
+    transform: translateY(-1px);
+    background: #009933;
+    box-shadow: 0 8px 20px rgba(0, 89, 64, 0.40);
+  }
+
+  .btn-abonados:active {
+    transform: translateY(0);
+    box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
   /* ── Suite meta ───────────────────────────────────────────────────── */
@@ -828,6 +900,17 @@
   @media (max-width: 768px) {
     .form-container {
       padding: 1.2rem 1rem 1.4rem;
+    }
+
+    /* El título y el botón de abonados se apilan a lo ancho */
+    .step-heading {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .btn-abonados {
+      width: 100%;
+      justify-content: center;
     }
 
     .suite-meta {
