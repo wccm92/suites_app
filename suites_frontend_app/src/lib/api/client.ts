@@ -1,6 +1,7 @@
 // src/lib/api/client.ts
 import { get } from 'svelte/store';
 import { session } from '$lib/stores/session';
+import { USE_MOCKS, mockFetch } from '$lib/api/mocks';
 
 // Ajusta esto cuando tengas URL real del backend
 const BACKEND_BASE_URL = ''; // ejemplo
@@ -11,6 +12,14 @@ type ApiOptions = RequestInit & {
 
 export async function apiFetch(path: string, options: ApiOptions = {}) {
   const { auth = true, ...rest } = options;
+
+  // Mocks (mientras no exista el backend). Si el path no está mockeado
+  // devuelve null y seguimos con el fetch real.
+  if (USE_MOCKS) {
+    const mocked = await mockFetch(path, rest);
+    if (mocked) return mocked;
+  }
+
   const { jwt } = get(session);
 
   const headers = new Headers(rest.headers ?? {});
