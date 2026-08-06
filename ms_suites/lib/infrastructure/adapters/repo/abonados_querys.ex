@@ -33,7 +33,7 @@ defmodule MsSuitesApp.Infrastructure.Adapters.AbonadosQueryAdapter do
   end
 
   @doc """
-  Registra un abonado en una suite.
+  Inserta un abonado en la tabla `abonados`.
   Devuelve `{:ok, %Abonado{}}` o `{:error, %Ecto.Changeset{}}`.
   """
   def register_season_ticket_holder(id_abonado, id_suite) do
