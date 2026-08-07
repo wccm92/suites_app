@@ -56,11 +56,11 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
-  def build_error_response({:error, :abonado_already_in_other_suite}) do
+  def build_error_response({:error, {:abonado_already_in_other_suite, registered_suite_id}}) do
     make_error_v2(
       "11",
       "Error",
-      "Cédula ya se encuentra abonada en otra suite",
+      "Cédula ya se encuentra abonada en otra suite " <> registered_suite_id,
       404
     )
   end
