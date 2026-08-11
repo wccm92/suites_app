@@ -1,7 +1,8 @@
 // src/lib/api/mocks.ts
 //
 // Servicio de mocks MUY sencillo y no intrusivo para simular los llamados a
-// las APIs de "abonados" mientras el backend está listo.
+// las APIs de "abonados" y al registro de visitantes (validate_guest /
+// register_guests) mientras el backend está listo.
 //
 // Cómo funciona:
 //   - `apiFetch` (en client.ts) llama a `mockFetch(path, options)` solo si
@@ -95,9 +96,74 @@ export async function mockFetch(
     return json({ successful_deleted_season_ticket_holders: deleted });
   }
 
+  // 4) POST validar una cédula antes de agregarla (Paso 1 del wizard)
+  //    Cualquier cédula que NO esté en BLOCKED_CEDULAS se considera válida.
+  if (path === "/suites_app/validate_guest") {
+    await delay(250);
+    const cedula = String(body?.invitado ?? "");
+    if (BLOCKED_CEDULAS.has(cedula)) {
+      return json(
+        { errors: [{ code: "05", detail: "El visitante está reportado por logística." }] },
+        409
+      );
+    }
+    return json({ detail: "Visitante válido" });
+  }
+
+  // 5) POST registro de visitantes (nuevo shape multi-amparado)
+  //    Request: { id_suite, invitados: { "1": {invitado, amparados:[uuid...]}, ... } }
+  if (path === "/suites_app/register_guests") {
+    await delay(500);
+    const invitadosObj =
+      body?.invitados && typeof body.invitados === "object"
+        ? (body.invitados as Record<string, { invitado?: string; amparados?: string[] }>)
+        : {};
+
+    const successful_registrations: string[] = [];
+    const not_registered_already_suites: string[] = [];
+    const successful_registrations_amparados: Record<
+      string,
+      { sponsor: string; amparados: string[] }
+    > = {};
+
+    let idx = 1;
+    for (const entry of Object.values(invitadosObj)) {
+      const ced = String(entry?.invitado ?? "");
+      if (!ced) continue;
+      const amparados = Array.isArray(entry?.amparados)
+        ? entry.amparados.map(String)
+        : [];
+
+      // Simula rechazo si la cédula ya está "en otra suite" del evento.
+      if (ALREADY_IN_SUITES.has(ced)) {
+        not_registered_already_suites.push(ced);
+        continue;
+      }
+
+      successful_registrations.push(ced);
+      successful_registrations_amparados[String(idx)] = {
+        sponsor: ced,
+        amparados,
+      };
+      idx += 1;
+    }
+
+    return json({
+      successful_registrations,
+      successful_registrations_amparados,
+      not_registered_blocked: [],
+      not_registered_already_suites,
+    });
+  }
+
   // No es un endpoint mockeado → seguir con el fetch real.
   return null;
 }
+
+// Cédulas de prueba para forzar caminos de error en el wizard de visitantes.
+// (Ajusta libremente mientras pruebas; vacías = todo pasa.)
+const BLOCKED_CEDULAS = new Set<string>([]); // reportadas por logística (validate_guest → 409)
+const ALREADY_IN_SUITES = new Set<string>([]); // ya registradas en el evento (register_guests)
 
 /** Parsea el body (string JSON) de las peticiones POST de forma segura. */
 function parseBody(raw: BodyInit | null | undefined): any {
