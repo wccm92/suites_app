@@ -110,24 +110,21 @@ export async function mockFetch(
     return json({ detail: "Visitante válido" });
   }
 
-  // 5) POST registro de visitantes (nuevo shape multi-amparado)
-  //    Request: { id_suite, invitados: { "1": {invitado, amparados:[uuid...]}, ... } }
+  // 5) POST registro de visitantes (shape multi-amparado, listas planas)
+  //    Request: { id_suite, invitados: [ {invitado, amparados:[uuid...]}, ... ] }
   if (path === "/suites_app/register_guests") {
     await delay(500);
-    const invitadosObj =
-      body?.invitados && typeof body.invitados === "object"
-        ? (body.invitados as Record<string, { invitado?: string; amparados?: string[] }>)
-        : {};
+    const invitadosArr: { invitado?: string; amparados?: string[] }[] =
+      Array.isArray(body?.invitados) ? body.invitados : [];
 
     const successful_registrations: string[] = [];
     const not_registered_already_suites: string[] = [];
-    const successful_registrations_amparados: Record<
-      string,
-      { sponsor: string; amparados: string[] }
-    > = {};
+    const successful_registrations_amparados: {
+      sponsor: string;
+      amparados: string[];
+    }[] = [];
 
-    let idx = 1;
-    for (const entry of Object.values(invitadosObj)) {
+    for (const entry of invitadosArr) {
       const ced = String(entry?.invitado ?? "");
       if (!ced) continue;
       const amparados = Array.isArray(entry?.amparados)
@@ -141,11 +138,7 @@ export async function mockFetch(
       }
 
       successful_registrations.push(ced);
-      successful_registrations_amparados[String(idx)] = {
-        sponsor: ced,
-        amparados,
-      };
-      idx += 1;
+      successful_registrations_amparados.push({ sponsor: ced, amparados });
     }
 
     return json({

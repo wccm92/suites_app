@@ -240,15 +240,11 @@
     isSubmittingFinal = true;
 
     try {
-      // Mapa indexado por ordinal (1..N). Cada amparado se materializa como
-      // un UUID aleatorio; los invitados sin amparados llevan lista vacía.
-      const invitadosMap: Record<
-        string,
-        { invitado: string; amparados: string[] }
-      > = {};
-      invitados.forEach((ced, i) => {
+      // Lista de invitados. Cada amparado se materializa como un UUID
+      // aleatorio; los invitados sin amparados llevan lista vacía.
+      const invitadosPayload = invitados.map((ced) => {
         const n = amparadosPorInvitado[ced] ?? 0;
-        invitadosMap[String(i + 1)] = {
+        return {
           invitado: ced,
           amparados: Array.from({ length: n }, () => crypto.randomUUID()),
         };
@@ -258,7 +254,7 @@
         method: "POST",
         body: JSON.stringify({
           id_suite: suiteId,
-          invitados: invitadosMap,
+          invitados: invitadosPayload,
         }),
       });
 
@@ -278,18 +274,18 @@
 
       const body = (await res.json()) as {
         successful_registrations?: string[];
-        successful_registrations_amparados?: Record<
-          string,
-          { sponsor?: string; amparados?: string[] }
-        >;
+        successful_registrations_amparados?: {
+          sponsor?: string;
+          amparados?: string[];
+        }[];
         not_registered_blocked?: string[];
         not_registered_already_suites?: string[];
       };
 
       // El backend devuelve los amparados agrupados por sponsor (invitado
       // principal). Nos quedamos solo con los sponsors que llevaron amparados.
-      const grupos: AmparadoGroup[] = Object.values(
-        body.successful_registrations_amparados ?? {}
+      const grupos: AmparadoGroup[] = (
+        body.successful_registrations_amparados ?? []
       )
         .map((g) => ({
           sponsor: g?.sponsor ?? "",
