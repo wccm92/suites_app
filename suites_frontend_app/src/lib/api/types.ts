@@ -1,8 +1,15 @@
+export type InvitadoInscrito = {
+    /** Cédula del invitado adulto (ya no llega prefijada con '0'). */
+    invitado: string;
+    /** Cantidad de amparados (menores de siete años) asociados a este invitado. */
+    amparados: number;
+};
+
 export type SuiteDetail = {
     id_suite: string;
     capacidad: number;
     cupos_disponibles: number;
-    invitados_inscritos: string[];
+    invitados_inscritos: InvitadoInscrito[];
     suite_alquilada: boolean;
 };
 

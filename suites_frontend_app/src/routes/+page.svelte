@@ -39,11 +39,13 @@
   $: suiteConVisitantes =
     !!selectedSuite && (selectedSuite.invitados_inscritos?.length ?? 0) > 0;
 
-  // Derivados: separa visitantes adultos (cédula normal) de niños (cédula con '0' al inicio)
-  $: visitantesAdultos =
-    selectedSuite?.invitados_inscritos?.filter((g) => !g.startsWith("0")) ?? [];
-  $: niosInscritos =
-    selectedSuite?.invitados_inscritos?.filter((g) => g.startsWith("0")) ?? [];
+  // Derivados sobre la nueva forma: cada invitado adulto trae un conteo de amparados.
+  $: invitadosInscritos = selectedSuite?.invitados_inscritos ?? [];
+  $: totalAdultos = invitadosInscritos.length;
+  $: totalMenores = invitadosInscritos.reduce(
+    (acc, g) => acc + (g.amparados ?? 0),
+    0
+  );
 
   // 1) Revisamos JWT en localStorage (via store session)
   // 2) Si no hay JWT → login
@@ -319,31 +321,55 @@
             </div>
             <div class="inscritos-section">
               <h3 class="inscritos-title">Inscritos</h3>
-              <div class="inscritos-group">
-                <span class="inscritos-group-label">Adultos</span>
-                {#if visitantesAdultos.length}
-                  <div class="guests-grid">
-                    {#each visitantesAdultos as guest}
-                      <div class="guest-pill">
-                        <span class="guest-id">{guest}</span>
-                      </div>
-                    {/each}
-                  </div>
-                {:else}
-                  <span class="detail-value">Sin visitantes</span>
-                {/if}
-              </div>
-              {#if niosInscritos.length}
-                <div class="inscritos-group inscritos-group--child">
-                  <span class="inscritos-group-label inscritos-group-label--child">Menores de siete años</span>
-                  <div class="guests-grid">
-                    {#each niosInscritos as guest}
-                      <div class="guest-pill guest-pill--child">
-                        <span class="guest-id">{guest}</span>
-                      </div>
-                    {/each}
-                  </div>
+
+              {#if invitadosInscritos.length}
+                <div class="inscritos-stats">
+                  <span class="stat-chip stat-chip--adulto">
+                    <strong>{totalAdultos}</strong>
+                    {totalAdultos === 1 ? "Adulto" : "Adultos"}
+                  </span>
+                  <span class="stat-chip stat-chip--child">
+                    <strong>{totalMenores}</strong>
+                    {totalMenores === 1
+                      ? "Menor de siete años"
+                      : "Menores de siete años"}
+                  </span>
                 </div>
+
+                <div class="guests-grid">
+                  {#each invitadosInscritos as g}
+                    <div
+                      class="guest-pill {g.amparados > 0
+                        ? 'guest-pill--has-child'
+                        : ''}"
+                    >
+                      <span class="guest-id">{g.invitado}</span>
+                      {#if g.amparados > 0}
+                        <span
+                          class="guest-amparados"
+                          title="{g.amparados} menor(es) de siete años a cargo"
+                        >
+                          <svg
+                            class="guest-amparados__icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            aria-hidden="true"
+                          >
+                            <circle cx="12" cy="7" r="4" />
+                            <path d="M5.5 21a6.5 6.5 0 0 1 13 0" />
+                          </svg>
+                          {g.amparados}
+                        </span>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
+              {:else}
+                <span class="detail-value">Sin visitantes</span>
               {/if}
             </div>
           </div>
@@ -1011,36 +1037,39 @@
     letter-spacing: 0.01em;
   }
 
-  .inscritos-group {
-    margin-bottom: 0.6rem;
+  /* Resumen de inscritos: adultos vs. menores */
+  .inscritos-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-chip {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+
+  .stat-chip strong {
+    font-size: 1rem;
+    font-weight: 800;
+  }
+
+  .stat-chip--adulto {
     background: #f4faf7;
-    border: 1px solid #c8e6d8;
-    border-radius: 0.75rem;
-    padding: 0.65rem 0.75rem;
-    box-shadow: 0 2px 6px rgba(0, 89, 64, 0.07);
+    border-color: #c8e6d8;
+    color: var(--color-success, #1a5c3a);
   }
 
-  .inscritos-group:last-child {
-    margin-bottom: 0;
-  }
-
-  .inscritos-group--child {
+  .stat-chip--child {
     background: #fef9ec;
     border-color: #f0d080;
-    box-shadow: 0 2px 6px rgba(146, 97, 10, 0.08);
-  }
-
-  .inscritos-group-label {
-    display: block;
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--color-success, #1a5c3a);
-    margin-bottom: 0.45rem;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-  }
-
-  .inscritos-group-label--child {
     color: #92610a;
   }
 
@@ -1056,6 +1085,9 @@
   }
 
   .guest-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
     background: #edf7f2;
     border-radius: 999px;
     padding: 0.3rem 0.65rem;
@@ -1072,13 +1104,30 @@
     letter-spacing: 0.02em;
   }
 
-  .guest-pill--child {
-    background: #fef9ec;
-    border-color: #f5c842;
+  /* Pill de un adulto que trae menores a cargo */
+  .guest-pill--has-child {
+    background: #f4faf7;
+    border-color: #cfe8db;
   }
 
-  .guest-pill--child .guest-id {
+  .guest-amparados {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.15rem;
+    padding: 0.1rem 0.45rem;
+    border-radius: 999px;
+    background: #fdf3e0;
+    border: 1px solid #f0d080;
     color: #92610a;
+    font-size: 0.72rem;
+    font-weight: 800;
+    line-height: 1;
+  }
+
+  .guest-amparados__icon {
+    width: 0.85em;
+    height: 0.85em;
+    flex-shrink: 0;
   }
 
   /* ── Modal styles ──────────────────────────────────────────────────── */
