@@ -47,6 +47,14 @@
     0
   );
 
+  // Anillo de ocupación: arco = fracción ocupada de la capacidad.
+  const RING_CIRC = 2 * Math.PI * 50; // circunferencia (r=50)
+  $: capacidadSafe = selectedSuite?.capacidad ?? 0;
+  $: cuposSafe = selectedSuite?.cupos_disponibles ?? 0;
+  $: ocupados = Math.max(0, capacidadSafe - cuposSafe);
+  $: ringFraction = capacidadSafe > 0 ? Math.min(1, ocupados / capacidadSafe) : 0;
+  $: ringOffset = RING_CIRC * (1 - ringFraction);
+
   // 1) Revisamos JWT en localStorage (via store session)
   // 2) Si no hay JWT → login
   // 3) Si hay JWT → llamar /suites_app/suites
@@ -302,75 +310,80 @@
           <p class="error">{detailError}</p>
         {:else if selectedSuite}
           <div class="detail-card">
-            <div class="detail-row">
-              <span class="detail-label">ID Suite</span>
-              <span class="detail-value">{selectedSuite.id_suite}</span>
+            <div class="suite-id-head">
+              <span class="suite-id-eyebrow">ID de suite</span>
+              <span class="suite-id-value">{selectedSuite.id_suite}</span>
             </div>
-            <div class="detail-row">
-              <span class="detail-label">Capacidad</span>
-              <span class="detail-value">{selectedSuite.capacidad}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Cupos disponibles</span>
-              <!-- si no hay cupos, pintamos en rojo -->
-              <span
-                class="detail-value {suiteSinCupos ? 'detail-value-zero' : ''}"
-              >
-                {selectedSuite.cupos_disponibles}
-              </span>
-            </div>
-            <div class="inscritos-section">
-              <h3 class="inscritos-title">Inscritos</h3>
 
-              {#if invitadosInscritos.length}
-                <div class="inscritos-stats">
-                  <span class="stat-chip stat-chip--adulto">
-                    <strong>{totalAdultos}</strong>
+            <div class="occupancy">
+              <div
+                class="ring"
+                role="img"
+                aria-label="{selectedSuite.cupos_disponibles} cupos libres de {selectedSuite.capacidad}"
+              >
+                <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="#e8f1ec"
+                    stroke-width="12"
+                  />
+                  <circle
+                    class="ring-arc"
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke={suiteSinCupos ? "#e0574f" : "#16a34a"}
+                    stroke-width="12"
+                    stroke-linecap="round"
+                    stroke-dasharray={RING_CIRC}
+                    stroke-dashoffset={ringOffset}
+                    transform="rotate(-90 60 60)"
+                  />
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-num {suiteSinCupos ? 'ring-num--zero' : ''}">
+                    {selectedSuite.cupos_disponibles}
+                  </span>
+                  <span class="ring-cap">
+                    {selectedSuite.cupos_disponibles === 1
+                      ? "cupo libre"
+                      : "cupos libres"}<br />de {selectedSuite.capacidad}
+                  </span>
+                </div>
+              </div>
+
+              <ul class="occ-list">
+                <li class="occ-row">
+                  <span class="occ-dot occ-dot--adult">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 21a8 8 0 0 1 16 0" />
+                    </svg>
+                  </span>
+                  <span class="occ-num">{totalAdultos}</span>
+                  <span class="occ-label">
                     {totalAdultos === 1 ? "Adulto" : "Adultos"}
                   </span>
-                  <span class="stat-chip stat-chip--child">
-                    <strong>{totalMenores}</strong>
+                </li>
+                <li class="occ-row">
+                  <span class="occ-dot occ-dot--child">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="7" r="3" />
+                      <path d="M6.5 21a5.5 5.5 0 0 1 11 0" />
+                    </svg>
+                  </span>
+                  <span class="occ-num occ-num--child">{totalMenores}</span>
+                  <span class="occ-label occ-label--child">
                     {totalMenores === 1
                       ? "Menor de siete años"
                       : "Menores de siete años"}
                   </span>
-                </div>
-
-                <div class="guests-grid">
-                  {#each invitadosInscritos as g}
-                    <div
-                      class="guest-pill {g.amparados > 0
-                        ? 'guest-pill--has-child'
-                        : ''}"
-                    >
-                      <span class="guest-id">{g.invitado}</span>
-                      {#if g.amparados > 0}
-                        <span
-                          class="guest-amparados"
-                          title="{g.amparados} menor(es) de siete años a cargo"
-                        >
-                          <svg
-                            class="guest-amparados__icon"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            stroke-width="2"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            aria-hidden="true"
-                          >
-                            <circle cx="12" cy="7" r="4" />
-                            <path d="M5.5 21a6.5 6.5 0 0 1 13 0" />
-                          </svg>
-                          {g.amparados}
-                        </span>
-                      {/if}
-                    </div>
-                  {/each}
-                </div>
-              {:else}
-                <span class="detail-value">Sin visitantes</span>
-              {/if}
+                </li>
+              </ul>
             </div>
           </div>
           <div class="detail-actions">
@@ -839,35 +852,6 @@
     gap: 0.6rem;
   }
 
-  .detail-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #e5f0ea;
-  }
-
-  .detail-row:last-child {
-    border-bottom: none;
-  }
-
-  .detail-label {
-    font-size: 0.85rem;
-    color: var(--color-success);
-  }
-
-  .detail-value {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--color-text-main);
-  }
-
-  /* ✅ valor de cupos en rojo cuando es 0 */
-  .detail-value-zero {
-    color: #ff6b6b;
-    font-weight: 700;
-  }
-
   .hint {
     font-size: 0.9rem;
     color: var(--color-text-muted);
@@ -1021,113 +1005,144 @@
     box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
-  /* ── Inscritos section ────────────────────────────────────────────── */
-  .inscritos-section {
-    border-top: 1px solid #e8f0ed;
-    padding-top: 0.75rem;
-    margin-top: 0.25rem;
+  /* ── Detalle: cabecera del ID ─────────────────────────────────────── */
+  .suite-id-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid #e8f0ed;
   }
 
-  .inscritos-title {
-    font-size: 0.95rem;
+  .suite-id-eyebrow {
+    font-size: 0.7rem;
     font-weight: 700;
-    color: var(--color-primary, #1a5c3a);
-    text-align: center;
-    margin: 0 0 0.75rem;
-    letter-spacing: 0.01em;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
   }
 
-  /* Resumen de inscritos: adultos vs. menores */
-  .inscritos-stats {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-bottom: 0.75rem;
-  }
-
-  .stat-chip {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 0.35rem;
-    padding: 0.35rem 0.8rem;
-    border-radius: 999px;
-    font-size: 0.78rem;
-    font-weight: 600;
-    border: 1px solid transparent;
-  }
-
-  .stat-chip strong {
-    font-size: 1rem;
+  .suite-id-value {
+    font-size: 1.7rem;
     font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--color-text-main);
+    font-variant-numeric: tabular-nums;
   }
 
-  .stat-chip--adulto {
-    background: #f4faf7;
-    border-color: #c8e6d8;
-    color: var(--color-success, #1a5c3a);
-  }
-
-  .stat-chip--child {
-    background: #fef9ec;
-    border-color: #f0d080;
-    color: #92610a;
-  }
-
-  .guests-grid {
-    margin-top: 0.35rem;
-    width: 100%;
+  /* ── Anillo de ocupación + desglose de inscritos ──────────────────── */
+  .occupancy {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    max-height: 9rem;
-    overflow-y: auto;
-    padding-right: 0.15rem;
+    align-items: center;
+    gap: 1.2rem;
+    margin-top: 1rem;
   }
 
-  .guest-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    background: #edf7f2;
-    border-radius: 999px;
-    padding: 0.3rem 0.65rem;
-    border: 1px solid #c0ddd4;
-    box-shadow: 0 2px 6px rgba(0, 89, 64, 0.10);
-    white-space: nowrap;
+  .ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
     flex-shrink: 0;
   }
 
-  .guest-id {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--color-success);
-    letter-spacing: 0.02em;
+  .ring-arc {
+    transition: stroke-dashoffset 0.5s ease;
   }
 
-  /* Pill de un adulto que trae menores a cargo */
-  .guest-pill--has-child {
-    background: #f4faf7;
-    border-color: #cfe8db;
-  }
-
-  .guest-amparados {
-    display: inline-flex;
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 0.15rem;
-    padding: 0.1rem 0.45rem;
-    border-radius: 999px;
-    background: #fdf3e0;
-    border: 1px solid #f0d080;
-    color: #92610a;
-    font-size: 0.72rem;
+    justify-content: center;
+    text-align: center;
+  }
+
+  .ring-num {
+    font-size: 1.9rem;
     font-weight: 800;
     line-height: 1;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
   }
 
-  .guest-amparados__icon {
-    width: 0.85em;
-    height: 0.85em;
+  .ring-num--zero {
+    color: #e0574f;
+  }
+
+  .ring-cap {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-top: 0.2rem;
+    line-height: 1.25;
+  }
+
+  .occ-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .occ-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.1rem;
+  }
+
+  .occ-row + .occ-row {
+    border-top: 1px solid #eaf2ee;
+  }
+
+  .occ-dot {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.6rem;
+    display: grid;
+    place-items: center;
     flex-shrink: 0;
+  }
+
+  .occ-dot svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .occ-dot--adult {
+    background: #d9efe3;
+    color: var(--color-success);
+  }
+
+  .occ-dot--child {
+    background: #f6e6c2;
+    color: #8a5a0a;
+  }
+
+  .occ-num {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .occ-num--child {
+    color: #8a5a0a;
+  }
+
+  .occ-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .occ-label--child {
+    color: #8a5a0a;
+    opacity: 0.9;
   }
 
   /* ── Modal styles ──────────────────────────────────────────────────── */
