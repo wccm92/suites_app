@@ -1,152 +1,126 @@
 defmodule MsSuitesApp.Domain.RegisterGuestsUsecase do
+  @moduledoc """
+  Registro masivo de invitados y sus amparados.
+
+  Contrato API POST `/suites_app/register_guests`:
+
+      %{
+        "id_suite" => "DEMO3",
+        "invitados" => [
+          %{"invitado" => "1047451430", "amparados" => ["uuid1", "uuid2", ...]},
+          %{"invitado" => "1047451431", "amparados" => ["uuid4"]},
+          %{"invitado" => "1047451432", "amparados" => []}
+        ]
+      }
+
+  Los invitados se registran en `visitantexevento`; sus amparados en
+  `amparadoxevento` (solo si el invitado se registró OK). El registro de
+  amparados es best-effort: los fallos individuales se ignoran.
+
+  Respuesta:
+
+      %{
+        successful_registrations: ["1047451430", "1047451432"],
+        successful_registrations_amparados: [
+          %{sponsor: "1047451430", amparados: ["uuid1", "uuid2", "uuid3"]},
+          %{sponsor: "1047451432", amparados: []}
+        ],
+        not_registered_blocked: [],
+        not_registered_already_suites: ["1047451431"]
+      }
+  """
+
   require Logger
 
   alias MsSuitesApp.Domain.LoginUsecase
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
+  alias MsSuitesApp.Infrastructure.Adapters.AmparadosQueryAdapter
 
-
-  def handle_register_guests(id_suite, visitantes, invitados_amparados, token)
-      when is_list(visitantes) and is_list(invitados_amparados) do
+  def handle_register_guests(id_suite, invitados, token) when is_list(invitados) do
     with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token),
-         {:ok, results} <- register_guests(event_user_info.id, id_suite, visitantes, invitados_amparados) do
+         {:ok, results} <- register_guests(event_user_info.id, id_suite, invitados) do
       {:ok, results}
     else
       {:error, _} = err -> err
-      false -> {:error, :invalid_body}
     end
   end
 
-  # Construye un mapa padre_doc -> amparado_doc (quitando el "0" inicial del amparado)
-  defp build_amparados_map(invitados_amparados) do
-    Enum.reduce(invitados_amparados, %{}, fn doc, acc ->
-      normalized = normalize_doc(doc)
-      parent = String.replace_prefix(normalized, "0", "")
-      Map.put(acc, parent, normalized)
-    end)
-  end
+  def handle_register_guests(_id_suite, _invitados, _token), do: {:error, :invalid_body}
 
-  #mapea los documentos
-  defp register_guests(id, id_suite, visitantes, invitados_amparados) do
-    amparados_map = build_amparados_map(invitados_amparados)
-
+  defp register_guests(id_evento, id_suite, invitados) do
     results =
-      visitantes
-      |> Enum.map(&normalize_doc/1)
-      |> Enum.reject(&is_nil_or_empty?/1)
-      |> Enum.flat_map(&register_with_amparado(id, id_suite, &1, amparados_map))
+      invitados
+      |> Enum.map(&normalize_invitado/1)
+      |> Enum.reject(fn item -> is_nil(item) or item.invitado == "" end)
+      |> Enum.map(&register_invitado(id_evento, id_suite, &1))
 
     {:ok, build_response(results)}
   end
 
-  defp is_nil_or_empty?(value), do: is_nil(value) or value == ""
-
-  defp normalize_doc(doc) do
-    doc
-    |> to_string()
-    |> String.trim()
-  end
-
-  # Si el padre está bloqueado, bloquea también al amparado sin intentar registrarlo
-  defp register_with_amparado(id, id_suite, documento, amparados_map) do
-    amparado = Map.get(amparados_map, documento)
-
-    if SuitesQueryAdapter.validate_blacklisted(documento) do
-      padre_bloqueado = [tag(error_result(documento, "blocked"), :adult)]
-      amparado_bloqueado = if amparado, do: [tag(error_result(amparado, "blocked"), :amparado)], else: []
-      padre_bloqueado ++ amparado_bloqueado
-    else
-      parent_result = tag(register_one_doc(id, id_suite, documento), :adult)
-
-      amparado_results =
-        if amparado && parent_result.status == "OK" do
-          [tag(register_one_doc(id, id_suite, amparado), :amparado)]
-        else
-          []
-        end
-
-      [parent_result | amparado_results]
-    end
-  end
-
-  defp tag(result, tipo), do: Map.put(result, :tipo, tipo)
-
-  #registra un documento (sin chequeo de blacklist, ya fue validado en el padre)
-  defp register_one_doc(id, id_suite, documento) do
-    case SuitesQueryAdapter.ensure_visitante_exists(documento) do
-      :ok ->
-        do_register_one(id, id_suite, documento)
-
-      {:error, {:visitante_insert_failed, changeset}} ->
-        error_result(documento, "visitor_insert_failed", %{detail: inspect(changeset.errors)})
-
-      other ->
-        error_result(documento, "error", %{detail: inspect(other)})
-    end
-  end
-  #registra visitantesxevento
-  defp do_register_one(id, id_suite, documento) do
-    case SuitesQueryAdapter.register_guest_in_suite(id, id_suite, documento) do
-      {:ok, _} ->
-        %{documento: documento, status: "OK"}
-
-      {:error, {:constraint_error, "visitantexevento_pkey"}} ->
-        already_registered_response(id, documento)
-
-      {:error, {:constraint_error, constraint_name}} ->
-        error_result(documento, "constraint_error", %{constraint: constraint_name})
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        error_result(documento, "register_failed", %{detail: inspect(changeset.errors)})
-
-      other ->
-        error_result(documento, "error", %{detail: inspect(other)})
-    end
-  end
-  #si no se pudo registrar en visitantexevento verifica en que suite esta registrado
-  defp already_registered_response(id, documento) do
-    case SuitesQueryAdapter.validate_guess_in_event(id, documento) do
-      {:ok, existing_suite_id} ->
-        error_result(documento, "already_registered", %{id_suite_actual: existing_suite_id})
-
-      :not_found ->
-        error_result(documento, "already_registered", %{})
-    end
-  end
-
-
-
-  defp error_result(documento, code, extra \\ %{}) do
-    Map.merge(%{documento: documento, status: "error", code: code}, extra)
-  end
-
-  defp build_response(results) do
-    adults    = Enum.filter(results, &(&1.tipo == :adult))
-    amparados = Enum.filter(results, &(&1.tipo == :amparado))
-
+  # Normaliza cada item {invitado, amparados} del request.
+  defp normalize_invitado(%{"invitado" => invitado} = item) do
     %{
-      successful_registrations: successful(adults),
-      not_registered_blocked: blocked_docs(adults),
-      not_registered_already_suites: already_registered_docs(adults),
-      successful_registrations_amparados: successful(amparados)
+      invitado: normalize_doc(invitado),
+      amparados: item |> Map.get("amparados", []) |> List.wrap()
     }
   end
 
-  defp successful(results) do
-    results
-    |> Enum.filter(&(&1.status == "OK"))
-    |> Enum.map(& &1.documento)
+  defp normalize_invitado(_), do: nil
+
+  # Registra un invitado y, si entra OK, sus amparados.
+  defp register_invitado(id_evento, id_suite, %{invitado: documento, amparados: amparados}) do
+    if SuitesQueryAdapter.validate_blacklisted(documento) do
+      %{status: :blocked, invitado: documento}
+    else
+      case register_guest(id_evento, id_suite, documento) do
+        :ok ->
+          AmparadosQueryAdapter.register_amparados(id_evento, id_suite, documento, amparados)
+          %{status: :ok, invitado: documento, amparados: amparados}
+
+        :already_registered ->
+          %{status: :already_registered, invitado: documento}
+
+        :error ->
+          %{status: :error, invitado: documento}
+      end
+    end
   end
 
-  defp already_registered_docs(results) do
-    results
-    |> Enum.filter(&(&1.status == "error" and &1.code == "already_registered"))
-    |> Enum.map(& &1.documento)
+  # visitante (master) + visitantexevento, siguiendo el patrón de do_register_one.
+  defp register_guest(id_evento, id_suite, documento) do
+    case SuitesQueryAdapter.ensure_visitante_exists(documento) do
+      :ok -> do_register_guest(id_evento, id_suite, documento)
+      _other -> :error
+    end
   end
 
-  defp blocked_docs(results) do
-    results
-    |> Enum.filter(&(&1.status == "error" and &1.code == "blocked"))
-    |> Enum.map(& &1.documento)
+  defp do_register_guest(id_evento, id_suite, documento) do
+    case SuitesQueryAdapter.register_guest_in_suite(id_evento, id_suite, documento) do
+      {:ok, _} ->
+        :ok
+
+      {:error, {:constraint_error, "visitantexevento_pkey"}} ->
+        :already_registered
+
+      other ->
+        Logger.error("Error registrando invitado #{documento}: #{inspect(other)}")
+        :error
+    end
   end
 
+  defp build_response(results) do
+    ok = Enum.filter(results, &(&1.status == :ok))
+
+    %{
+      successful_registrations: Enum.map(ok, & &1.invitado),
+      successful_registrations_amparados:
+        Enum.map(ok, &%{sponsor: &1.invitado, amparados: &1.amparados}),
+      not_registered_blocked:
+        results |> Enum.filter(&(&1.status == :blocked)) |> Enum.map(& &1.invitado),
+      not_registered_already_suites:
+        results |> Enum.filter(&(&1.status == :already_registered)) |> Enum.map(& &1.invitado)
+    }
+  end
+
+  defp normalize_doc(doc), do: doc |> to_string() |> String.trim()
 end

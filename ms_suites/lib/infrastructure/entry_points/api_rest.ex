@@ -139,9 +139,8 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   post "/suites_app/register_guests" do
     token = extract_auth(conn)
     case conn.body_params do
-      %{"id_suite" => id_suite, "invitados" => invitados} = params ->
-        invitados_amparados = Map.get(params, "invitados_amparados", [])
-        case RegisterGuestsUsecase.handle_register_guests(id_suite, invitados, invitados_amparados, token) do
+      %{"id_suite" => id_suite, "invitados" => invitados} ->
+        case RegisterGuestsUsecase.handle_register_guests(id_suite, invitados, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->
@@ -179,8 +178,8 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   post "/suites_app/register_amparado" do
     token = extract_auth(conn)
     case conn.body_params do
-      %{"id_suite" => id_suite, "amparado" => amparado} = params ->
-        case RegisterAmparadoUsecase.handle_register_amparado(id_suite, amparado, token) do
+      %{"id_suite" => id_suite, "invitado" => invitado, "amparados" => amparados} ->
+        case RegisterAmparadoUsecase.handle_register_amparados(id_suite, invitado, amparados, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->

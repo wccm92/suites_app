@@ -4,6 +4,7 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
   alias MsSuitesApp.Domain.LoginUsecase
   alias MsSuitesApp.Infrastructure.Adapters.Repo
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
+  alias MsSuitesApp.Infrastructure.Adapters.AmparadosQueryAdapter
   alias MsSuitesApp.Domain.Model.Suites
   alias MsSuitesApp.Infrastructure.Adapters.ParametrosRepo
 
@@ -35,11 +36,36 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
       event_user_info.id
     )
     Logger.debug("BD devolvió  suites")
-    {:ok, suites_detail}
+    {:ok, enrich_invitados(suites_detail, id_suite, event_user_info.id)}
   rescue
     error ->
       Logger.error("Error consultando BD: #{Exception.message(error)}")
       {:error, {:db_error, error}}
+  end
+
+  # Transforma invitados_inscritos (lista de cédulas) en una lista de
+  # %{invitado: cedula, amparados: <conteo en amparadoxevento>} y descuenta
+  # los amparados de los cupos disponibles (los amparados también ocupan cupo).
+  defp enrich_invitados(nil, _id_suite, _id_evento), do: nil
+
+  defp enrich_invitados(
+         %{invitados_inscritos: invitados, cupos_disponibles: cupos_base} = detail,
+         id_suite,
+         id_evento
+       ) do
+    counts = AmparadosQueryAdapter.count_amparados_by_suite(id_evento, id_suite)
+    total_amparados = counts |> Map.values() |> Enum.sum()
+
+    invitados_inscritos =
+      Enum.map(invitados, fn invitado ->
+        %{invitado: invitado, amparados: Map.get(counts, invitado, 0)}
+      end)
+
+    %{
+      detail
+    | invitados_inscritos: invitados_inscritos,
+      cupos_disponibles: cupos_base - total_amparados
+    }
   end
 
   defp validate_suite_estado(%{estado: false}) do
