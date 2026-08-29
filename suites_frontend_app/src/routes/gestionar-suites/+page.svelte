@@ -195,8 +195,10 @@
         detail?: string;
       };
 
-      if (body?.title === "error") {
-        showMessage(body.detail ?? "Ocurrió un error.");
+      // Cualquier respuesta no exitosa (500, etc.) o marcada como error de negocio
+      // se muestra como aviso; nunca como éxito.
+      if (!res.ok || body?.title === "error") {
+        showMessage(body?.detail ?? "No se pudo eliminar el visitante.");
         return;
       }
 
@@ -255,9 +257,17 @@
         detail?: string;
       };
 
+      // Error de negocio: cierra el modal y muestra el aviso.
       if (body?.title === "error") {
         replaceOpen = false;
         showMessage(body.detail ?? "Ocurrió un error.");
+        return;
+      }
+
+      // Fallo del servidor (500, etc.): mantener el modal abierto para reintentar.
+      if (!res.ok) {
+        replaceError =
+          body?.detail ?? "No se pudo reemplazar el visitante. Inténtalo de nuevo.";
         return;
       }
 
@@ -322,9 +332,13 @@
         detail?: string;
       };
 
-      if (body?.title === "error") {
+      if (!res.ok || body?.title === "error") {
         amparadoPromptOpen = false;
-        showMessage(body.detail ?? "Ocurrió un error.", false, () => loadSuite());
+        showMessage(
+          body?.detail ?? "No se pudieron registrar los amparados.",
+          false,
+          () => loadSuite()
+        );
         return;
       }
 
