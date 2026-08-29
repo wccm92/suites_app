@@ -24,6 +24,22 @@
   $: suiteSinCupos =
     !!selectedSuite && selectedSuite.cupos_disponibles === 0;
 
+  // Nueva forma: cada invitado adulto trae un conteo de amparados.
+  $: invitadosInscritos = selectedSuite?.invitados_inscritos ?? [];
+  $: totalAdultos = invitadosInscritos.length;
+  $: totalMenores = invitadosInscritos.reduce(
+    (acc, g) => acc + (g.amparados ?? 0),
+    0
+  );
+
+  // Anillo de ocupación: arco = fracción ocupada de la capacidad.
+  const RING_CIRC = 2 * Math.PI * 50; // circunferencia (r=50)
+  $: capacidadSafe = selectedSuite?.capacidad ?? 0;
+  $: cuposSafe = selectedSuite?.cupos_disponibles ?? 0;
+  $: ocupados = Math.max(0, capacidadSafe - cuposSafe);
+  $: ringFraction = capacidadSafe > 0 ? Math.min(1, ocupados / capacidadSafe) : 0;
+  $: ringOffset = RING_CIRC * (1 - ringFraction);
+
   onMount(async () => {
     suitesLoading = true;
     suitesError = null;
@@ -177,35 +193,80 @@
           <p class="error">{detailError}</p>
         {:else if selectedSuite}
           <div class="detail-card">
-            <div class="detail-row">
-              <span class="detail-label">ID Suite</span>
-              <span class="detail-value">{selectedSuite.id_suite}</span>
+            <div class="suite-id-head">
+              <span class="suite-id-eyebrow">ID de suite</span>
+              <span class="suite-id-value">{selectedSuite.id_suite}</span>
             </div>
-            <div class="detail-row">
-              <span class="detail-label">Capacidad</span>
-              <span class="detail-value">{selectedSuite.capacidad}</span>
-            </div>
-            <div class="detail-row">
-              <span class="detail-label">Cupos disponibles</span>
-              <span
-                class="detail-value {suiteSinCupos ? 'detail-value-zero' : ''}"
+
+            <div class="occupancy">
+              <div
+                class="ring"
+                role="img"
+                aria-label="{selectedSuite.cupos_disponibles} cupos libres de {selectedSuite.capacidad}"
               >
-                {selectedSuite.cupos_disponibles}
-              </span>
-            </div>
-            <div class="detail-row detail-row-column">
-              <span class="detail-label">Visitantes inscritos</span>
-              {#if selectedSuite.invitados_inscritos?.length}
-                <div class="guests-grid">
-                  {#each selectedSuite.invitados_inscritos as guest}
-                    <div class="guest-pill">
-                      <span class="guest-id">{guest}</span>
-                    </div>
-                  {/each}
+                <svg width="120" height="120" viewBox="0 0 120 120" aria-hidden="true">
+                  <circle
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke="#e8f1ec"
+                    stroke-width="12"
+                  />
+                  <circle
+                    class="ring-arc"
+                    cx="60"
+                    cy="60"
+                    r="50"
+                    fill="none"
+                    stroke={suiteSinCupos ? "#e0574f" : "#16a34a"}
+                    stroke-width="12"
+                    stroke-linecap="round"
+                    stroke-dasharray={RING_CIRC}
+                    stroke-dashoffset={ringOffset}
+                    transform="rotate(-90 60 60)"
+                  />
+                </svg>
+                <div class="ring-center">
+                  <span class="ring-num {suiteSinCupos ? 'ring-num--zero' : ''}">
+                    {selectedSuite.cupos_disponibles}
+                  </span>
+                  <span class="ring-cap">
+                    {selectedSuite.cupos_disponibles === 1
+                      ? "cupo libre"
+                      : "cupos libres"}<br />de {selectedSuite.capacidad}
+                  </span>
                 </div>
-              {:else}
-                <span class="detail-value">Sin visitantes</span>
-              {/if}
+              </div>
+
+              <ul class="occ-list">
+                <li class="occ-row">
+                  <span class="occ-dot occ-dot--adult">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="8" r="4" />
+                      <path d="M4 21a8 8 0 0 1 16 0" />
+                    </svg>
+                  </span>
+                  <span class="occ-num">{totalAdultos}</span>
+                  <span class="occ-label">
+                    {totalAdultos === 1 ? "Adulto" : "Adultos"}
+                  </span>
+                </li>
+                <li class="occ-row">
+                  <span class="occ-dot occ-dot--child">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="12" cy="7" r="3" />
+                      <path d="M6.5 21a5.5 5.5 0 0 1 11 0" />
+                    </svg>
+                  </span>
+                  <span class="occ-num occ-num--child">{totalMenores}</span>
+                  <span class="occ-label occ-label--child">
+                    {totalMenores === 1
+                      ? "Menor de siete años"
+                      : "Menores de siete años"}
+                  </span>
+                </li>
+              </ul>
             </div>
           </div>
           <div class="detail-actions">
@@ -508,34 +569,6 @@
     gap: 0.6rem;
   }
 
-  .detail-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 0.5rem;
-    padding: 0.4rem 0;
-    border-bottom: 1px solid #e5f0ea;
-  }
-
-  .detail-row:last-child {
-    border-bottom: none;
-  }
-
-  .detail-label {
-    font-size: 0.85rem;
-    color: var(--color-success);
-  }
-
-  .detail-value {
-    font-size: 0.95rem;
-    font-weight: 500;
-    color: var(--color-text-main);
-  }
-
-  .detail-value-zero {
-    color: #ff6b6b;
-    font-weight: 700;
-  }
-
   .hint {
     font-size: 0.9rem;
     color: var(--color-text-muted);
@@ -627,33 +660,144 @@
     box-shadow: 0 4px 10px rgba(0, 89, 64, 0.30);
   }
 
-  .detail-row-column {
+  /* ── Detalle: cabecera del ID ─────────────────────────────────────── */
+  .suite-id-head {
+    display: flex;
     flex-direction: column;
-    align-items: flex-start;
+    gap: 0.1rem;
+    padding-bottom: 0.9rem;
+    border-bottom: 1px solid #e8f0ed;
   }
 
-  .guests-grid {
-    margin-top: 0.35rem;
-    width: 100%;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-    gap: 0.4rem;
+  .suite-id-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
   }
 
-  .guest-pill {
-    background: #edf7f2;
-    border-radius: 999px;
-    padding: 0.3rem 0.5rem;
-    border: 1px solid #c0ddd4;
-    box-shadow: 0 2px 6px rgba(0, 89, 64, 0.10);
+  .suite-id-value {
+    font-size: 1.7rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1;
+    color: var(--color-text-main);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Anillo de ocupación + desglose de inscritos ──────────────────── */
+  .occupancy {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+    margin-top: 1rem;
+  }
+
+  .ring {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    flex-shrink: 0;
+  }
+
+  .ring-arc {
+    transition: stroke-dashoffset 0.5s ease;
+  }
+
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
   }
 
-  .guest-id {
-    font-size: 0.8rem;
-    font-weight: 500;
+  .ring-num {
+    font-size: 1.9rem;
+    font-weight: 800;
+    line-height: 1;
     color: var(--color-success);
-    letter-spacing: 0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .ring-num--zero {
+    color: #e0574f;
+  }
+
+  .ring-cap {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    margin-top: 0.2rem;
+    line-height: 1.25;
+  }
+
+  .occ-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .occ-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.1rem;
+  }
+
+  .occ-row + .occ-row {
+    border-top: 1px solid #eaf2ee;
+  }
+
+  .occ-dot {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.6rem;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+
+  .occ-dot svg {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+
+  .occ-dot--adult {
+    background: #d9efe3;
+    color: var(--color-success);
+  }
+
+  .occ-dot--child {
+    background: #f6e6c2;
+    color: #8a5a0a;
+  }
+
+  .occ-num {
+    font-size: 1.3rem;
+    font-weight: 800;
+    line-height: 1;
+    color: var(--color-success);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .occ-num--child {
+    color: #8a5a0a;
+  }
+
+  .occ-label {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+  }
+
+  .occ-label--child {
+    color: #8a5a0a;
+    opacity: 0.9;
   }
 
   @media (max-width: 768px) {

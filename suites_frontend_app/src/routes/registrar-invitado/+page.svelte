@@ -36,23 +36,34 @@
   $: cuposInvalidos = cuposDisponiblesSafe === 0;
   $: restantes = Math.max(0, cuposDisponiblesSafe - totalAgregados);
 
-  // ── Step 2: Niños amparados ───────────────────────────────────────────
-  let ninosPorInvitado: Record<string, boolean> = {};
+  // ── Step 2: Amparados (múltiples por invitado) ────────────────────────
+  // Conteo de amparados por cédula. Cada amparado es un menor de siete años
+  // sin datos propios: en el submit se materializa como un UUID aleatorio.
+  let amparadosPorInvitado: Record<string, number> = {};
 
-  $: totalNinos = Object.values(ninosPorInvitado).filter(Boolean).length;
-  $: restantesConNinos = Math.max(
-    0,
-    cuposDisponiblesSafe - totalAgregados - totalNinos
+  $: totalAmparados = Object.values(amparadosPorInvitado).reduce(
+    (acc, n) => acc + n,
+    0
   );
-  $: sinCuposParaNinos = restantesConNinos === 0;
+  $: restantesConAmparados = Math.max(
+    0,
+    cuposDisponiblesSafe - totalAgregados - totalAmparados
+  );
+  $: sinCuposParaAmparados = restantesConAmparados === 0;
 
-  function handleNinoChange(inv: string, target: HTMLInputElement) {
-    // Sin cupos libres no se pueden marcar más amparados (solo desmarcar).
-    if (target.checked && restantesConNinos === 0) {
-      target.checked = false;
-      return;
-    }
-    ninosPorInvitado = { ...ninosPorInvitado, [inv]: target.checked };
+  function incAmparado(inv: string) {
+    // No se puede exceder los cupos disponibles de la suite.
+    if (restantesConAmparados <= 0) return;
+    amparadosPorInvitado = {
+      ...amparadosPorInvitado,
+      [inv]: (amparadosPorInvitado[inv] ?? 0) + 1,
+    };
+  }
+
+  function decAmparado(inv: string) {
+    const cur = amparadosPorInvitado[inv] ?? 0;
+    if (cur <= 0) return;
+    amparadosPorInvitado = { ...amparadosPorInvitado, [inv]: cur - 1 };
   }
 
   // ── Submission state ──────────────────────────────────────────────────
@@ -72,9 +83,11 @@
   }
 
   // ── Result modal ──────────────────────────────────────────────────────
+  type AmparadoGroup = { sponsor: string; amparados: string[] };
   type RegistroResult = {
     adultos: string[];
-    ninos: string[];
+    amparadosPorSponsor: AmparadoGroup[]; // solo sponsors con amparados > 0
+    totalAmparados: number;
     bloqueados: string[];
     yaEnSuites: string[];
   };
@@ -111,12 +124,16 @@
 
   function goToStep2() {
     if (invitados.length === 0) return;
-    // Initialise niños map preserving existing selections if user goes back & forward
-    const updated: Record<string, boolean> = {};
+    // Reconstruye el mapa de amparados preservando los conteos previos y
+    // recortándolos si, tras cambios en el Paso 1, ya no caben en los cupos.
+    const updated: Record<string, number> = {};
+    let budget = Math.max(0, cuposDisponiblesSafe - invitados.length);
     for (const id of invitados) {
-      updated[id] = ninosPorInvitado[id] ?? false;
+      const val = Math.min(amparadosPorInvitado[id] ?? 0, budget);
+      updated[id] = val;
+      budget -= val;
     }
-    ninosPorInvitado = updated;
+    amparadosPorInvitado = updated;
     currentStep = 2;
   }
 
@@ -223,16 +240,21 @@
     isSubmittingFinal = true;
 
     try {
-      const invitadosAmparados = invitados
-        .filter((id) => ninosPorInvitado[id])
-        .map((id) => `0${id}`);
+      // Lista de invitados. Cada amparado se materializa como un UUID
+      // aleatorio; los invitados sin amparados llevan lista vacía.
+      const invitadosPayload = invitados.map((ced) => {
+        const n = amparadosPorInvitado[ced] ?? 0;
+        return {
+          invitado: ced,
+          amparados: Array.from({ length: n }, () => crypto.randomUUID()),
+        };
+      });
 
       const res = await apiFetch("/suites_app/register_guests", {
         method: "POST",
         body: JSON.stringify({
           id_suite: suiteId,
-          invitados,
-          invitados_amparados: invitadosAmparados,
+          invitados: invitadosPayload,
         }),
       });
 
@@ -252,15 +274,31 @@
 
       const body = (await res.json()) as {
         successful_registrations?: string[];
-        successful_registrations_amparados?: string[];
+        successful_registrations_amparados?: {
+          sponsor?: string;
+          amparados?: string[];
+        }[];
         not_registered_blocked?: string[];
         not_registered_already_suites?: string[];
       };
 
+      // El backend devuelve los amparados agrupados por sponsor (invitado
+      // principal). Nos quedamos solo con los sponsors que llevaron amparados.
+      const grupos: AmparadoGroup[] = (
+        body.successful_registrations_amparados ?? []
+      )
+        .map((g) => ({
+          sponsor: g?.sponsor ?? "",
+          amparados: Array.isArray(g?.amparados) ? g.amparados : [],
+        }))
+        .filter((g) => g.amparados.length > 0);
+      const totalAmp = grupos.reduce((acc, g) => acc + g.amparados.length, 0);
+
       invitados = [];
       openResultModal({
-        adultos:    body.successful_registrations ?? [],
-        ninos:      body.successful_registrations_amparados ?? [],
+        adultos: body.successful_registrations ?? [],
+        amparadosPorSponsor: grupos,
+        totalAmparados: totalAmp,
         bloqueados: body.not_registered_blocked ?? [],
         yaEnSuites: body.not_registered_already_suites ?? [],
       });
@@ -410,43 +448,51 @@
           <span class="step-count">2 de 3</span>
         </div>
         <p class="step-subtitle">
-          Marca la casilla de los visitantes adultos que llevarán un niño menor de siete años
+          Indica cuántos amparados (menores de siete años) llevará cada visitante
         </p>
 
         <div class="visitors-table">
           <div class="visitors-header">
             <span>Visitante</span>
-            <span>Viene con un menor de siete años</span>
+            <span>Amparados (menores de siete años)</span>
           </div>
           {#each invitados as inv}
             <div class="visitors-row">
               <span class="visitor-cedula">{inv}</span>
-              <label
-                class="checkbox-wrap {sinCuposParaNinos && !ninosPorInvitado[inv] ? 'checkbox-wrap--disabled' : ''}"
-                title={sinCuposParaNinos && !ninosPorInvitado[inv]
-                  ? "No quedan cupos disponibles en esta suite."
-                  : "Viene con un menor de siete años"}
-              >
-                <input
-                  type="checkbox"
-                  class="checkbox"
-                  checked={ninosPorInvitado[inv] ?? false}
-                  disabled={sinCuposParaNinos && !ninosPorInvitado[inv]}
-                  on:change={(e) => handleNinoChange(inv, e.currentTarget)}
-                />
-              </label>
+              <div class="stepper">
+                <button
+                  type="button"
+                  class="stepper-btn"
+                  on:click={() => decAmparado(inv)}
+                  disabled={(amparadosPorInvitado[inv] ?? 0) === 0}
+                  aria-label="Quitar un amparado"
+                >−</button>
+                <span class="stepper-value" aria-live="polite">
+                  {amparadosPorInvitado[inv] ?? 0}
+                </span>
+                <button
+                  type="button"
+                  class="stepper-btn"
+                  on:click={() => incAmparado(inv)}
+                  disabled={sinCuposParaAmparados}
+                  aria-label="Agregar un amparado"
+                  title={sinCuposParaAmparados
+                    ? "No quedan cupos disponibles en esta suite."
+                    : "Agregar un amparado"}
+                >+</button>
+              </div>
             </div>
           {/each}
         </div>
 
-        <div class="cupos-badge {sinCuposParaNinos ? 'cupos-badge--zero' : ''}" aria-live="polite">
-          Quedan <strong>{restantesConNinos}</strong> cupo{restantesConNinos !== 1 ? 's' : ''} libre{restantesConNinos !== 1 ? 's' : ''}
+        <div class="cupos-badge {sinCuposParaAmparados ? 'cupos-badge--zero' : ''}" aria-live="polite">
+          Quedan <strong>{restantesConAmparados}</strong> cupo{restantesConAmparados !== 1 ? 's' : ''} libre{restantesConAmparados !== 1 ? 's' : ''}
         </div>
 
-        {#if sinCuposParaNinos}
+        {#if sinCuposParaAmparados}
           <p class="cupos-warning" aria-live="polite">
-            No quedan cupos disponibles. Para agregar un menor, desmarca otro o
-            regresa al paso anterior y quita un visitante.
+            No quedan cupos disponibles. Para agregar un amparado, quita otro o
+            regresa al paso anterior y elimina un visitante.
           </p>
         {/if}
 
@@ -473,13 +519,13 @@
         <div class="visitors-table">
           <div class="visitors-header">
             <span>Visitantes</span>
-            <span>Viene con un menor de siete años</span>
+            <span>Amparados (menores de siete años)</span>
           </div>
           {#each invitados as inv}
             <div class="visitors-row">
               <span class="visitor-cedula">{inv}</span>
-              <span class="nino-tag {ninosPorInvitado[inv] ? 'nino-tag--si' : 'nino-tag--no'}">
-                {ninosPorInvitado[inv] ? 'Sí' : 'No'}
+              <span class="amparados-count {(amparadosPorInvitado[inv] ?? 0) > 0 ? 'amparados-count--si' : 'amparados-count--no'}">
+                {amparadosPorInvitado[inv] ?? 0}
               </span>
             </div>
           {/each}
@@ -491,12 +537,12 @@
             <strong class="total-value">{totalAgregados}</strong>
           </div>
           <div class="total-row">
-            <span class="total-label">Menores de siete años</span>
-            <strong class="total-value">{totalNinos}</strong>
+            <span class="total-label">Amparados (menores de siete años)</span>
+            <strong class="total-value">{totalAmparados}</strong>
           </div>
           <div class="total-row total-row--highlight">
             <span class="total-label">Total de inscripciones</span>
-            <strong class="total-value">{totalAgregados + totalNinos}</strong>
+            <strong class="total-value">{totalAgregados + totalAmparados}</strong>
           </div>
         </div>
 
@@ -565,13 +611,13 @@
       </div>
 
       <!-- ── Registros exitosos ── -->
-      {#if registroResult.adultos.length > 0 || registroResult.ninos.length > 0}
+      {#if registroResult.adultos.length > 0 || registroResult.totalAmparados > 0}
         <div class="result-section result-section--success">
           <div class="result-section-header">
             <span class="result-section-dot result-section-dot--success"></span>
             <h3 class="result-section-title">Registros exitosos</h3>
             <span class="result-count result-count--success">
-              {registroResult.adultos.length + registroResult.ninos.length}
+              {registroResult.adultos.length + registroResult.totalAmparados}
             </span>
           </div>
           <div class="result-groups">
@@ -588,15 +634,20 @@
                 </div>
               </div>
             {/if}
-            {#if registroResult.ninos.length > 0}
+            {#if registroResult.totalAmparados > 0}
               <div class="result-group result-group--success">
                 <p class="result-group-label">
-                  <span class="result-group-icon">🧒</span> Menores de siete años
-                  <span class="result-group-count">{registroResult.ninos.length}</span>
+                  <span class="result-group-icon">🧒</span> Amparados
+                  <span class="result-group-count">{registroResult.totalAmparados}</span>
                 </p>
-                <div class="result-pills">
-                  {#each registroResult.ninos as id}
-                    <span class="result-pill result-pill--success">{id}</span>
+                <div class="amparados-by-sponsor">
+                  {#each registroResult.amparadosPorSponsor as g}
+                    <div class="sponsor-line">
+                      <span class="sponsor-ced">{g.sponsor}</span>
+                      <span class="sponsor-amp-count">
+                        {g.amparados.length} amparado{g.amparados.length !== 1 ? 's' : ''}
+                      </span>
+                    </div>
                   {/each}
                 </div>
               </div>
@@ -647,7 +698,7 @@
       {/if}
 
       <!-- Edge case: all empty -->
-      {#if registroResult.adultos.length === 0 && registroResult.ninos.length === 0 && registroResult.bloqueados.length === 0 && registroResult.yaEnSuites.length === 0}
+      {#if registroResult.adultos.length === 0 && registroResult.totalAmparados === 0 && registroResult.bloqueados.length === 0 && registroResult.yaEnSuites.length === 0}
         <p class="result-empty">La operación se completó, pero no se devolvieron detalles específicos.</p>
       {/if}
 
@@ -1050,48 +1101,75 @@
     letter-spacing: 0.02em;
   }
 
-  /* ── Checkbox (Step 2) ───────────────────────────────────────────── */
-  .checkbox-wrap {
-    display: flex;
+  /* ── Stepper de amparados (Step 2) ───────────────────────────────── */
+  .stepper {
+    display: inline-flex;
+    align-items: center;
     justify-content: center;
-    cursor: pointer;
-  }
-
-  .checkbox {
-    width: 1.25rem;
-    height: 1.25rem;
-    accent-color: var(--color-primary);
-    cursor: pointer;
-  }
-
-  .checkbox-wrap--disabled {
-    cursor: not-allowed;
-  }
-
-  .checkbox:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  /* ── Sí/No tag (Step 3) ──────────────────────────────────────────── */
-  .nino-tag {
-    display: flex;
-    justify-content: center;
-    font-size: 0.85rem;
-    font-weight: 700;
-    padding: 0.2rem 0.75rem;
-    border-radius: 999px;
-    width: fit-content;
+    gap: 0.6rem;
     margin: 0 auto;
   }
 
-  .nino-tag--si {
+  .stepper-btn {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid #c0ddd4;
+    background: #ffffff;
+    color: var(--color-primary);
+    font-size: 1.25rem;
+    font-weight: 900;
+    line-height: 1;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 2px 6px rgba(0, 89, 64, 0.1);
+    transition: transform 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  }
+
+  .stepper-btn:hover:enabled {
+    transform: translateY(-1px);
+    border-color: var(--color-primary);
+    background: #edf7f2;
+  }
+
+  .stepper-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  .stepper-value {
+    min-width: 1.6rem;
+    text-align: center;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--color-text-main);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Conteo de amparados (Step 3) ────────────────────────────────── */
+  .amparados-count {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 800;
+    padding: 0.2rem 0.85rem;
+    border-radius: 999px;
+    width: fit-content;
+    min-width: 2.2rem;
+    margin: 0 auto;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .amparados-count--si {
     background: #dcfce7;
     color: #166534;
     border: 1px solid #86efac;
   }
 
-  .nino-tag--no {
+  .amparados-count--no {
     background: #f5f5f5;
     color: #6b7280;
     border: 1px solid #e0e0e0;
@@ -1443,6 +1521,41 @@
     background: rgba(163, 106, 46, 0.08);
     border: 1px solid rgba(163, 106, 46, 0.28);
     color: #7a4e1a;
+  }
+
+  /* ── Amparados agrupados por sponsor (result modal) ──────────────── */
+  .amparados-by-sponsor {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .sponsor-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.6rem;
+    background: #edf7f2;
+    border: 1px solid #c0ddd4;
+  }
+
+  .sponsor-ced {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--color-primary);
+    letter-spacing: 0.01em;
+  }
+
+  .sponsor-amp-count {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--color-text-muted);
+    background: #ffffff;
+    border-radius: 999px;
+    padding: 0.1rem 0.5rem;
+    white-space: nowrap;
   }
 
   .result-empty {

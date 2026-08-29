@@ -32,15 +32,12 @@
   $: capacidadShown = suiteDetail?.capacidad ?? capacidadParam;
   $: cuposShown = suiteDetail?.cupos_disponibles ?? Math.max(0, cuposParam);
 
-  // Filas: cada adulto (cédula sin '0' inicial) alineado con su amparado ('0' + cédula)
+  // Filas: cada invitado adulto con su cantidad de amparados (menores de siete años).
   $: guests = suiteDetail?.invitados_inscritos ?? [];
-  $: amparadosSet = new Set(guests.filter((g) => g.startsWith("0")));
-  $: rows = guests
-    .filter((g) => !g.startsWith("0"))
-    .map((adulto) => ({
-      adulto,
-      amparado: amparadosSet.has(`0${adulto}`) ? `0${adulto}` : null,
-    }));
+  $: rows = guests.map((g) => ({
+    invitado: g.invitado,
+    amparados: g.amparados ?? 0,
+  }));
 
   // ── Modal genérico de mensaje (título + Aceptar) ──────────────────────
   let msgOpen = false;
@@ -73,9 +70,26 @@
   let replaceError = "";
   let replaceSubmitting = false;
 
-  // ── Modal "¿Registrar amparados?" ─────────────────────────────────────
+  // ── Modal "Registrar amparados" (contador con cupos dinámicos) ────────
   let amparadoPromptOpen = false;
   let amparadoNuevoInvitado = "";
+  let amparadoCount = 0;
+  let amparadoSubmitting = false;
+
+  // Cupos que quedarían libres según el conteo elegido en el modal.
+  // Cada amparado consume un cupo (misma regla que el registro de visitantes).
+  $: amparadoRestantes = Math.max(0, cuposShown - amparadoCount);
+  $: amparadoSinCupos = amparadoRestantes <= 0;
+
+  function incAmparado() {
+    if (amparadoSinCupos) return;
+    amparadoCount += 1;
+  }
+
+  function decAmparado() {
+    if (amparadoCount <= 0) return;
+    amparadoCount -= 1;
+  }
 
   // ── Navegación / sesión ───────────────────────────────────────────────
   function getHomeRoute(): string {
@@ -259,9 +273,10 @@
     }
   }
 
-  // ── Flujo: ¿Registrar amparados? (register_amparado) ──────────────────
+  // ── Flujo: Registrar amparados (register_amparado) ────────────────────
   function openAmparadoPrompt(nuevoInvitado: string) {
     amparadoNuevoInvitado = nuevoInvitado;
+    amparadoCount = 0;
     amparadoPromptOpen = true;
   }
 
@@ -271,13 +286,26 @@
   }
 
   async function acceptAmparado() {
-    amparadoPromptOpen = false;
-    const amparado = `0${amparadoNuevoInvitado}`;
-    processing = true;
+    // Sin amparados elegidos: no hay nada que registrar, cerramos y refrescamos.
+    if (amparadoCount <= 0) {
+      declineAmparado();
+      return;
+    }
+
+    // Cada amparado se materializa como un UUID aleatorio generado en el front.
+    const amparados = Array.from({ length: amparadoCount }, () =>
+      crypto.randomUUID()
+    );
+
+    amparadoSubmitting = true;
     try {
       const res = await apiFetch("/suites_app/register_amparado", {
         method: "POST",
-        body: JSON.stringify({ id_suite: suiteId, amparado }),
+        body: JSON.stringify({
+          id_suite: suiteId,
+          invitado: amparadoNuevoInvitado,
+          amparados,
+        }),
       });
 
       if (res.status === 401) {
@@ -295,17 +323,24 @@
       };
 
       if (body?.title === "error") {
+        amparadoPromptOpen = false;
         showMessage(body.detail ?? "Ocurrió un error.", false, () => loadSuite());
         return;
       }
 
-      showMessage("Amparado registrado exitosamente", true, () => loadSuite());
+      amparadoPromptOpen = false;
+      showMessage(
+        body.detail ?? "Amparados registrados correctamente",
+        true,
+        () => loadSuite()
+      );
     } catch {
-      showMessage("Error inesperado al registrar el amparado.", false, () =>
+      amparadoPromptOpen = false;
+      showMessage("Error inesperado al registrar los amparados.", false, () =>
         loadSuite()
       );
     } finally {
-      processing = false;
+      amparadoSubmitting = false;
     }
   }
 </script>
@@ -374,17 +409,35 @@
           <span class="col-head col-head--actions" aria-hidden="true"></span>
         </div>
 
-        {#each rows as row (row.adulto)}
+        {#each rows as row (row.invitado)}
           <div class="guest-row">
             <div class="cell cell--adulto">
               <span class="cell-label">Adulto</span>
-              <span class="pill pill--adulto">{row.adulto}</span>
+              <span class="pill pill--adulto">{row.invitado}</span>
             </div>
 
-            <div class="cell cell--amparado {row.amparado ? '' : 'cell--empty'}">
-              {#if row.amparado}
-                <span class="cell-label">Amparado</span>
-                <span class="pill pill--amparado">{row.amparado}</span>
+            <div class="cell cell--amparado">
+              <span class="cell-label">Amparados</span>
+              {#if row.amparados > 0}
+                <span class="pill pill--amparado">
+                  <svg
+                    class="pill-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <circle cx="12" cy="7" r="4" />
+                    <path d="M5.5 21a6.5 6.5 0 0 1 13 0" />
+                  </svg>
+                  {row.amparados}
+                  {row.amparados === 1 ? "amparado" : "amparados"}
+                </span>
+              {:else}
+                <span class="amparado-none">Sin amparados</span>
               {/if}
             </div>
 
@@ -392,7 +445,7 @@
               <button
                 type="button"
                 class="btn-quitar"
-                on:click={() => quitarInvitado(row.adulto)}
+                on:click={() => quitarInvitado(row.invitado)}
                 disabled={processing}
               >
                 Quitar
@@ -400,7 +453,7 @@
               <button
                 type="button"
                 class="btn-reemplazar"
-                on:click={() => openReplace(row.adulto)}
+                on:click={() => openReplace(row.invitado)}
                 disabled={processing}
               >
                 Reemplazar
@@ -462,20 +515,63 @@
   </div>
 {/if}
 
-<!-- ── Modal: ¿Registrar amparados? ───────────────────────────────────── -->
+<!-- ── Modal: Registrar amparados (contador con cupos dinámicos) ───────── -->
 {#if amparadoPromptOpen}
   <div class="modal-overlay" role="presentation"></div>
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="amparado-prompt-title">
     <h3 class="modal-title" id="amparado-prompt-title">Registrar amparados</h3>
     <p class="modal-text">
-      ¿Deseas registrar amparados para este nuevo visitante?
+      Indica cuántos amparados (menores de siete años) llevará
+      <strong>{amparadoNuevoInvitado}</strong>. Cada amparado ocupa un cupo de la
+      suite.
     </p>
-    <div class="modal-actions">
-      <button class="modal-btn-secondary" type="button" on:click={declineAmparado}>
-        No
+
+    <div class="cupos-badge {amparadoSinCupos ? 'cupos-badge--zero' : ''}">
+      Quedan <strong>{amparadoRestantes}</strong>
+      {amparadoRestantes === 1 ? "cupo libre" : "cupos libres"}
+    </div>
+
+    <div class="amparado-stepper">
+      <button
+        type="button"
+        class="stepper-btn"
+        on:click={decAmparado}
+        disabled={amparadoCount === 0 || amparadoSubmitting}
+        aria-label="Quitar un amparado"
+      >
+        −
       </button>
-      <button class="modal-btn-primary" type="button" on:click={acceptAmparado}>
-        Sí
+      <span class="stepper-value">{amparadoCount}</span>
+      <button
+        type="button"
+        class="stepper-btn"
+        on:click={incAmparado}
+        disabled={amparadoSinCupos || amparadoSubmitting}
+        aria-label="Agregar un amparado"
+        title={amparadoSinCupos
+          ? "No quedan cupos disponibles en la suite."
+          : "Agregar un amparado"}
+      >
+        +
+      </button>
+    </div>
+
+    <div class="modal-actions">
+      <button
+        class="modal-btn-secondary"
+        type="button"
+        on:click={declineAmparado}
+        disabled={amparadoSubmitting}
+      >
+        Omitir
+      </button>
+      <button
+        class="modal-btn-primary"
+        type="button"
+        on:click={acceptAmparado}
+        disabled={amparadoCount === 0 || amparadoSubmitting}
+      >
+        {amparadoSubmitting ? "Registrando…" : "Registrar"}
       </button>
     </div>
   </div>
@@ -701,9 +797,22 @@
   }
 
   .pill--amparado {
+    gap: 0.35rem;
     background: #fdf3e7;
     border: 1px solid #e6b980;
     color: #b3701a;
+  }
+
+  .pill-icon {
+    width: 0.95em;
+    height: 0.95em;
+    flex-shrink: 0;
+  }
+
+  .amparado-none {
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: var(--color-text-muted);
   }
 
   .btn-quitar,
@@ -845,6 +954,78 @@
     color: #ff6b6b;
   }
 
+  /* Badge de cupos disponibles dentro del modal de amparados */
+  .cupos-badge {
+    display: inline-block;
+    margin: 0 0 1rem 0;
+    padding: 0.35rem 0.9rem;
+    border-radius: 999px;
+    background: #edf7f2;
+    border: 1px solid #c8e6d8;
+    color: var(--color-primary);
+    font-size: 0.85rem;
+    font-weight: 600;
+  }
+
+  .cupos-badge strong {
+    font-weight: 800;
+  }
+
+  .cupos-badge--zero {
+    background: #fff5f5;
+    border-color: var(--color-error-soft);
+    color: var(--color-error);
+  }
+
+  /* Contador +/- de amparados */
+  .amparado-stepper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.1rem;
+    margin: 0.25rem 0 0.75rem;
+  }
+
+  .stepper-btn {
+    width: 2.6rem;
+    height: 2.6rem;
+    border-radius: 50%;
+    border: 1px solid #c0ddd4;
+    background: #ffffff;
+    color: var(--color-primary);
+    font-size: 1.4rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      background 0.12s ease,
+      border-color 0.12s ease,
+      transform 0.12s ease;
+  }
+
+  .stepper-btn:hover:enabled {
+    background: #edf7f2;
+    border-color: var(--color-primary);
+    transform: translateY(-1px);
+  }
+
+  .stepper-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .stepper-value {
+    min-width: 2.5rem;
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-text-main);
+    font-variant-numeric: tabular-nums;
+  }
+
   .modal-actions {
     display: flex;
     gap: 0.75rem;
@@ -932,10 +1113,6 @@
     .cell {
       justify-content: flex-start;
       gap: 0.6rem;
-    }
-
-    .cell--empty {
-      display: none;
     }
 
     .cell-label {
