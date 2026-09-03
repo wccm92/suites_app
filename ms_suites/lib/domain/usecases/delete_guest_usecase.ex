@@ -1,7 +1,10 @@
 defmodule MsSuitesApp.Domain.DeleteGuestUsecase do
   alias MsSuitesApp.Domain.LoginUsecase
+  alias MsSuitesApp.Infrastructure.Adapters.AmparadosQueryAdapter
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
   alias MsSuitesApp.Infrastructure.Adapters.Repo
+
+  require Logger
 
   def handle_delete_guest(id_suite, invitado, token) do
     with {:ok, event_user} <- LoginUsecase.validate_event_and_session(token),
@@ -43,6 +46,14 @@ defmodule MsSuitesApp.Domain.DeleteGuestUsecase do
 
   defp delete_guest_transaction(registro) do
     case Repo.transaction(fn ->
+      # Los amparados van primero: la FK hacia visitantexevento es NO ACTION,
+      # asi que la BD rechaza borrar al invitado mientras tenga amparados.
+      AmparadosQueryAdapter.delete_amparados_by_visitante(
+        registro.id_evento,
+        registro.id_suite,
+        registro.id_visitante
+      )
+
       SuitesQueryAdapter.delete_guest(
         registro.id_evento,
         registro.id_suite,
@@ -58,8 +69,13 @@ defmodule MsSuitesApp.Domain.DeleteGuestUsecase do
       {:ok, _} ->
         :ok
 
-      {:error, _, _, _} ->
+      {:error, reason} ->
+        Logger.error("Error eliminando invitado: #{inspect(reason)}")
         {:error, :delete_failed}
     end
+  rescue
+    e in Ecto.ConstraintError ->
+      Logger.error("Restriccion violada eliminando invitado: #{inspect(e.constraint)}")
+      {:error, :delete_failed}
   end
 end

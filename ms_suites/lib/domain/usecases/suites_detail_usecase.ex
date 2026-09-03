@@ -2,10 +2,8 @@ defmodule MsSuitesApp.Domain.SuitesDetailUsecase do
   import Ecto.Query, warn: false
 
   alias MsSuitesApp.Domain.LoginUsecase
-  alias MsSuitesApp.Infrastructure.Adapters.Repo
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
   alias MsSuitesApp.Infrastructure.Adapters.AmparadosQueryAdapter
-  alias MsSuitesApp.Domain.Model.Suites
   alias MsSuitesApp.Infrastructure.Adapters.ParametrosRepo
 
   require Logger

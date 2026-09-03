@@ -5,9 +5,6 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Utils.DataTypeUtils
   alias MsSuitesApp.Domain.SuitesUsecase
   alias MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler
-  alias MsSuitesApp.Utils.DataTypeUtils
-  alias MsSuitesApp.Domain.Model.NaturalPersonRequest
-  alias MsSuitesApp.Domain.Model.EnterprisesRequest
   alias MsSuitesApp.Domain.LoginUsecase
   alias MsSuitesApp.Domain.EventUsecase
   alias MsSuitesApp.Domain.SuitesDetailUsecase
@@ -32,12 +29,9 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   use Plug.Router
   use Timex
 
-  @natural_person "natural-person"
-  @enterprises "enterprises"
   @suites "suites"
-  @login "login"
   @evento "evento"
-  @evento "lots"
+  @lots "lots"
   @leaseholder "arrendatarios"
 
   plug(CORSPlug,
@@ -73,7 +67,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
 
   get "/suites_app/validate-session" do
     token = extract_auth(conn)
-    with {:ok, plain_token} <- LoginUsecase.validate_session(token) do
+    with {:ok, _plain_token} <- LoginUsecase.validate_session(token) do
       build_response("token_validado", conn)
     else
       error -> error |> handle_error_v2(conn)
@@ -152,7 +146,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   post "/suites_app/delete_guest" do
     token = extract_auth(conn)
     case conn.body_params do
-      %{"id_suite" => id_suite, "invitado" => invitado} = params ->
+      %{"id_suite" => id_suite, "invitado" => invitado} = _params ->
         case DeleteGuestUsecase.handle_delete_guest(id_suite, invitado, token) do
           {:ok, response} ->
             build_response(response, conn)
@@ -165,7 +159,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   post "/suites_app/replace_guest" do
     token = extract_auth(conn)
     case conn.body_params do
-      %{"id_suite" => id_suite, "invitado" => invitado, "nuevo_invitado" => nuevo_invitado} = params ->
+      %{"id_suite" => id_suite, "invitado" => invitado, "nuevo_invitado" => nuevo_invitado} = _params ->
         case ReplaceGuestUsecase.handle_replace_guest(id_suite, invitado, nuevo_invitado, token) do
           {:ok, response} ->
             build_response(response, conn)
@@ -291,11 +285,6 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     |> send_resp(status, Poison.encode!(body))
   end
 
-  match _ do
-    conn
-    |> handle_not_found(Logger.level())
-  end
-
   defp handle_not_found(conn, :debug) do
     %{request_path: path} = conn
     body = Poison.encode!(%{status: 404, path: path})
@@ -306,29 +295,13 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     send_resp(conn, 404, "")
   end
 
-  defp handle_error(error, conn) do
-    error
-    |> ErrorHandler.build_error_response()
-    |> build_error_response(conn)
-  end
-
   defp handle_error_v2(error, conn) do
     body_error = error |> ErrorHandler.build_error_response()
     build_error_response_v2(
       body_error,
-      status = extract_http_status(body_error),
+      extract_http_status(body_error),
       conn
     )
-  end
-
-  defp log_request(resource, request) do
-    Logger.info(
-      %{
-        "Resource: " => resource,
-        "Request: " => request
-      }
-    )
-    {:ok, true}
   end
 
   defp log_response(resource, request_id, response) do

@@ -2,7 +2,6 @@ defmodule MsSuitesApp.Domain.LeaseHolderUsecase do
   import Ecto.Query, warn: false
 
   alias MsSuitesApp.Domain.LoginLeaseHolderUsecase
-  alias MsSuitesApp.Infrastructure.Adapters.Repo
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
   alias MsSuitesApp.Domain.Model.Suites
 

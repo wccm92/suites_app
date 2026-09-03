@@ -18,8 +18,7 @@ defmodule MsSuitesApp.Utils.JwtHelper do
     try do
       {:ok, JOSE.JWT.peek_payload(token)}
     rescue
-      error in [ArgumentError, MatchError] -> {:error, :jwt_deserialization_error}
-      error -> {:error, :jwt_deserialization_error}
+      _error -> {:error, :jwt_deserialization_error}
     end
   end
 end

@@ -10,7 +10,7 @@ defmodule MsSuitesApp.Domain.ValidateGuestUsecase do
   Devuelve TODAS las suites (equivalente a: SELECT * FROM suites).
   """
 
-  def handle_validate_guess(id_suite, id_visitante, token) do
+  def handle_validate_guess(_id_suite, id_visitante, token) do
     with {:ok, event_user_info} <- LoginUsecase.validate_event_and_session(token),
          {:ok, true} <- validate_blacklist(id_visitante),
          {:ok, true} <- validate_guess(id_visitante, event_user_info),

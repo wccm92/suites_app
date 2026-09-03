@@ -1,11 +1,11 @@
 defmodule MsSuites.Auth.BridgeAuthClient do
+  require Logger
+
   @url "http://127.0.0.1:9099/verify"
   @url_hash "http://127.0.0.1:9099/hash"
   @token_bridge Application.compile_env(:ms_suites, :token_bridge)
 
   def verify_password(stored_hash, password) do
-    IO.inspect(stored_hash)
-    IO.inspect(password)
     body = %{
       hash: stored_hash,
       password: password
@@ -26,7 +26,7 @@ defmodule MsSuites.Auth.BridgeAuthClient do
     end
   rescue
     e ->
-      IO.inspect(e, label: "Bridge error")
+      Logger.error("Error verificando password en bridge: #{Exception.message(e)}")
       false
   end
   def hash_password(password) do
@@ -49,12 +49,7 @@ defmodule MsSuites.Auth.BridgeAuthClient do
     end
   rescue
     e ->
-      IO.inspect(e, label: "Bridge hash error")
+      Logger.error("Error generando hash en bridge: #{Exception.message(e)}")
       {:error, :bridge_error}
-  end
-  defp auth_header do
-    [
-      {"authorization", "Bearer " <> @token_bridge}
-    ]
   end
 end

@@ -1,7 +1,10 @@
 defmodule MsSuitesApp.Domain.ReplaceGuestUsecase do
   alias MsSuitesApp.Domain.LoginUsecase
+  alias MsSuitesApp.Infrastructure.Adapters.AmparadosQueryAdapter
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
   alias MsSuitesApp.Infrastructure.Adapters.Repo
+
+  require Logger
 
   def handle_replace_guest(
         id_suite,
@@ -84,6 +87,15 @@ defmodule MsSuitesApp.Domain.ReplaceGuestUsecase do
          nuevo_documento
        ) do
     case Repo.transaction(fn ->
+      # Los amparados quedan ligados al invitado sustituido, no pasan al nuevo.
+      # Van primero porque la FK hacia visitantexevento es NO ACTION: la BD
+      # rechaza cambiar el documento del invitado mientras tenga amparados.
+      AmparadosQueryAdapter.delete_amparados_by_visitante(
+        registro.id_evento,
+        registro.id_suite,
+        registro.id_visitante
+      )
+
       SuitesQueryAdapter.update_guest_document(
         registro,
         nuevo_documento
@@ -98,8 +110,13 @@ defmodule MsSuitesApp.Domain.ReplaceGuestUsecase do
       {:ok, _} ->
         :ok
 
-      {:error, _, _, _} ->
+      {:error, reason} ->
+        Logger.error("Error reemplazando invitado: #{inspect(reason)}")
         {:error, :replace_failed}
     end
+  rescue
+    e in Ecto.ConstraintError ->
+      Logger.error("Restriccion violada reemplazando invitado: #{inspect(e.constraint)}")
+      {:error, :replace_failed}
   end
 end

@@ -84,7 +84,7 @@ defmodule MsSuitesApp.Domain.LoginLeaseHolderUsecase do
 
   def validate_session(token) do
     case Token.verify_and_validate(token) do
-      {:error, [message: "Invalid token", claim: "exp", claim_val: data]} ->
+      {:error, [message: "Invalid token", claim: "exp", claim_val: _data]} ->
         {:error, :expired_suite_session}
       _ ->
         try do

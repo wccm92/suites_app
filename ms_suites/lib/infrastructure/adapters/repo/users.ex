@@ -3,7 +3,6 @@ defmodule MsSuitesApp.Infrastructure.Adapters.Users do
   alias MsSuitesApp.Infrastructure.Adapters.Repo
   alias MsSuitesApp.Domain.Model.Users
   alias MsSuitesApp.Domain.Model.Arrendatarios
-  alias MsSuitesApp.Infrastructure.Adapters.Password
   alias MsSuites.Auth.BridgeAuthClient
 
 
@@ -101,5 +100,4 @@ defmodule MsSuitesApp.Infrastructure.Adapters.Users do
     BridgeAuthClient.verify_password(hash, password)
   end
 
-  defp verify_password(_password, _hash), do: false
 end

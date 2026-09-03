@@ -60,5 +60,26 @@ defmodule MsSuitesApp.Infrastructure.Adapters.AmparadosQueryAdapter do
     |> Map.new()
   end
 
+  @doc """
+  Elimina los amparados ligados a un invitado dentro de un evento y suite.
+  Devuelve la cantidad de filas eliminadas.
+
+  Debe invocarse ANTES de borrar o modificar la fila del invitado en
+  `visitantexevento`: la FK `amparadoxevento_id_visitante_id_evento_fkey`
+  es NO ACTION, por lo que la BD rechaza tocar al padre con amparados vivos.
+  """
+  def delete_amparados_by_visitante(id_evento, id_suite, id_visitante) do
+    {count, _} =
+      from(a in Amparadoxevento,
+        where:
+          a.id_evento == ^id_evento and
+          a.id_suite == ^id_suite and
+          a.id_visitante == ^id_visitante
+      )
+      |> Repo.delete_all()
+
+    count
+  end
+
   defp normalize(value), do: value |> to_string() |> String.trim()
 end

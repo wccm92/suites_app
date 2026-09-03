@@ -12,7 +12,7 @@ defmodule MsSuitesApp.Application do
   use Application
   require Logger
 
-  def start(_type, [env]) do
+  def start(_type, [_env]) do
     config = AppConfig.load_config()
 
     env = Application.get_env(:ms_suites, :env)

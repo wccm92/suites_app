@@ -2,9 +2,7 @@ defmodule MsSuitesApp.Domain.ParkingUsecase do
   import Ecto.Query, warn: false
 
   alias MsSuitesApp.Domain.LoginUsecase
-  alias MsSuitesApp.Infrastructure.Adapters.Repo
   alias MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter
-  alias MsSuitesApp.Domain.Model.Suites
   alias MsSuitesApp.Infrastructure.Adapters.ParametrosRepo
 
   require Logger
@@ -52,31 +50,6 @@ defmodule MsSuitesApp.Domain.ParkingUsecase do
   rescue
     error ->
       Logger.error("Error consultando BD: #{Exception.message(error)}")
-      {:error, {:db_error, error}}
-  end
-
-  defp validate_suite_estado(%{estado: false}) do
-    {:error, :suite_bloqueada}
-  end
-
-  defp validate_suite_estado(%{estado: true}), do: {:ok, true}
-
-  defp validate_suite_mora(%{diasmora: diasmora}, exonera) do
-    max_dias =
-      case ParametrosRepo.get_diasmora_max() do
-        nil -> 0
-        v when is_integer(v) -> v
-        v when is_binary(v) -> String.to_integer(v)
-      end
-
-    if diasmora > max_dias and not exonera do
-      {:error, :suite_en_mora}
-    else
-      {:ok, true}
-    end
-  rescue
-    error ->
-      Logger.error("Error consultando parametro diasmora: #{Exception.message(error)}")
       {:error, {:db_error, error}}
   end
 

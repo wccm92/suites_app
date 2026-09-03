@@ -136,18 +136,6 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
-  defp make_error(code, title, detail) do
-    %{
-      "errors" => [
-        %{
-          "code" => code,
-          "title" => title,
-          "detail" => detail
-        }
-      ]
-    }
-  end
-
   defp make_error_v2(code, title, detail, http_status) do
     %{
       "errors" => [

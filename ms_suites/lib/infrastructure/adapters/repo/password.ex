@@ -1,5 +1,5 @@
 defmodule MsSuitesApp.Infrastructure.Adapters.Password do
-  use Bitwise
+  import Bitwise
   require Logger
   @dk_len 64
 
