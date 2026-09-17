@@ -7,6 +7,12 @@
   import { browser } from "$app/environment";
   import { apiFetch } from "$lib/api/client";
   import { session } from "$lib/stores/session";
+  import {
+    DOC_MAX,
+    MENSAJE_CARACTERES_NO_VALIDOS,
+    normalizarDocumento,
+    validarDocumento,
+  } from "$lib/documento";
 
   // ── Suite params ──────────────────────────────────────────────────────
   let suiteId = "";
@@ -142,27 +148,19 @@
   }
 
   // ── Cedula helpers ────────────────────────────────────────────────────
-  function sanitizeCedula(value: string): string {
-    return value.replace(/\D/g, "").slice(0, 10);
-  }
-
   function handleCedulaInput(event: Event) {
     const target = event.target as HTMLInputElement;
     const original = target.value;
-    const sanitized = sanitizeCedula(original);
-    cedula = sanitized;
+    const normalizado = normalizarDocumento(original);
+    cedula = normalizado;
+    // Solo se avisa si se descartó algo distinto de las mayúsculas: pasar a mayúsculas
+    // es parte de la forma canónica del documento, no un error del usuario.
     error =
-      original !== sanitized
-        ? "Solo se permiten números (0-9), sin espacios, letras ni caracteres especiales. Máximo 10 dígitos."
-        : "";
+      original.toUpperCase() !== normalizado ? MENSAJE_CARACTERES_NO_VALIDOS : "";
   }
 
   function isValidCedula(value: string): string {
-    if (!value) return "El documento es obligatorio.";
-    if (value.length < 6) return "El documento debe tener entre 6 y 10 dígitos.";
-    if (!/^\d+$/.test(value))
-      return "El documento debe contener únicamente números.";
-    return "";
+    return validarDocumento(value);
   }
 
   async function addInvitado() {
@@ -376,13 +374,12 @@
               id="cedula"
               name="cedula"
               type="text"
-              inputmode="numeric"
               autocomplete="off"
-              maxlength="10"
+              maxlength={DOC_MAX}
               class="input"
               bind:value={cedula}
               on:input={handleCedulaInput}
-              placeholder="Ej: 1234567890"
+              placeholder="Ej: 1234567890 o AB123456"
             />
             <button
               type="button"

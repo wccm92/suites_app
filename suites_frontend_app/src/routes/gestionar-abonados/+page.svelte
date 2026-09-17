@@ -7,6 +7,12 @@
   import { browser } from "$app/environment";
   import { apiFetch } from "$lib/api/client";
   import { session } from "$lib/stores/session";
+  import {
+    DOC_MAX,
+    normalizarDesdeEvento,
+    normalizarDocumento,
+    validarDocumento,
+  } from "$lib/documento";
 
   // ── Suite param (desde la query string) ───────────────────────────────
   let suiteId = "";
@@ -164,11 +170,13 @@
   // ── Acción: Registrar abonado (uno a uno) ─────────────────────────────
   async function registrarAbonado() {
     if (registrando) return;
-    const cedula = nuevaCedula.trim();
-    if (!/^\d{6,10}$/.test(cedula)) {
-      registerError = "Ingresa una cédula válida (6 a 10 dígitos).";
+    const cedula = normalizarDocumento(nuevaCedula);
+    const errorDoc = validarDocumento(cedula);
+    if (errorDoc) {
+      registerError = errorDoc;
       return;
     }
+    nuevaCedula = cedula;
 
     registrando = true;
     registerError = "";
@@ -302,10 +310,10 @@
         <input
           class="register-input"
           type="text"
-          inputmode="numeric"
-          placeholder="Cédula del abonado (Ej: 1047451430)"
+          placeholder="Documento del abonado (Ej: 1047451430 o AB123456)"
           bind:value={nuevaCedula}
-          maxlength={10}
+          on:input={(e) => (nuevaCedula = normalizarDesdeEvento(e))}
+          maxlength={DOC_MAX}
           disabled={registrando}
         />
         <button class="btn-registrar" type="submit" disabled={registrando}>

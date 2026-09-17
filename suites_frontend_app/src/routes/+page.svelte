@@ -12,6 +12,12 @@
     ErrorItem,
   } from "$lib/api/types";
   import { isSuiteDetailError, isSuiteDetail } from "$lib/api/guards";
+  import {
+    DOC_MAX,
+    normalizarDesdeEvento,
+    normalizarDocumento,
+    validarDocumento,
+  } from "$lib/documento";
 
   type SuiteSummary = {
     id_suite: string;
@@ -186,12 +192,13 @@
   }
 
   function openRentConfirm() {
-    const clean = cedulaArrendatario.trim().replace(/\D/g, '');
-    if (clean.length < 6 || clean.length > 10) {
-      rentError = 'Ingrese una cédula válida (entre 6 y 10 dígitos).';
+    const limpio = normalizarDocumento(cedulaArrendatario);
+    const errorDoc = validarDocumento(limpio);
+    if (errorDoc) {
+      rentError = errorDoc;
       return;
     }
-    cedulaArrendatario = clean;
+    cedulaArrendatario = limpio;
     rentError = '';
     showRentConfirm = true;
   }
@@ -492,10 +499,10 @@
       id="cedula-arrendatario"
       class="modal-input"
       type="text"
-      inputmode="numeric"
-      placeholder="Ej: 1234567890"
+      placeholder="Ej: 1234567890 o AB123456"
       bind:value={cedulaArrendatario}
-      maxlength={10}
+      on:input={(e) => (cedulaArrendatario = normalizarDesdeEvento(e))}
+      maxlength={DOC_MAX}
     />
     {#if rentError}
       <p class="modal-error">{rentError}</p>
