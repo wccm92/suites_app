@@ -8,7 +8,7 @@
   import { apiFetch } from "$lib/api/client";
   import { session } from "$lib/stores/session";
   import { isSuiteDetail, isSuiteDetailError } from "$lib/api/guards";
-  import type { SuiteDetail } from "$lib/api/types";
+  import type { GuestStatus, SuiteDetail } from "$lib/api/types";
   import {
     DOC_MAX,
     normalizarDesdeEvento,
@@ -38,12 +38,22 @@
   $: capacidadShown = suiteDetail?.capacidad ?? capacidadParam;
   $: cuposShown = suiteDetail?.cupos_disponibles ?? Math.max(0, cuposParam);
 
-  // Filas: cada invitado adulto con su cantidad de amparados (menores de siete años).
+  // Estado por visitante (abonado / ingresó al evento). `null` = no disponible:
+  // las filas muestran "—" en vez de un "No" que podría ser falso.
+  let guestStatus: Map<string, GuestStatus> | null = null;
+
+  // Filas: cada invitado adulto con su cantidad de amparados (menores de siete años)
+  // y su estado como abonado / ingreso al evento.
   $: guests = suiteDetail?.invitados_inscritos ?? [];
-  $: rows = guests.map((g) => ({
-    invitado: g.invitado,
-    amparados: g.amparados ?? 0,
-  }));
+  $: rows = guests.map((g) => {
+    const status = guestStatus?.get(g.invitado);
+    return {
+      invitado: g.invitado,
+      amparados: g.amparados ?? 0,
+      abonado: guestStatus ? (status?.abonado ?? false) : null,
+      ingreso: guestStatus ? (status?.ingreso_evento ?? false) : null,
+    };
+  });
 
   // ── Modal genérico de mensaje (título + Aceptar) ──────────────────────
   let msgOpen = false;
@@ -128,11 +138,34 @@
     await goto(`${base}/no-event`);
   }
 
+  // ── Carga del estado de los visitantes (abonado / ingreso) ───────────
+  // Complementa el detalle: si falla, el listado se sigue mostrando sin estos datos.
+  async function loadGuestStatus() {
+    try {
+      const res = await apiFetch(`/suites_app/guests_status/${suiteId}`);
+      if (!res.ok) {
+        guestStatus = null;
+        return;
+      }
+      const body = (await res.json().catch(() => ({}))) as {
+        invitados?: GuestStatus[];
+      };
+      guestStatus = new Map(
+        (body?.invitados ?? [])
+          .filter((g) => typeof g?.invitado === "string")
+          .map((g) => [g.invitado, g])
+      );
+    } catch {
+      guestStatus = null;
+    }
+  }
+
   // ── Carga del detalle de la suite ─────────────────────────────────────
   async function loadSuite() {
     if (!browser || !suiteId) return;
     loading = true;
     loadError = "";
+    loadGuestStatus();
     try {
       const res = await apiFetch(`/suites_app/suites/${suiteId}`);
 
@@ -426,8 +459,10 @@
     {:else}
       <div class="guests">
         <div class="guests-head">
-          <span class="col-head col-head--adulto">Adultos</span>
+          <span class="col-head col-head--adulto">Adulto</span>
           <span class="col-head col-head--amparado">Amparados</span>
+          <span class="col-head col-head--abonado">Abonado</span>
+          <span class="col-head col-head--ingreso">Ingresó al evento</span>
           <span class="col-head col-head--actions" aria-hidden="true"></span>
         </div>
 
@@ -460,6 +495,51 @@
                 </span>
               {:else}
                 <span class="amparado-none">Sin amparados</span>
+              {/if}
+            </div>
+
+            <!-- En escritorio el encabezado da el contexto ("Sí"/"No"); en móvil
+                 no hay encabezados, así que el valor se describe solo. -->
+            <div class="cell cell--abonado">
+              {#if row.abonado === null}
+                <span class="flag-unknown" title="No disponible">—</span>
+              {:else if row.abonado}
+                <span class="flag flag--si">
+                  <svg
+                    class="pill-icon"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2.4"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    aria-hidden="true"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  <span class="desk-only">Sí</span>
+                  <span class="mobile-only">Abonado</span>
+                </span>
+              {:else}
+                <span class="flag flag--no">
+                  <span class="desk-only">No</span>
+                  <span class="mobile-only">No abonado</span>
+                </span>
+              {/if}
+            </div>
+
+            <div class="cell cell--ingreso">
+              {#if row.ingreso === null}
+                <span class="flag-unknown" title="No disponible">—</span>
+              {:else}
+                <span
+                  class="ingreso {row.ingreso ? 'ingreso--on' : 'ingreso--off'}"
+                  title={row.ingreso ? "Ingresó al evento" : "Aún no ingresa al evento"}
+                >
+                  <span class="light" aria-hidden="true"></span>
+                  <span class="mobile-only">{row.ingreso ? "Ingresó" : "Sin ingreso"}</span>
+                  <span class="sr-only">{row.ingreso ? "Sí" : "No"}</span>
+                </span>
               {/if}
             </div>
 
@@ -749,10 +829,10 @@
   .guests-head,
   .guest-row {
     display: grid;
-    /* La 3ª columna (acciones) va con ancho fijo para que sea idéntica en el
-       encabezado y en las filas; así las dos columnas 1fr (Adultos/Amparados)
+    /* Abonado, Ingresó y acciones van con ancho fijo para que sean idénticas en
+       el encabezado y en las filas; así las dos columnas 1fr (Adulto/Amparados)
        se alinean verticalmente con sus respectivos encabezados. */
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 14rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 6rem 7.5rem 12rem;
     align-items: center;
     gap: 0.75rem;
   }
@@ -773,6 +853,12 @@
 
   .col-head--amparado {
     color: var(--color-accent);
+  }
+
+  .col-head--abonado,
+  .col-head--ingreso {
+    color: var(--color-primary);
+    line-height: 1.2;
   }
 
   .guest-row {
@@ -835,6 +921,110 @@
     font-size: 0.82rem;
     font-weight: 500;
     color: var(--color-text-muted);
+  }
+
+  /* ── Flag "Abonado": el "Sí" destaca (relleno), el "No" queda discreto ── */
+  .flag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .flag--si {
+    background: var(--color-primary);
+    color: #ffffff;
+    font-weight: 700;
+    box-shadow: 0 3px 10px rgba(0, 89, 64, 0.28);
+  }
+
+  .flag--no {
+    padding: 0.3rem 0.6rem;
+    color: var(--color-text-soft);
+    font-weight: 500;
+  }
+
+  .flag-unknown {
+    color: var(--color-text-soft);
+  }
+
+  /* ── Luz "Ingresó al evento": encendida (verde con brillo) vs apagada ── */
+  .ingreso {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  .light {
+    width: 1.05rem;
+    height: 1.05rem;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .ingreso--on {
+    color: #15803d;
+    font-weight: 700;
+  }
+
+  .ingreso--on .light {
+    background: radial-gradient(circle at 35% 35%, #bbf7d0 0, #22c55e 45%, #16a34a 100%);
+    box-shadow:
+      0 0 0 3px rgba(34, 197, 94, 0.18),
+      0 0 12px 2px rgba(34, 197, 94, 0.65);
+    animation: light-pulse 2.2s ease-in-out infinite;
+  }
+
+  .ingreso--off {
+    color: var(--color-text-soft);
+    font-weight: 500;
+  }
+
+  .ingreso--off .light {
+    background: #e4ebe8;
+    border: 1px solid #cdd8d3;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.12);
+  }
+
+  @keyframes light-pulse {
+    0%,
+    100% {
+      box-shadow:
+        0 0 0 3px rgba(34, 197, 94, 0.18),
+        0 0 12px 2px rgba(34, 197, 94, 0.65);
+    }
+    50% {
+      box-shadow:
+        0 0 0 5px rgba(34, 197, 94, 0.1),
+        0 0 18px 4px rgba(34, 197, 94, 0.45);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .ingreso--on .light {
+      animation: none;
+    }
+  }
+
+  .mobile-only {
+    display: none;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
   }
 
   .btn-quitar,
@@ -1099,6 +1289,94 @@
     cursor: not-allowed;
   }
 
+  /* ── Responsive: listado como tarjetas compactas ──────────────────────
+     Con 5 columnas la tabla deja de caber antes de los 768px, así que el
+     listado pasa a tarjetas desde 860px. En vez de apilar una fila con
+     etiqueta por dato (5 filas por visitante), cada tarjeta va en 2 filas:
+       [ cédula            luz de ingreso ]
+       [ amparados          flag abonado  ]
+       [        Quitar | Reemplazar       ]
+     Los valores se describen solos ("Abonado", "Ingresó"), sin etiquetas. */
+  @media (max-width: 860px) {
+    .guests-head {
+      display: none;
+    }
+
+    .guest-row {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        "adulto ingreso"
+        "amparado abonado"
+        "actions actions";
+      gap: 0.55rem 0.75rem;
+      padding: 0.8rem 0.9rem;
+    }
+
+    .cell--adulto {
+      grid-area: adulto;
+    }
+
+    .cell--amparado {
+      grid-area: amparado;
+    }
+
+    .cell--abonado {
+      grid-area: abonado;
+    }
+
+    .cell--ingreso {
+      grid-area: ingreso;
+    }
+
+    .cell--actions {
+      grid-area: actions;
+    }
+
+    .cell {
+      justify-content: flex-start;
+    }
+
+    .cell--abonado,
+    .cell--ingreso {
+      justify-content: flex-end;
+    }
+
+    .cell-label {
+      display: none;
+    }
+
+    .mobile-only {
+      display: inline;
+    }
+
+    .desk-only {
+      display: none;
+    }
+
+    /* "No abonado" / "Sin ingreso" quedan como texto pequeño y discreto */
+    .flag--no {
+      padding: 0;
+      font-size: 0.78rem;
+    }
+
+    .ingreso--off {
+      font-size: 0.78rem;
+    }
+
+    .cell--actions {
+      justify-content: stretch;
+      padding-top: 0.55rem;
+      border-top: 1px solid #e3eee9;
+    }
+
+    .cell--actions .btn-quitar,
+    .cell--actions .btn-reemplazar {
+      flex: 1;
+      padding: 0.55rem 0.9rem;
+      text-align: center;
+    }
+  }
+
   /* ── Responsive ───────────────────────────────────────────────────── */
   @media (max-width: 768px) {
     .form-container {
@@ -1119,44 +1397,6 @@
     .suite-meta {
       flex-direction: column;
       align-items: flex-start;
-    }
-
-    /* En móvil las columnas se apilan verticalmente */
-    .guests-head {
-      display: none;
-    }
-
-    .guest-row {
-      grid-template-columns: 1fr;
-      gap: 0.6rem;
-      padding: 0.9rem;
-    }
-
-    .cell {
-      justify-content: flex-start;
-      gap: 0.6rem;
-    }
-
-    .cell-label {
-      display: inline-block;
-      min-width: 5.5rem;
-      font-size: 0.78rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      color: var(--color-text-muted);
-    }
-
-    .cell--actions {
-      justify-content: stretch;
-      margin-top: 0.2rem;
-    }
-
-    .cell--actions .btn-quitar,
-    .cell--actions .btn-reemplazar {
-      flex: 1;
-      padding: 0.55rem 0.9rem;
-      text-align: center;
     }
 
     .step-actions {

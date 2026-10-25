@@ -20,6 +20,17 @@ defmodule MsSuitesApp.Infrastructure.Adapters.AbonadosQueryAdapter do
   end
 
   @doc """
+  Cuenta los abonados registrados en una suite.
+  """
+  def count_season_ticket_holders_by_suite(id_suite) when is_binary(id_suite) do
+    from(a in Abonado,
+      where: a.id_suite == ^id_suite,
+      select: count(a.id_abonado)
+    )
+    |> Repo.one()
+  end
+
+  @doc """
   Devuelve el `id_suite` en el que un abonado está registrado, o `nil`
   si el abonado no existe en ninguna suite.
   """

@@ -20,6 +20,8 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Domain.GetSeasonTicketHoldersUsecase
   alias MsSuitesApp.Domain.DeleteSeasonTicketHoldersUsecase
   alias MsSuitesApp.Domain.RegisterSeasonTicketHolderUsecase
+  alias MsSuitesApp.Domain.ValidateSeasonTicketHoldersLimitUsecase
+  alias MsSuitesApp.Domain.GuestsStatusUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -109,6 +111,19 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     case conn.params do
       %{"id_suite" => id_suite} ->
         case SuitesDetailUsecase.handle_list_suites_detail(id_suite, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
+    end
+  end
+
+  get "/suites_app/guests_status/:id_suite" do
+    token = extract_auth(conn)
+    case conn.params do
+      %{"id_suite" => id_suite} ->
+        case GuestsStatusUsecase.handle_guests_status(id_suite, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->
@@ -208,11 +223,25 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     end
   end
 
+  get "/suites_app/validate_season_ticket_holders_limit/:id_suite" do
+    token = extract_auth(conn)
+    case conn.params do
+      %{"id_suite" => id_suite} ->
+        case ValidateSeasonTicketHoldersLimitUsecase.handle_validate_limit(id_suite, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
+    end
+  end
+
   post "/suites_app/register_season_ticket_holder" do
     token = extract_auth(conn)
     case conn.body_params do
-      %{"id_suite" => id_suite, "id_season_ticket_holder" => id_season_ticket_holder} ->
-        case RegisterSeasonTicketHolderUsecase.handle_register_season_ticket_holder(id_suite, id_season_ticket_holder, token) do
+      %{"id_suite" => id_suite, "id_season_ticket_holder" => id_season_ticket_holder} = params ->
+        registrar_visitante = Map.get(params, "registrar_visitante", true)
+        case RegisterSeasonTicketHolderUsecase.handle_register_season_ticket_holder(id_suite, id_season_ticket_holder, registrar_visitante, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->

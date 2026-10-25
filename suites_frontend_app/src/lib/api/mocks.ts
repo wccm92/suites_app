@@ -20,6 +20,7 @@ export const USE_MOCKS = false;
 // ── "Base de datos" en memoria: abonados (id_suite -> Set de cédulas) ─────
 const db = new Map<string, Set<string>>();
 db.set("demo", new Set(["1001234567", "1009876543", "1122334455"]));
+db.set("DEMO3", new Set(["1231414212", "1414141414"]));
 
 function suiteSet(idSuite: string): Set<string> {
   let set = db.get(idSuite);
@@ -33,7 +34,8 @@ function suiteSet(idSuite: string): Set<string> {
 // ── "Base de datos" en memoria: suites y sus invitados ────────────────────
 // Cada invitado adulto lleva un CONTEO de amparados (menores de siete años),
 // acorde a la nueva forma del API `/suites_app/suites/{id}`.
-type MockInvitado = { invitado: string; amparados: number };
+// `ingreso` simula `visitantexevento.estado === "1"` (ya ingresó al evento).
+type MockInvitado = { invitado: string; amparados: number; ingreso?: boolean };
 type MockSuite = {
   id_suite: string;
   capacidad: number;
@@ -59,7 +61,7 @@ suitesDb.set("DEMO3", {
   capacidad: 8,
   suite_alquilada: false,
   invitados: [
-    { invitado: "1231414212", amparados: 2 },
+    { invitado: "1231414212", amparados: 2, ingreso: true },
     { invitado: "1241241241", amparados: 1 },
     { invitado: "1414141414", amparados: 0 },
   ],
@@ -94,6 +96,35 @@ function suiteSummaries() {
     id_suite: s.id_suite,
     capacidad: s.capacidad,
   }));
+}
+
+/** Límite de abonados = capacidad de la suite (3 para suites sin modelo, p. ej. "demo"). */
+function abonadosCapacity(idSuite: string): number {
+  return suitesDb.get(idSuite)?.capacidad ?? 3;
+}
+
+/** Cupos libres del evento actual (2 para suites sin modelo). */
+function eventCupos(idSuite: string): number {
+  const s = suitesDb.get(idSuite);
+  return s ? cuposDisponibles(s) : 2;
+}
+
+/** Error code "12": la suite alcanzó su límite de abonados. */
+function limitReachedResponse(): Response {
+  return json(
+    {
+      errors: [
+        {
+          code: "12",
+          title: "Error",
+          detail:
+            "Se ha llegado al límite de abonados inscritos para esta suite, si deseas inscribir un nuevo abonado debes retirar uno ya existente",
+          http_status: 409,
+        },
+      ],
+    },
+    409
+  );
 }
 
 /** Pequeña latencia para simular la red. */
@@ -132,17 +163,61 @@ export async function mockFetch(
     return json({ abonados });
   }
 
-  // POST registrar un abonado
+  // GET validar el límite de abonados de una suite (code "12" = límite)
+  const limitMatch = path.match(
+    /^\/suites_app\/validate_season_ticket_holders_limit\/(.+)$/
+  );
+  if (limitMatch) {
+    await delay();
+    const idSuite = decodeURIComponent(limitMatch[1]);
+    const capacidad = abonadosCapacity(idSuite);
+    const inscritos = suiteSet(idSuite).size;
+    if (inscritos >= capacidad) return limitReachedResponse();
+    return json({
+      id_suite: idSuite,
+      capacidad,
+      abonados_inscritos: inscritos,
+      cupos_abonados_disponibles: capacidad - inscritos,
+      cupos_visitantes_disponibles: eventCupos(idSuite),
+    });
+  }
+
+  // POST registrar un abonado (+ opcionalmente visitante del evento actual)
   if (path === "/suites_app/register_season_ticket_holder") {
     await delay();
     const idSuite = String(body?.id_suite ?? "");
     const cedula = String(body?.id_season_ticket_holder ?? "");
+    const registrarVisitante = body?.registrar_visitante !== false;
     const set = suiteSet(idSuite);
-    if (set.has(cedula)) {
-      return json({ detail: "error: el abonado ya se encuentra registrado" });
+    const nuevo = !set.has(cedula);
+    if (nuevo && set.size >= abonadosCapacity(idSuite)) {
+      return limitReachedResponse();
     }
     set.add(cedula);
-    return json({ detail: "Abonado registrado exitosamente" });
+
+    let visitante_evento: { estado: string; detail: string };
+    const s = suitesDb.get(idSuite);
+    if (!registrarVisitante) {
+      visitante_evento = { estado: "omitido", detail: "No se registró como visitante del evento actual" };
+    } else if (s?.invitados.some((i) => i.invitado === cedula)) {
+      visitante_evento = { estado: "ya_registrado", detail: "Ya era visitante de esta suite en el evento actual" };
+    } else if (eventCupos(idSuite) <= 0) {
+      visitante_evento = {
+        estado: "sin_cupos",
+        detail: "No hay cupos disponibles en la suite para el evento actual",
+      };
+    } else {
+      s?.invitados.push({ invitado: cedula, amparados: 0 });
+      visitante_evento = { estado: "registrado", detail: "Registrado como visitante del evento actual" };
+    }
+
+    return json({
+      title: "success",
+      detail: nuevo
+        ? "Abonado registrado correctamente"
+        : "El abonado ya se encontraba registrado en esta suite",
+      visitante_evento,
+    });
   }
 
   // POST eliminar múltiples abonados
@@ -193,6 +268,23 @@ export async function mockFetch(
       );
     }
     return json(suiteDetail(s));
+  }
+
+  // GET estado de los visitantes de una suite (abonado / ingresó al evento)
+  const statusMatch = path.match(/^\/suites_app\/guests_status\/(.+)$/);
+  if (statusMatch) {
+    await delay();
+    const id = decodeURIComponent(statusMatch[1]);
+    const s = suitesDb.get(id);
+    const abonados = suiteSet(id);
+    return json({
+      id_suite: id,
+      invitados: (s?.invitados ?? []).map((i) => ({
+        invitado: i.invitado,
+        abonado: abonados.has(i.invitado),
+        ingreso_evento: i.ingreso === true,
+      })),
+    });
   }
 
   // POST alquilar una suite

@@ -32,6 +32,49 @@
   let registerError = "";
   let registrando = false;
 
+  // ── Límite de abonados (capacidad de la suite) ────────────────────────
+  // Lo informa el API validate_season_ticket_holders_limit (code "12" = límite).
+  const LIMIT_MESSAGE =
+    "Se ha llegado al límite de abonados inscritos para esta suite, si deseas inscribir un nuevo abonado debes retirar uno ya existente";
+  let limitReached = false;
+  let capacidad: number | null = null;
+  // Cupos libres de la suite para el evento actual (visitantes + amparados)
+  let cuposVisitantes: number | null = null;
+  let limitOpen = false;
+  let limitText = LIMIT_MESSAGE;
+
+  function showLimit(detail?: string) {
+    limitReached = true;
+    limitText = detail || LIMIT_MESSAGE;
+    limitOpen = true;
+  }
+
+  // ── Decisión: ¿registrar también como visitante del evento actual? ────
+  let decisionOpen = false;
+  let pendingCedula = "";
+
+  // ── Resultado del registro (abonado + visitante del evento) ───────────
+  type VisitanteEvento = {
+    estado:
+      | "registrado"
+      | "ya_registrado"
+      | "sin_cupos"
+      | "registrado_en_otra_suite"
+      | "omitido";
+    detail?: string;
+    id_suite?: string;
+  };
+  let regResultOpen = false;
+  let regCedula = "";
+  let regDetail = "";
+  let regVisitante: VisitanteEvento | null = null;
+  $: regVisitanteOk =
+    regVisitante?.estado === "registrado" ||
+    regVisitante?.estado === "ya_registrado";
+  $: regVisitanteWarn =
+    regVisitante?.estado === "sin_cupos" ||
+    regVisitante?.estado === "registrado_en_otra_suite";
+
   // ── Borrado múltiple ──────────────────────────────────────────────────
   let deleting = false;
   let confirmDeleteOpen = false;
@@ -94,10 +137,23 @@
    * - 401 (código 04 sesión no válida / 09 perfil inválido) → limpiar + /login
    * - 404 código 03 (sin eventos)                           → limpiar + /no-event
    * - 404 código 10/11 (u otro)                             → modal de aviso con `detail`
+   * - 409 código 12 (límite de abonados)                    → modal de límite + bloquear registro
    */
   async function handleErrorResponse(res: Response): Promise<boolean> {
     if (res.status === 401) {
       await handleUnauthorized();
+      return true;
+    }
+    if (res.status === 409) {
+      const body = (await res.json().catch(() => ({}))) as {
+        errors?: { detail?: string; code?: string }[];
+      };
+      const first = body?.errors?.[0];
+      if (first?.code === "12") {
+        showLimit(first?.detail);
+        return true;
+      }
+      showMessage(first?.detail ?? "No se pudo completar la operación.");
       return true;
     }
     if (res.status === 404) {
@@ -153,6 +209,62 @@
     }
   }
 
+  // ── Validación del límite de abonados ─────────────────────────────────
+  // `showModal` solo en la carga inicial: tras borrar/registrar se actualiza
+  // el estado del botón sin volver a interrumpir al usuario.
+  async function loadLimit(showModal = false) {
+    if (!browser || !suiteId) return;
+    try {
+      const res = await apiFetch(
+        `/suites_app/validate_season_ticket_holders_limit/${suiteId}`
+      );
+
+      if (res.status === 401) {
+        await handleUnauthorized();
+        return;
+      }
+      if (res.status === 404 || res.status === 409) {
+        const body = (await res.json().catch(() => ({}))) as {
+          errors?: { detail?: string; code?: string }[];
+        };
+        const first = body?.errors?.[0];
+        if (first?.code === "03") {
+          await handleNoEvent();
+          return;
+        }
+        if (first?.code === "12") {
+          limitReached = true;
+          cuposVisitantes = null;
+          if (showModal) showLimit(first?.detail);
+          return;
+        }
+      }
+      if (!res.ok) {
+        // Sin información del límite: el backend lo vuelve a validar al registrar.
+        limitReached = false;
+        return;
+      }
+
+      const body = (await res.json().catch(() => ({}))) as {
+        capacidad?: number;
+        cupos_visitantes_disponibles?: number;
+      };
+      limitReached = false;
+      capacidad = typeof body?.capacidad === "number" ? body.capacidad : null;
+      cuposVisitantes =
+        typeof body?.cupos_visitantes_disponibles === "number"
+          ? body.cupos_visitantes_disponibles
+          : null;
+    } catch {
+      limitReached = false;
+    }
+  }
+
+  function reloadAll() {
+    loadAbonados();
+    loadLimit();
+  }
+
   onMount(() => {
     const { jwt } = get(session);
     if (!jwt) {
@@ -165,11 +277,17 @@
       return;
     }
     loadAbonados();
+    loadLimit(true);
   });
 
   // ── Acción: Registrar abonado (uno a uno) ─────────────────────────────
-  async function registrarAbonado() {
+  // Paso 1: validar la cédula y preguntar si también entra al evento actual.
+  function registrarAbonado() {
     if (registrando) return;
+    if (limitReached) {
+      showLimit();
+      return;
+    }
     const cedula = normalizarDocumento(nuevaCedula);
     const errorDoc = validarDocumento(cedula);
     if (errorDoc) {
@@ -177,6 +295,21 @@
       return;
     }
     nuevaCedula = cedula;
+    registerError = "";
+    pendingCedula = cedula;
+    decisionOpen = true;
+  }
+
+  function cancelDecision() {
+    decisionOpen = false;
+    pendingCedula = "";
+  }
+
+  // Paso 2: registrar con la decisión tomada en el modal.
+  async function confirmRegistro(registrarVisitante: boolean) {
+    decisionOpen = false;
+    const cedula = pendingCedula;
+    if (registrando || !cedula) return;
 
     registrando = true;
     registerError = "";
@@ -186,6 +319,7 @@
         body: JSON.stringify({
           id_suite: suiteId,
           id_season_ticket_holder: cedula,
+          registrar_visitante: registrarVisitante,
         }),
       });
 
@@ -197,7 +331,10 @@
       }
 
       // Éxito: status 200 y sin valor "error" en el body.detail
-      const body = (await res.json().catch(() => ({}))) as { detail?: unknown };
+      const body = (await res.json().catch(() => ({}))) as {
+        detail?: unknown;
+        visitante_evento?: VisitanteEvento;
+      };
       const detailStr = String(body?.detail ?? "").toLowerCase();
       if (detailStr.includes("error")) {
         showMessage(
@@ -209,12 +346,29 @@
       }
 
       nuevaCedula = "";
-      showMessage("Abonado registrado exitosamente", true, () => loadAbonados());
+      regCedula = cedula;
+      regDetail =
+        typeof body?.detail === "string"
+          ? body.detail
+          : "Abonado registrado exitosamente";
+      regVisitante = body?.visitante_evento ?? null;
+      regResultOpen = true;
     } catch {
       registerError = "Error inesperado al registrar el abonado.";
     } finally {
       registrando = false;
+      pendingCedula = "";
     }
+  }
+
+  function acceptRegResult() {
+    regResultOpen = false;
+    reloadAll();
+  }
+
+  function goToManageGuests() {
+    regResultOpen = false;
+    handleBack();
   }
 
   // ── Selección múltiple ────────────────────────────────────────────────
@@ -275,7 +429,7 @@
 
   function acceptResult() {
     resultOpen = false;
-    loadAbonados();
+    reloadAll();
   }
 </script>
 
@@ -294,9 +448,17 @@
     <div class="suite-meta">
       <span class="suite-id-label">Suite: <strong>{suiteId || "—"}</strong></span>
       <div class="suite-stats">
-        <span class="stat-pill">
-          Abonados: <strong>{loading ? "…" : abonados.length}</strong>
+        <span class="stat-pill {limitReached ? 'stat-pill--full' : ''}">
+          Abonados:
+          <strong>
+            {loading ? "…" : abonados.length}{capacidad !== null ? ` / ${capacidad}` : ""}
+          </strong>
         </span>
+        {#if cuposVisitantes !== null}
+          <span class="stat-pill">
+            Cupos evento actual: <strong>{cuposVisitantes}</strong>
+          </span>
+        {/if}
       </div>
     </div>
 
@@ -314,9 +476,9 @@
           bind:value={nuevaCedula}
           on:input={(e) => (nuevaCedula = normalizarDesdeEvento(e))}
           maxlength={DOC_MAX}
-          disabled={registrando}
+          disabled={registrando || limitReached}
         />
-        <button class="btn-registrar" type="submit" disabled={registrando}>
+        <button class="btn-registrar" type="submit" disabled={registrando || limitReached}>
           {#if registrando}
             Registrando…
           {:else}
@@ -339,6 +501,11 @@
       </form>
       {#if registerError}
         <p class="register-error">{registerError}</p>
+      {/if}
+      {#if limitReached}
+        <p class="register-limit">
+          Límite de abonados alcanzado. Retira un abonado del listado para inscribir uno nuevo.
+        </p>
       {/if}
     </div>
 
@@ -438,6 +605,148 @@
   </div>
 {/if}
 
+<!-- ── Modal: Límite de abonados alcanzado ────────────────────────────── -->
+{#if limitOpen}
+  <div class="modal-overlay" role="presentation"></div>
+  <div class="modal" role="alertdialog" aria-modal="true" aria-labelledby="limit-title">
+    <h3 class="modal-title modal-title-warn" id="limit-title">Límite de abonados alcanzado</h3>
+    <p class="modal-text">{limitText}</p>
+    <div class="modal-actions">
+      <button class="modal-btn-primary" type="button" on:click={() => (limitOpen = false)}>
+        Entendido
+      </button>
+    </div>
+  </div>
+{/if}
+
+<!-- ── Modal: ¿También visitante del evento actual? ───────────────────── -->
+{#if decisionOpen}
+  <div class="modal-overlay" on:click={cancelDecision} role="presentation"></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="decision-title">
+    <h3 class="modal-title" id="decision-title">Registrar abonado</h3>
+    <p class="modal-text">
+      La cédula <strong>{pendingCedula}</strong> quedará inscrita como abonado de esta
+      suite para los próximos eventos.
+    </p>
+    <!-- Sin cupos no es posible entrar al evento actual: se omite la pregunta -->
+    {#if cuposVisitantes !== 0}
+      <p class="modal-text modal-question">
+        ¿Deseas registrarla también como visitante del <strong>evento actual</strong>?
+      </p>
+    {/if}
+
+    {#if cuposVisitantes !== null}
+      <div class="cupos-badge {cuposVisitantes === 0 ? 'cupos-badge--zero' : ''}">
+        {#if cuposVisitantes === 0}
+          No quedan cupos para el evento actual
+        {:else}
+          Quedan <strong>{cuposVisitantes}</strong>
+          {cuposVisitantes === 1 ? "cupo libre" : "cupos libres"} para el evento actual
+        {/if}
+      </div>
+      {#if cuposVisitantes === 0}
+        <p class="decision-hint">
+          Puedes registrarla solo como abonado. Si deseas que quede para el evento
+          actual, primero debes retirar algún visitante desde «Gestionar suite».
+        </p>
+      {/if}
+    {/if}
+
+    <div class="modal-actions modal-actions--decision">
+      {#if cuposVisitantes === 0}
+        <!-- Sin cupos: solo queda decidir entre cancelar o registrar como abonado -->
+        <button class="modal-btn-secondary modal-btn-cancel" type="button" on:click={cancelDecision}>
+          Cancelar
+        </button>
+        <button
+          class="modal-btn-primary"
+          type="button"
+          on:click={() => confirmRegistro(false)}
+        >
+          Solo abonado
+        </button>
+      {:else}
+        <button class="modal-btn-link" type="button" on:click={cancelDecision}>
+          Cancelar
+        </button>
+        <button
+          class="modal-btn-secondary"
+          type="button"
+          on:click={() => confirmRegistro(false)}
+        >
+          Solo abonado
+        </button>
+        <button
+          class="modal-btn-primary"
+          type="button"
+          on:click={() => confirmRegistro(true)}
+        >
+          Sí, también este evento
+        </button>
+      {/if}
+    </div>
+  </div>
+{/if}
+
+<!-- ── Modal: Resultado del registro ──────────────────────────────────── -->
+{#if regResultOpen}
+  <div class="modal-overlay" role="presentation"></div>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="reg-result-title">
+    <h3 class="modal-title modal-title-success" id="reg-result-title">Listo</h3>
+    <p class="modal-text">Resultado del registro de <strong>{regCedula}</strong>:</p>
+
+    <ul class="reg-steps">
+      <li class="reg-step reg-step--ok">
+        <span class="reg-step__icon" aria-hidden="true">✓</span>
+        <div>
+          <span class="reg-step__title">Abonado para futuros eventos</span>
+          <span class="reg-step__detail">{regDetail}</span>
+        </div>
+      </li>
+      {#if regVisitante}
+        <li
+          class="reg-step {regVisitanteOk
+            ? 'reg-step--ok'
+            : regVisitanteWarn
+              ? 'reg-step--warn'
+              : 'reg-step--skip'}"
+        >
+          <span class="reg-step__icon" aria-hidden="true">
+            {regVisitanteOk ? "✓" : regVisitanteWarn ? "!" : "–"}
+          </span>
+          <div>
+            <span class="reg-step__title">Visitante del evento actual</span>
+            <span class="reg-step__detail">
+              {#if regVisitante.estado === "sin_cupos"}
+                No fue posible: la suite no tiene cupos disponibles para el evento
+                actual. Si deseas que quede para el evento actual debes retirar algún
+                visitante.
+              {:else}
+                {regVisitante.detail ?? ""}
+              {/if}
+            </span>
+          </div>
+        </li>
+      {/if}
+    </ul>
+
+    <div class="modal-actions">
+      {#if regVisitante?.estado === "sin_cupos"}
+        <button class="modal-btn-secondary" type="button" on:click={goToManageGuests}>
+          Ir a Gestionar suite
+        </button>
+        <button class="modal-btn-primary" type="button" on:click={acceptRegResult}>
+          Entendido
+        </button>
+      {:else}
+        <button class="modal-btn-primary" type="button" on:click={acceptRegResult}>
+          Aceptar
+        </button>
+      {/if}
+    </div>
+  </div>
+{/if}
+
 <!-- ── Modal: Mensaje genérico ────────────────────────────────────────── -->
 {#if msgOpen}
   <div class="modal-overlay" role="presentation"></div>
@@ -517,6 +826,15 @@
     margin-left: 0.3rem;
     color: var(--color-text-main);
     font-weight: 700;
+  }
+
+  .stat-pill--full {
+    background: #fff5f5;
+    border-color: var(--color-error-soft);
+  }
+
+  .stat-pill--full strong {
+    color: var(--color-error);
   }
 
   /* ── Bloques ──────────────────────────────────────────────────────── */
@@ -606,6 +924,16 @@
     margin: 0.5rem 0 0 0;
     font-size: 0.85rem;
     color: var(--color-error);
+  }
+
+  .register-limit {
+    margin: 0.6rem 0 0 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 0.6rem;
+    background: #fff8e8;
+    border: 1px solid #f3d27a;
+    font-size: 0.85rem;
+    color: #8a5a0a;
   }
 
   /* ── Listado ──────────────────────────────────────────────────────── */
@@ -783,11 +1111,133 @@
     color: #4ade80;
   }
 
+  .modal-title-warn {
+    color: #8a5a0a;
+  }
+
   .modal-text {
     margin: 0 0 1rem 0;
     color: var(--color-text-main);
     font-size: 0.95rem;
     line-height: 1.5;
+  }
+
+  .modal-question {
+    font-weight: 600;
+  }
+
+  /* ── Decisión: cupos del evento actual ────────────────────────────── */
+  .cupos-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: #edf7f2;
+    border: 1px solid #9bd3b8;
+    font-size: 0.85rem;
+    color: var(--color-primary);
+  }
+
+  .cupos-badge--zero {
+    background: #fff5f5;
+    border-color: var(--color-error-soft);
+    color: var(--color-error);
+  }
+
+  .decision-hint {
+    margin: 0.6rem 0 0 0;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--color-text-muted);
+  }
+
+  .modal-actions--decision {
+    flex-wrap: wrap;
+  }
+
+  .modal-btn-link {
+    margin-right: auto;
+    padding: 0.55rem 0.4rem;
+    border: none;
+    background: transparent;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .modal-btn-link:hover {
+    color: var(--color-text-main);
+    text-decoration: underline;
+  }
+
+  .modal-btn-cancel {
+    border-width: 2px;
+    border-color: var(--color-primary);
+    font-weight: 700;
+  }
+
+  /* ── Resultado del registro ───────────────────────────────────────── */
+  .reg-steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .reg-step {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.7rem 0.85rem;
+    border-radius: 0.75rem;
+    border: 1px solid #d1e8e0;
+    background: #f5faf7;
+  }
+
+  .reg-step__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 1.6rem;
+    height: 1.6rem;
+    border-radius: 999px;
+    font-weight: 800;
+    font-size: 0.9rem;
+    color: #ffffff;
+    background: var(--color-primary);
+  }
+
+  .reg-step__title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: var(--color-text-main);
+  }
+
+  .reg-step__detail {
+    display: block;
+    margin-top: 0.15rem;
+    font-size: 0.85rem;
+    line-height: 1.4;
+    color: var(--color-text-muted);
+  }
+
+  .reg-step--warn {
+    background: #fff8e8;
+    border-color: #f3d27a;
+  }
+
+  .reg-step--warn .reg-step__icon {
+    background: #d9961a;
+  }
+
+  .reg-step--skip .reg-step__icon {
+    background: #b6c2bd;
   }
 
   .result-grid {
@@ -917,6 +1367,18 @@
     .btn-back {
       width: 100%;
       text-align: center;
+    }
+
+    .modal-actions--decision {
+      flex-direction: column-reverse;
+    }
+
+    .modal-actions--decision button {
+      width: 100%;
+    }
+
+    .modal-btn-link {
+      margin-right: 0;
     }
   }
 </style>
