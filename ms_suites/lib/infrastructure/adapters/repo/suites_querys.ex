@@ -8,6 +8,7 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
   alias MsSuitesApp.Domain.Model.Blacklist
   alias MsSuitesApp.Domain.Model.ArrendatarioXSuite
   alias MsSuitesApp.Domain.Model.SuiteXEvento
+  alias MsSuitesApp.Domain.Model.Abonado
 
   def list_suites_by_event_and_admin(event_id, admin_id) do
     from(s in Suites,
@@ -167,6 +168,20 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
       select: count(vx.id_visitante, :distinct)
     )
     |> Repo.one()
+  end
+
+  def list_guests_status(id_evento, id_suite) do
+    from(vx in VisitanteXEvento,
+      left_join: a in Abonado,
+      on: a.id_abonado == vx.id_visitante and a.id_suite == vx.id_suite,
+      where: vx.id_evento == ^id_evento and vx.id_suite == ^id_suite,
+      select: %{
+        invitado: vx.id_visitante,
+        estado: vx.estado,
+        abonado: not is_nil(a.id_abonado)
+      }
+    )
+    |> Repo.all()
   end
 
   def validate_guess_in_event(id_evento, id_visitante) do

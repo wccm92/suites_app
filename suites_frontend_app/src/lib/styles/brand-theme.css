@@ -48,6 +48,8 @@ body {
 
 /* contenedor principal de todas las páginas (+page y login usan .page) */
 .page {
+  /* border-box: el padding lateral no suma al 100% (evita scroll horizontal en móvil) */
+  box-sizing: border-box;
   width: min(1120px, 100%);
   margin: 2.5rem auto 3rem auto;
   padding: 0 1rem;
@@ -109,6 +111,7 @@ body {
 /* ===== FORMULARIOS (login + registrar invitado) ===== */
 
 .form-container {
+  box-sizing: border-box;
   background: #ffffff;
   border-radius: var(--radius-lg);
   border: 1px solid #d1e8e0;

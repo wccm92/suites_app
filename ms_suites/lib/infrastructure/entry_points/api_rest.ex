@@ -21,6 +21,7 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
   alias MsSuitesApp.Domain.DeleteSeasonTicketHoldersUsecase
   alias MsSuitesApp.Domain.RegisterSeasonTicketHolderUsecase
   alias MsSuitesApp.Domain.ValidateSeasonTicketHoldersLimitUsecase
+  alias MsSuitesApp.Domain.GuestsStatusUsecase
 
   @moduledoc """
   Access point to the rest exposed services
@@ -110,6 +111,19 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ApiRest do
     case conn.params do
       %{"id_suite" => id_suite} ->
         case SuitesDetailUsecase.handle_list_suites_detail(id_suite, token) do
+          {:ok, response} ->
+            build_response(response, conn)
+          error ->
+            error |> handle_error_v2(conn)
+        end
+    end
+  end
+
+  get "/suites_app/guests_status/:id_suite" do
+    token = extract_auth(conn)
+    case conn.params do
+      %{"id_suite" => id_suite} ->
+        case GuestsStatusUsecase.handle_guests_status(id_suite, token) do
           {:ok, response} ->
             build_response(response, conn)
           error ->

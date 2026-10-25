@@ -20,6 +20,7 @@ export const USE_MOCKS = false;
 // ── "Base de datos" en memoria: abonados (id_suite -> Set de cédulas) ─────
 const db = new Map<string, Set<string>>();
 db.set("demo", new Set(["1001234567", "1009876543", "1122334455"]));
+db.set("DEMO3", new Set(["1231414212", "1414141414"]));
 
 function suiteSet(idSuite: string): Set<string> {
   let set = db.get(idSuite);
@@ -33,7 +34,8 @@ function suiteSet(idSuite: string): Set<string> {
 // ── "Base de datos" en memoria: suites y sus invitados ────────────────────
 // Cada invitado adulto lleva un CONTEO de amparados (menores de siete años),
 // acorde a la nueva forma del API `/suites_app/suites/{id}`.
-type MockInvitado = { invitado: string; amparados: number };
+// `ingreso` simula `visitantexevento.estado === "1"` (ya ingresó al evento).
+type MockInvitado = { invitado: string; amparados: number; ingreso?: boolean };
 type MockSuite = {
   id_suite: string;
   capacidad: number;
@@ -59,7 +61,7 @@ suitesDb.set("DEMO3", {
   capacidad: 8,
   suite_alquilada: false,
   invitados: [
-    { invitado: "1231414212", amparados: 2 },
+    { invitado: "1231414212", amparados: 2, ingreso: true },
     { invitado: "1241241241", amparados: 1 },
     { invitado: "1414141414", amparados: 0 },
   ],
@@ -266,6 +268,23 @@ export async function mockFetch(
       );
     }
     return json(suiteDetail(s));
+  }
+
+  // GET estado de los visitantes de una suite (abonado / ingresó al evento)
+  const statusMatch = path.match(/^\/suites_app\/guests_status\/(.+)$/);
+  if (statusMatch) {
+    await delay();
+    const id = decodeURIComponent(statusMatch[1]);
+    const s = suitesDb.get(id);
+    const abonados = suiteSet(id);
+    return json({
+      id_suite: id,
+      invitados: (s?.invitados ?? []).map((i) => ({
+        invitado: i.invitado,
+        abonado: abonados.has(i.invitado),
+        ingreso_evento: i.ingreso === true,
+      })),
+    });
   }
 
   // POST alquilar una suite

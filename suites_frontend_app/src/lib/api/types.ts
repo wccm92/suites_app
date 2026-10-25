@@ -5,6 +5,15 @@ export type InvitadoInscrito = {
     amparados: number;
 };
 
+/** Estado de un visitante en el evento actual (API `/suites_app/guests_status/{id}`). */
+export type GuestStatus = {
+    invitado: string;
+    /** Registrado en la tabla `abonados` para esta suite. */
+    abonado: boolean;
+    /** `visitantexevento.estado === "1"`: el visitante ya ingresó al evento. */
+    ingreso_evento: boolean;
+};
+
 export type SuiteDetail = {
     id_suite: string;
     capacidad: number;
