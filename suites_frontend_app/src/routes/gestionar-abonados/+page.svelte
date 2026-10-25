@@ -620,9 +620,12 @@
       La cédula <strong>{pendingCedula}</strong> quedará inscrita como abonado de esta
       suite para los próximos eventos.
     </p>
-    <p class="modal-text modal-question">
-      ¿Deseas registrarla también como visitante del <strong>evento actual</strong>?
-    </p>
+    <!-- Sin cupos no es posible entrar al evento actual: se omite la pregunta -->
+    {#if cuposVisitantes !== 0}
+      <p class="modal-text modal-question">
+        ¿Deseas registrarla también como visitante del <strong>evento actual</strong>?
+      </p>
+    {/if}
 
     {#if cuposVisitantes !== null}
       <div class="cupos-badge {cuposVisitantes === 0 ? 'cupos-badge--zero' : ''}">
@@ -642,24 +645,37 @@
     {/if}
 
     <div class="modal-actions modal-actions--decision">
-      <button class="modal-btn-link" type="button" on:click={cancelDecision}>
-        Cancelar
-      </button>
-      <button
-        class="modal-btn-secondary"
-        type="button"
-        on:click={() => confirmRegistro(false)}
-      >
-        Solo abonado
-      </button>
-      <button
-        class="modal-btn-primary"
-        type="button"
-        on:click={() => confirmRegistro(true)}
-        disabled={cuposVisitantes === 0}
-      >
-        Sí, también este evento
-      </button>
+      {#if cuposVisitantes === 0}
+        <!-- Sin cupos: solo queda decidir entre cancelar o registrar como abonado -->
+        <button class="modal-btn-secondary modal-btn-cancel" type="button" on:click={cancelDecision}>
+          Cancelar
+        </button>
+        <button
+          class="modal-btn-primary"
+          type="button"
+          on:click={() => confirmRegistro(false)}
+        >
+          Solo abonado
+        </button>
+      {:else}
+        <button class="modal-btn-link" type="button" on:click={cancelDecision}>
+          Cancelar
+        </button>
+        <button
+          class="modal-btn-secondary"
+          type="button"
+          on:click={() => confirmRegistro(false)}
+        >
+          Solo abonado
+        </button>
+        <button
+          class="modal-btn-primary"
+          type="button"
+          on:click={() => confirmRegistro(true)}
+        >
+          Sí, también este evento
+        </button>
+      {/if}
     </div>
   </div>
 {/if}
@@ -1148,9 +1164,10 @@
     text-decoration: underline;
   }
 
-  .modal-btn-primary:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .modal-btn-cancel {
+    border-width: 2px;
+    border-color: var(--color-primary);
+    font-weight: 700;
   }
 
   /* ── Resultado del registro ───────────────────────────────────────── */
