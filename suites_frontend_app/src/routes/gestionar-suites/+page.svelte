@@ -9,6 +9,12 @@
   import { session } from "$lib/stores/session";
   import { isSuiteDetail, isSuiteDetailError } from "$lib/api/guards";
   import type { GuestStatus, SuiteDetail } from "$lib/api/types";
+  import {
+    DOC_MAX,
+    normalizarDesdeEvento,
+    normalizarDocumento,
+    validarDocumento,
+  } from "$lib/documento";
 
   // ── Suite params (desde la query string) ──────────────────────────────
   let suiteId = "";
@@ -257,11 +263,13 @@
   }
 
   async function confirmReplace() {
-    const cedula = nuevaCedula.trim();
-    if (!/^\d{6,10}$/.test(cedula)) {
-      replaceError = "Ingresa una cédula válida (6 a 10 dígitos).";
+    const cedula = normalizarDocumento(nuevaCedula);
+    const errorDoc = validarDocumento(cedula);
+    if (errorDoc) {
+      replaceError = errorDoc;
       return;
     }
+    nuevaCedula = cedula;
 
     replaceSubmitting = true;
     replaceError = "";
@@ -580,10 +588,10 @@
       id="nueva-cedula"
       class="modal-input"
       type="text"
-      inputmode="numeric"
-      placeholder="Ej: 1234567890"
+      placeholder="Ej: 1234567890 o AB123456"
       bind:value={nuevaCedula}
-      maxlength={10}
+      on:input={(e) => (nuevaCedula = normalizarDesdeEvento(e))}
+      maxlength={DOC_MAX}
     />
     {#if replaceError}
       <p class="modal-error">{replaceError}</p>
