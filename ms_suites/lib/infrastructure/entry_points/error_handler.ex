@@ -65,6 +65,15 @@ defmodule MsSuitesApp.Infrastructure.EntryPoint.ErrorHandler do
     )
   end
 
+  def build_error_response({:error, :season_ticket_holders_limit_reached}) do
+    make_error_v2(
+      "12",
+      "Error",
+      "Se ha llegado al límite de abonados inscritos para esta suite, si deseas inscribir un nuevo abonado debes retirar uno ya existente",
+      409
+    )
+  end
+
   def build_error_response({:error, :inactive_user}) do
     make_error_v2(
       "02",

@@ -96,6 +96,35 @@ function suiteSummaries() {
   }));
 }
 
+/** Límite de abonados = capacidad de la suite (3 para suites sin modelo, p. ej. "demo"). */
+function abonadosCapacity(idSuite: string): number {
+  return suitesDb.get(idSuite)?.capacidad ?? 3;
+}
+
+/** Cupos libres del evento actual (2 para suites sin modelo). */
+function eventCupos(idSuite: string): number {
+  const s = suitesDb.get(idSuite);
+  return s ? cuposDisponibles(s) : 2;
+}
+
+/** Error code "12": la suite alcanzó su límite de abonados. */
+function limitReachedResponse(): Response {
+  return json(
+    {
+      errors: [
+        {
+          code: "12",
+          title: "Error",
+          detail:
+            "Se ha llegado al límite de abonados inscritos para esta suite, si deseas inscribir un nuevo abonado debes retirar uno ya existente",
+          http_status: 409,
+        },
+      ],
+    },
+    409
+  );
+}
+
 /** Pequeña latencia para simular la red. */
 function delay(ms = 350): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -132,17 +161,61 @@ export async function mockFetch(
     return json({ abonados });
   }
 
-  // POST registrar un abonado
+  // GET validar el límite de abonados de una suite (code "12" = límite)
+  const limitMatch = path.match(
+    /^\/suites_app\/validate_season_ticket_holders_limit\/(.+)$/
+  );
+  if (limitMatch) {
+    await delay();
+    const idSuite = decodeURIComponent(limitMatch[1]);
+    const capacidad = abonadosCapacity(idSuite);
+    const inscritos = suiteSet(idSuite).size;
+    if (inscritos >= capacidad) return limitReachedResponse();
+    return json({
+      id_suite: idSuite,
+      capacidad,
+      abonados_inscritos: inscritos,
+      cupos_abonados_disponibles: capacidad - inscritos,
+      cupos_visitantes_disponibles: eventCupos(idSuite),
+    });
+  }
+
+  // POST registrar un abonado (+ opcionalmente visitante del evento actual)
   if (path === "/suites_app/register_season_ticket_holder") {
     await delay();
     const idSuite = String(body?.id_suite ?? "");
     const cedula = String(body?.id_season_ticket_holder ?? "");
+    const registrarVisitante = body?.registrar_visitante !== false;
     const set = suiteSet(idSuite);
-    if (set.has(cedula)) {
-      return json({ detail: "error: el abonado ya se encuentra registrado" });
+    const nuevo = !set.has(cedula);
+    if (nuevo && set.size >= abonadosCapacity(idSuite)) {
+      return limitReachedResponse();
     }
     set.add(cedula);
-    return json({ detail: "Abonado registrado exitosamente" });
+
+    let visitante_evento: { estado: string; detail: string };
+    const s = suitesDb.get(idSuite);
+    if (!registrarVisitante) {
+      visitante_evento = { estado: "omitido", detail: "No se registró como visitante del evento actual" };
+    } else if (s?.invitados.some((i) => i.invitado === cedula)) {
+      visitante_evento = { estado: "ya_registrado", detail: "Ya era visitante de esta suite en el evento actual" };
+    } else if (eventCupos(idSuite) <= 0) {
+      visitante_evento = {
+        estado: "sin_cupos",
+        detail: "No hay cupos disponibles en la suite para el evento actual",
+      };
+    } else {
+      s?.invitados.push({ invitado: cedula, amparados: 0 });
+      visitante_evento = { estado: "registrado", detail: "Registrado como visitante del evento actual" };
+    }
+
+    return json({
+      title: "success",
+      detail: nuevo
+        ? "Abonado registrado correctamente"
+        : "El abonado ya se encontraba registrado en esta suite",
+      visitante_evento,
+    });
   }
 
   // POST eliminar múltiples abonados

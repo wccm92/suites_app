@@ -153,6 +153,22 @@ defmodule MsSuitesApp.Infrastructure.Adapters.SuitesQueryAdapter do
     |> Repo.all()
   end
 
+  def get_suite_capacity(id_suite) when is_binary(id_suite) do
+    from(s in Suites,
+      where: s.id_suite == ^id_suite,
+      select: s.capacidad
+    )
+    |> Repo.one()
+  end
+
+  def count_guests_in_suite(id_evento, id_suite) do
+    from(vx in VisitanteXEvento,
+      where: vx.id_evento == ^id_evento and vx.id_suite == ^id_suite,
+      select: count(vx.id_visitante, :distinct)
+    )
+    |> Repo.one()
+  end
+
   def validate_guess_in_event(id_evento, id_visitante) do
     from(vx in VisitanteXEvento,
       where: vx.id_evento == ^id_evento and vx.id_visitante == ^id_visitante,
